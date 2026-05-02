@@ -1,0 +1,8 @@
+{
+  "chat.tools.terminal.autoApprove": {
+    "/^\\$doc = Resolve-Path 'Vocubulary\\.docx'; \\$out = Join-Path \\$env:TEMP 'vocab_doc_text\\.txt'; python - <<'PY'\nfrom zipfile import ZipFile\nfrom pathlib import Path\nimport xml\\.etree\\.ElementTree as ET\nimport re, sys\npath = Path\\(r'c:\\\\Users\\\\RAJ\\\\Desktop\\\\vocab\\\\vocabvault\\\\Vocubulary\\.docx'\\)\nwith ZipFile\\(path\\) as z:\n    xml = z\\.read\\('word/document\\.xml'\\)\nroot = ET\\.fromstring\\(xml\\)\nns = \\{'w': 'http://schemas\\.openxmlformats\\.org/wordprocessingml/2006/main'\\}\nparas = \\[\\]\nfor p in root\\.findall\\('\\.//w:p', ns\\):\n    texts = \\[t\\.text or '' for t in p\\.findall\\('\\.//w:t', ns\\)\\]\n    line = ''\\.join\\(texts\\)\\.strip\\(\\)\n    if line:\n        paras\\.append\\(line\\)\nprint\\('\\\\n'\\.join\\(paras\\)\\)\nPY$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
+}
