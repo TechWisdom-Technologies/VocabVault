@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     let nextStageResponse: number | "summary" = newStage;
 
-    let flaggedForRetry: number[] = [];
+    const flaggedForRetry: number[] = [];
     // Calculate flagged stages (any stage with a best score < 8)
     for (let i = 1; i <= 10; i++) {
       const best = bestScores.get(i) || 0;

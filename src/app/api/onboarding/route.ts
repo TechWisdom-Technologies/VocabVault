@@ -45,20 +45,24 @@ export async function POST(req: NextRequest) {
       const fileName = `${authResult.user.id}/avatar.${fileExt}`;
       const buffer = Buffer.from(await avatarFile.arrayBuffer());
 
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("avatars")
-        .upload(fileName, buffer, {
-          contentType: avatarFile.type,
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error("Avatar upload error:", uploadError);
+      if (!supabaseAdmin) {
+        console.error("Supabase admin client is not configured; skipping avatar upload");
       } else {
-        const { data: urlData } = supabaseAdmin.storage
+        const { error: uploadError } = await supabaseAdmin.storage
           .from("avatars")
-          .getPublicUrl(fileName);
-        avatarUrl = urlData.publicUrl;
+          .upload(fileName, buffer, {
+            contentType: avatarFile.type,
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Avatar upload error:", uploadError);
+        } else {
+          const { data: urlData } = supabaseAdmin.storage
+            .from("avatars")
+            .getPublicUrl(fileName);
+          avatarUrl = urlData.publicUrl;
+        }
       }
     }
 

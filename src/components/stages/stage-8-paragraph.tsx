@@ -96,7 +96,7 @@ export default function Stage8Paragraph({ word, onComplete }: Stage8Props) {
     const submittedSynonym = parseInt(synonymCount, 10) || 0;
     const submittedAntonym = parseInt(antonymCount, 10) || 0;
     const totalDiff = Math.abs(submittedTarget - actualTargetCount) + Math.abs(submittedSynonym - actualSynonymCount) + Math.abs(submittedAntonym - actualAntonymCount);
-    let score = totalDiff === 0 ? 10 : totalDiff <= 2 ? 8 : totalDiff <= 4 ? 5 : 0;
+    const score = totalDiff === 0 ? 10 : totalDiff <= 2 ? 8 : totalDiff <= 4 ? 5 : 0;
     onComplete(score, [], elapsed);
   }, [targetCount, synonymCount, antonymCount, actualTargetCount, actualSynonymCount, actualAntonymCount, onComplete]);
 

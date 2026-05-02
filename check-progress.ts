@@ -18,6 +18,6 @@ async function main() {
 }
 
 main().finally(() => {
-  // eslint-disable-next-line
+   
   prisma.$disconnect();
 });

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const recentOnly = url.searchParams.get("recent") === "true";
 
-    let whereClause: any = {
+    const whereClause: any = {
       userId: user.id,
       read: false,
     };

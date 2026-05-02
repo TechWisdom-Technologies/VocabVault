@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const filter = searchParams.get("filter");
     const sortBy = searchParams.get("sortBy");
 
-    let whereClause: any = {
+    const whereClause: any = {
       totalScore: { gt: 0 } // Only show users with a score
     };
 

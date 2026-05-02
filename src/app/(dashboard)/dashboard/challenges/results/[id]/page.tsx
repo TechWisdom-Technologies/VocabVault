@@ -59,7 +59,7 @@ export default function ChallengeResultsPage() {
     );
   }
 
-  const isWinner = challenge.challengedScore >= (challenge.challengerScore || 0);
+  const isWinner = (challenge.challengedScore ?? 0) >= (challenge.challengerScore ?? 0);
 
   return (
     <div className="min-h-screen bg-muted/30 pb-20">
@@ -101,7 +101,7 @@ export default function ChallengeResultsPage() {
               </div>
               <p className="font-bold text-lg">{user?.name ?? "You"}</p>
               <div className="mt-4 flex flex-col items-center">
-                <span className="text-4xl font-bold text-primary">{challenge.challengedScore}</span>
+                <span className="text-4xl font-bold text-primary">{challenge.challengedScore ?? 0}</span>
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-1">Total Score</span>
               </div>
             </CardContent>
