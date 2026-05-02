@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { redis, sessionKey, userSessionsKey } from "@/lib/redis";
 import { prisma } from "@/lib/prisma";
 
@@ -115,7 +115,7 @@ export async function validateRequest(
       firebaseUid = cachedToken.uid;
     } else {
       try {
-        const decodedToken = await adminAuth.verifyIdToken(firebaseToken);
+        const decodedToken = await getAdminAuth().verifyIdToken(firebaseToken);
         firebaseUid = decodedToken.uid;
         TOKEN_CACHE.set(firebaseToken, { uid: firebaseUid, timestamp: Date.now() });
       } catch {

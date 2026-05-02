@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { createSession, invalidateSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createSessionSchema } from "@/schemas/auth";
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     // Verify Firebase token
     let decodedToken;
     try {
-      decodedToken = await adminAuth.verifyIdToken(firebaseToken);
+      decodedToken = await getAdminAuth().verifyIdToken(firebaseToken);
     } catch {
       return NextResponse.json(
         { error: "Invalid Firebase token" },

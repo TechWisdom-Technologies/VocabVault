@@ -3,6 +3,7 @@ import { getAuth, Auth } from "firebase-admin/auth";
 
 const globalForFirebaseAdmin = globalThis as unknown as {
   firebaseAdmin: App | undefined;
+  firebaseAdminAuth: Auth | undefined;
 };
 
 type ServiceAccountInput = {
@@ -64,4 +65,13 @@ function getFirebaseAdminApp(): App {
 }
 
 export const adminApp = getFirebaseAdminApp();
-export const adminAuth: Auth = getAuth(adminApp);
+
+export function getAdminAuth(): Auth {
+  if (globalForFirebaseAdmin.firebaseAdminAuth) {
+    return globalForFirebaseAdmin.firebaseAdminAuth;
+  }
+
+  const auth = getAuth(getFirebaseAdminApp());
+  globalForFirebaseAdmin.firebaseAdminAuth = auth;
+  return auth;
+}
