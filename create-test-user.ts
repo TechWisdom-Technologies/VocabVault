@@ -1,11 +1,11 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
-import { adminAuth } from "./src/lib/firebase/admin";
+import { getAdminAuth } from "./src/lib/firebase/admin";
 import { prisma } from "./src/lib/prisma";
 
 async function createTestUser() {
   try {
-    const userRecord = await adminAuth.createUser({
+    const userRecord = await getAdminAuth().createUser({
       email: "test@example.com",
       password: "Password123!",
       emailVerified: true,

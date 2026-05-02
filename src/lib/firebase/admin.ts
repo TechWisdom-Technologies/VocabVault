@@ -64,8 +64,6 @@ function getFirebaseAdminApp(): App {
   return app;
 }
 
-export const adminApp = getFirebaseAdminApp();
-
 export function getAdminAuth(): Auth {
   if (globalForFirebaseAdmin.firebaseAdminAuth) {
     return globalForFirebaseAdmin.firebaseAdminAuth;
