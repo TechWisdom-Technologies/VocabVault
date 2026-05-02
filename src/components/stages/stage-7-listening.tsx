@@ -157,23 +157,23 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
   }, []);
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col sm:flex-row overflow-hidden bg-[#070708] relative pt-20">
+    <div className="flex-1 w-full h-full flex flex-col sm:flex-row overflow-hidden bg-background relative pt-20">
       {/* Sidebar: Audio Clips (Left) */}
-      <div className="hidden sm:flex flex-col w-72 border-r border-white/5 bg-white/[0.01] p-6 shrink-0">
+      <div className="hidden sm:flex flex-col w-72 border-r border-border/50 bg-muted/10 p-6 shrink-0">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
               <Headphones className="w-5 h-5 text-violet-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Audio Archive</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Audio Archive</span>
           </div>
-          <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-white/10">
+          <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-muted/20 border border-border/50">
             <span className="text-[9px] font-black text-violet-400">{listenedSet.size}/{accents.length}</span>
           </div>
         </div>
 
-        <div className="space-y-4 mb-6">
-          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="space-y-4 mb-6">
+          <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
             <motion.div className="h-full bg-violet-600 shadow-[0_0_8px_rgba(139,92,246,0.4)]" animate={{ width: `${(listenedSet.size / accents.length) * 100}%` }} />
           </div>
         </div>
@@ -184,28 +184,28 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
             const isCurrent = currentIdx === idx;
             const isPlaying = playingIdx === idx;
             return (
-              <button
+                <button
                 key={idx}
                 onClick={() => setCurrentIdx(idx)}
                 className={`w-full text-left p-3.5 rounded-xl border transition-all relative overflow-hidden group ${
                   isCurrent 
                     ? "bg-violet-600 border-violet-400 shadow-lg shadow-violet-600/20" 
-                    : "bg-white/5 border-white/5 hover:border-white/10"
+                    : "bg-muted/20 border-border/50 hover:border-violet-500/40"
                 }`}
               >
                 <div className="flex items-center gap-2 mb-0.5">
-                  <div className={`w-1 h-1 rounded-full ${hasListened ? "bg-emerald-400" : isPlaying ? "bg-white animate-pulse" : "bg-white/20"}`} />
-                  <span className={`text-[9px] font-black uppercase tracking-widest ${isCurrent ? "text-white" : "text-white/40"}`}>Clip {idx + 1}</span>
+                  <div className={`w-1 h-1 rounded-full ${hasListened ? "bg-emerald-400" : isPlaying ? "bg-muted animate-pulse" : "bg-muted/40"}`} />
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>Clip {idx + 1}</span>
                 </div>
-                <p className={`text-[11px] font-bold ${isCurrent ? "text-white" : "text-white/60"}`}>{item.accent}</p>
+                <p className={`text-[11px] font-bold ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>{item.accent}</p>
                 {hasListened && <CheckCircle2 className="absolute top-3.5 right-3.5 w-2.5 h-2.5 text-emerald-400/50" />}
               </button>
             );
           })}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-white/5">
-          <Button variant="ghost" onClick={handleRepeat} className="w-full justify-start text-white/20 hover:text-white/80 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest gap-2 p-0 px-3 h-10">
+        <div className="mt-6 pt-6 border-t border-border/50">
+          <Button variant="ghost" onClick={handleRepeat} className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/20 text-[9px] font-black uppercase tracking-widest gap-2 p-0 px-3 h-10">
             <RotateCcw className="w-3.5 h-3.5" /> Reset Module
           </Button>
         </div>
@@ -219,16 +219,16 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
         </div>
 
         {/* Header HUD */}
-        <div className="flex items-center justify-between p-6 sm:px-12 sm:py-8 border-b border-white/5 shrink-0 z-20">
+        <div className="flex items-center justify-between p-6 sm:px-12 sm:py-8 border-b border-border/50 shrink-0 z-20">
           <div className="flex items-center gap-4">
             <Brain className="w-4 h-4 text-violet-400" />
-            <h1 className="text-sm font-black uppercase tracking-[0.3em] text-white/60">Stage 7: Auditory Precision</h1>
+            <h1 className="text-sm font-black uppercase tracking-[0.3em] text-foreground">Stage 7: Auditory Precision</h1>
           </div>
-          <div className="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
-            <div className="w-20 h-1 bg-white/10 rounded-full overflow-hidden">
+          <div className="flex items-center gap-3 bg-muted/20 px-4 py-1.5 rounded-full border border-border/50">
+            <div className="w-20 h-1 bg-muted/30 rounded-full overflow-hidden">
               <motion.div className="h-full bg-violet-500" animate={{ width: `${(listenedSet.size / accents.length) * 100}%` }} />
             </div>
-            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{listenedSet.size}/{accents.length} Listened</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{listenedSet.size}/{accents.length} Listened</span>
           </div>
         </div>
 
@@ -247,7 +247,7 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
                   <Globe className="w-3 h-3 text-violet-400" />
                   <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest">{accents[currentIdx]?.accent} Accent</span>
                 </div>
-                <h2 className="text-xl sm:text-3xl font-black text-white leading-tight tracking-tight">
+                <h2 className="text-xl sm:text-3xl font-black text-foreground leading-tight tracking-tight">
                   Log the word frequency.
                 </h2>
               </div>
@@ -259,16 +259,16 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
                   <Button
                     onClick={() => handlePlay(currentIdx)}
                     disabled={playingIdx !== null}
-                    className={`w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-white text-black hover:bg-white/90 relative z-10 transition-all active:scale-95 shadow-xl ${playingIdx === currentIdx ? "animate-pulse" : ""}`}
+                    className={`w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-card text-foreground hover:bg-muted/30 relative z-10 transition-all active:scale-95 shadow-xl ${playingIdx === currentIdx ? "animate-pulse" : ""}`}
                   >
                     {playingIdx === currentIdx ? <Waves className="w-8 h-8 sm:w-12 sm:h-12 animate-bounce" /> : listenedSet.has(currentIdx) ? <CheckCircle2 className="w-8 h-8 sm:w-12 sm:h-12" /> : <Play className="w-8 h-8 sm:w-12 sm:h-12 ml-1" />}
                   </Button>
                 </div>
 
                 <div className="flex items-center gap-4 w-full max-w-[240px]">
-                  <div className="flex-1 h-[1px] bg-white/10" />
-                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] whitespace-nowrap">{playingIdx === currentIdx ? "Analyzing..." : "Standby"}</span>
-                  <div className="flex-1 h-[1px] bg-white/10" />
+                  <div className="flex-1 h-[1px] bg-border/40" />
+                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">{playingIdx === currentIdx ? "Analyzing..." : "Standby"}</span>
+                  <div className="flex-1 h-[1px] bg-border/40" />
                 </div>
 
                 <AnimatePresence>
@@ -279,11 +279,11 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
                       className="w-full"
                     >
                       <div className="relative max-w-[120px] mx-auto">
-                        <Input
+                          <Input
                           type="number"
                           value={counts[currentIdx] || ""}
                           onChange={(e) => updateCount(currentIdx, e.target.value)}
-                          className="text-center text-3xl sm:text-5xl h-14 sm:h-20 font-black bg-white/5 border-2 border-white/10 focus:border-violet-500/50 rounded-xl transition-all shadow-xl placeholder:text-white/5"
+                          className="text-center text-3xl sm:text-5xl h-14 sm:h-20 font-black bg-muted/20 border-2 border-border/50 focus:border-violet-500/50 rounded-xl transition-all shadow-xl placeholder:text-muted-foreground"
                           placeholder="0"
                         />
                       </div>
@@ -296,17 +296,17 @@ export default function Stage7Listening({ word, onComplete }: Stage7Props) {
         </div>
 
         {/* Global Action Bar */}
-        <div className="px-6 py-4 sm:px-12 sm:py-6 border-t border-white/5 bg-white/[0.01] flex flex-col sm:flex-row items-center justify-between gap-4 z-20 shrink-0">
+        <div className="px-6 py-4 sm:px-12 sm:py-6 border-t border-border/50 bg-muted/5 flex flex-col sm:flex-row items-center justify-between gap-4 z-20 shrink-0">
           <div className="hidden sm:flex flex-col gap-0.5 text-left">
-            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Mastery Status</span>
-            <p className="text-[10px] font-bold text-white/40">Complete counts for all modules.</p>
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Mastery Status</span>
+            <p className="text-[10px] font-bold text-muted-foreground">Complete counts for all modules.</p>
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {!allListened || !allCounted ? (
               <div className="flex items-center gap-4 w-full">
                 {currentIdx < accents.length - 1 && listenedSet.has(currentIdx) && counts[currentIdx] !== "" && (
-                   <Button onClick={() => setCurrentIdx(currentIdx + 1)} className="h-11 px-6 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 w-full sm:w-auto">Next Module <ArrowRight className="w-3 h-3 ml-2" /></Button>
+                   <Button onClick={() => setCurrentIdx(currentIdx + 1)} className="h-11 px-6 rounded-xl bg-muted/20 border border-border/50 text-muted-foreground text-xs font-bold hover:bg-muted/30 w-full sm:w-auto">Next Module <ArrowRight className="w-3 h-3 ml-2" /></Button>
                 )}
               </div>
             ) : (

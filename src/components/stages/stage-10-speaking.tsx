@@ -253,7 +253,7 @@ export default function Stage10Speaking({ word, onComplete }: Stage10Props) {
                 }`}
               >
                 <Mic
-                  className={`w-10 h-10 text-white ${isRecording ? "animate-bounce" : ""}`}
+                  className={`w-10 h-10 text-foreground ${isRecording ? "animate-bounce" : ""}`}
                 />
               </Button>
               <p className="mt-6 text-sm text-muted-foreground font-medium">
@@ -287,8 +287,8 @@ export default function Stage10Speaking({ word, onComplete }: Stage10Props) {
 
           {result && !isEvaluating && (
             <div className="flex-1 flex flex-col items-center justify-center w-full py-8 text-center animate-in fade-in zoom-in duration-500">
-              <div className="w-24 h-24 bg-linear-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(245,158,11,0.4)]">
-                <Trophy className="w-12 h-12 text-white" />
+                <div className="w-24 h-24 bg-linear-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(245,158,11,0.4)]">
+                <Trophy className="w-12 h-12 text-foreground" />
               </div>
 
               <h3 className="text-4xl font-black mb-1 bg-linear-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">

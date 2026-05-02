@@ -135,8 +135,8 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
   }, [matchingData, matchedPairs, onComplete, spellingResults]);
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col items-center justify-center relative bg-[#0a0a0c] pt-20">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    <div className="flex-1 w-full h-full flex flex-col items-center justify-center relative bg-background pt-20">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-background">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-violet-600/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px]" />
       </div>
@@ -145,11 +145,11 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
       <div className="flex-1 w-full relative flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden">
         {/* Phase Indicator HUD */}
         <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-6 z-20">
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-2">Recall Phasing</span>
+            <div className="flex flex-col items-center">
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2">Recall Phasing</span>
             <div className="flex gap-1.5">
               <div className={`h-1 w-12 rounded-full transition-all duration-500 ${phase === "spelling" ? "bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]" : "bg-emerald-500"}`} />
-              <div className={`h-1 w-12 rounded-full transition-all duration-500 ${phase === "matching" ? "bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]" : allMatched ? "bg-emerald-500" : "bg-white/5"}`} />
+              <div className={`h-1 w-12 rounded-full transition-all duration-500 ${phase === "matching" ? "bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]" : allMatched ? "bg-emerald-500" : "bg-muted/20"}`} />
             </div>
           </div>
         </div>
@@ -164,30 +164,30 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
             >
               <div className="text-center space-y-3">
                 <div className="flex items-center justify-center gap-3 opacity-30">
-                  <div className="h-px w-6 bg-white" />
+                  <div className="h-px w-6 bg-border/50" />
                   <Sparkles className="w-3 h-3" />
-                  <div className="h-px w-6 bg-white" />
+                  <div className="h-px w-6 bg-border/50" />
                 </div>
-                <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                  Spelling Recall
+                <h2 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight">
+                    Spelling Recall
                 </h2>
-                <p className="text-[10px] sm:text-sm text-white/30 font-bold uppercase tracking-[0.2em]">Verify accuracy from memory</p>
+                <p className="text-[10px] sm:text-sm text-muted-foreground font-bold uppercase tracking-[0.2em]">Verify accuracy from memory</p>
               </div>
 
               <div className="flex gap-4">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl border-2 flex items-center justify-center text-xl font-black transition-all ${i < spellingResults.length ? (spellingResults[i] ? "bg-emerald-500/10 border-emerald-500 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "bg-rose-500/10 border-rose-500 text-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.2)]") : i === spellingAttempt ? "border-violet-500 text-violet-500" : "border-white/5 text-white/10"}`}>
+                  <div key={i} className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl border-2 flex items-center justify-center text-xl font-black transition-all ${i < spellingResults.length ? (spellingResults[i] ? "bg-emerald-500/10 border-emerald-500 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "bg-rose-500/10 border-rose-500 text-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.2)]") : i === spellingAttempt ? "border-violet-500 text-violet-500" : "border-border/50 text-muted-foreground"}`}>
                     {i < spellingResults.length ? (spellingResults[i] ? <CheckCircle2 className="w-8 h-8" /> : <XCircle className="w-8 h-8" />) : i + 1}
                   </div>
                 ))}
               </div>
 
               <form onSubmit={handleSpellingSubmit} className="w-full max-w-xl relative group">
-                <Input
+                  <Input
                   autoFocus
                   value={spellingInput}
                   onChange={(e) => setSpellingInput(e.target.value)}
-                  className="text-center text-3xl sm:text-7xl h-20 sm:h-32 font-black border-0 bg-transparent focus-visible:ring-0 placeholder:text-white/5"
+                  className="text-center text-3xl sm:text-7xl h-20 sm:h-32 font-black border-0 bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground"
                   placeholder="..."
                   disabled={!!spellingFeedback}
                 />
@@ -210,8 +210,8 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
               className="w-full max-w-4xl h-full flex flex-col gap-6 min-h-0"
             >
               <div className="text-center sm:text-left space-y-1">
-                <h3 className="text-xl sm:text-2xl font-black text-white/90 leading-tight tracking-tight">Context Linkage</h3>
-                <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Connect terms to their correct descriptions</p>
+                <h3 className="text-xl sm:text-2xl font-black text-foreground leading-tight tracking-tight">Context Linkage</h3>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Connect terms to their correct descriptions</p>
               </div>
 
               <div className="flex-1 grid grid-cols-2 gap-3 sm:gap-4 min-h-0 overflow-hidden">
@@ -221,7 +221,7 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
                       const isUsed = Array.from(matchedPairs.values()).includes(def);
                       const isSelected = selectedDefinition === def;
                       return (
-                        <button key={idx} onClick={() => handleSelectDefinition(def)} disabled={isUsed} className={`w-full p-2.5 sm:p-3.5 rounded-lg sm:rounded-xl border-2 text-left text-[9px] sm:text-xs transition-all relative group ${isUsed ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-500/40" : isSelected ? "bg-violet-600 border-violet-400 text-white shadow-lg shadow-violet-600/20" : "bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10"}`}>
+                        <button key={idx} onClick={() => handleSelectDefinition(def)} disabled={isUsed} className={`w-full p-2.5 sm:p-3.5 rounded-lg sm:rounded-xl border-2 text-left text-[9px] sm:text-xs transition-all relative group ${isUsed ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-500/40" : isSelected ? "bg-violet-600 border-violet-400 text-foreground shadow-lg shadow-violet-600/20" : "bg-muted/20 border-border/50 hover:border-violet-500/40 hover:bg-muted/30"}`}>
                           {isUsed && <CheckCircle2 className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2 h-2 sm:w-3 sm:h-3" />}
                           <span className="line-clamp-3">{def}</span>
                         </button>
@@ -235,7 +235,7 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
                     {matchingData.items.map((item, idx) => {
                       const isMatched = matchedPairs.has(item.word);
                       return (
-                        <button key={idx} onClick={() => handleSelectWord(item.word)} disabled={isMatched || !selectedDefinition} className={`w-full h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 flex items-center justify-center font-black text-[10px] sm:text-sm transition-all ${isMatched ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : selectedDefinition ? "bg-violet-500/5 border-violet-500/40 hover:bg-violet-500/10 hover:border-violet-500 cursor-pointer shadow-lg shadow-violet-600/5" : "bg-white/[0.02] border-white/5 opacity-20"}`}>
+                        <button key={idx} onClick={() => handleSelectWord(item.word)} disabled={isMatched || !selectedDefinition} className={`w-full h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 flex items-center justify-center font-black text-[10px] sm:text-sm transition-all ${isMatched ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : selectedDefinition ? "bg-violet-500/5 border-violet-500/40 hover:bg-violet-500/10 hover:border-violet-500 cursor-pointer shadow-lg shadow-violet-600/5" : "bg-muted/10 border-border/50 opacity-90"}`}>
                           <span className="truncate px-1">{item.word}</span>
                         </button>
                       );
@@ -252,7 +252,7 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
                   className={`w-full max-w-sm h-12 rounded-xl text-sm font-black transition-all shadow-xl ${
                     allMatched
                       ? "bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-violet-600/20"
-                      : "bg-white/5 text-white/10 border border-white/10 cursor-not-allowed"
+                      : "bg-muted/20 text-muted-foreground border border-border/50 cursor-not-allowed"
                   }`}
                 >
                   {allMatched ? <div className="flex items-center gap-2">Complete Recall II <ArrowRight className="w-4 h-4" /></div> : <span className="text-[9px] font-black uppercase tracking-widest opacity-20">Awaiting Linkage</span>}

@@ -128,7 +128,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
   };
 
   return (
-    <div className="flex-1 w-full sm:h-full flex flex-col sm:overflow-hidden bg-[#0a0a0b] relative pt-20 overflow-y-auto sm:overflow-y-visible custom-scrollbar">
+    <div className="flex-1 w-full sm:h-full flex flex-col sm:overflow-hidden bg-background relative pt-20 overflow-y-auto sm:overflow-y-visible custom-scrollbar">
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,#312e8115,transparent)]" />
@@ -141,7 +141,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
-          className="shrink-0 sm:w-[420px] flex flex-col p-6 sm:p-10 border-t sm:border-t-0 sm:border-r border-white/5 bg-black/40 backdrop-blur-xl relative sm:h-full overflow-y-visible sm:overflow-y-auto custom-scrollbar"
+          className="shrink-0 sm:w-[420px] flex flex-col p-6 sm:p-10 border-t sm:border-t-0 sm:border-r border-border/50 bg-muted/10 backdrop-blur-xl relative sm:h-full overflow-y-visible sm:overflow-y-auto custom-scrollbar"
         >
           {/* Header HUD */}
           <div className="flex items-center justify-between mb-10">
@@ -151,11 +151,11 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-400">Phase 09</span>
-                <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Neural Draft</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Neural Draft</span>
               </div>
             </div>
 
-            <div className={`px-3 py-1 rounded-lg border flex items-center gap-2 ${timeLeft < 60 ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-white/5 border-white/10 text-white/40"}`}>
+            <div className={`px-3 py-1 rounded-lg border flex items-center gap-2 ${timeLeft < 60 ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-muted/20 border-border/50 text-muted-foreground"}`}>
               <Clock className="w-3.5 h-3.5" />
               <span className="text-xs font-mono font-black">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
             </div>
@@ -164,15 +164,15 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
           {/* Word Focus Panel */}
           <div className="mb-12">
             <div className="relative group inline-block">
-              <h1 className="text-5xl sm:text-6xl font-black capitalize text-white tracking-tighter mb-4 leading-none transition-all group-hover:text-violet-400">
+                <h1 className="text-5xl sm:text-6xl font-black capitalize text-foreground tracking-tighter mb-4 leading-none transition-all group-hover:text-violet-400">
                 {word.word}
               </h1>
               <div className="absolute -inset-2 bg-violet-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-full -z-10" />
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-4">
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
-                <span className="text-[10px] font-mono text-white/40">{word.phonetic}</span>
+              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="px-3 py-1 rounded-full bg-muted/20 border border-border/50 flex items-center gap-2">
+                <span className="text-[10px] font-mono text-muted-foreground">{word.phonetic}</span>
               </div>
               <div className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20">
                 <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">{word.partOfSpeech}</span>
@@ -182,8 +182,8 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
 
           {/* Verification Metrics */}
           <div className="space-y-10 flex-1">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/20">
+              <div className="space-y-4">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <span>Occurrence Matrix</span>
                 <span className={localWordCount >= 3 ? "text-emerald-400" : "text-violet-400"}>{localWordCount} / 3</span>
               </div>
@@ -193,19 +193,19 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                     key={i}
                     className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${localWordCount >= i
                         ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                        : i === localWordCount + 1 ? "bg-violet-600/40 animate-pulse" : "bg-white/5"
+                        : i === localWordCount + 1 ? "bg-violet-600/40 animate-pulse" : "bg-muted/20"
                       }`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/20">
+              <div className="space-y-4">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <span>Syntactic Volume</span>
                 <span className={totalWords >= 50 ? "text-emerald-400" : "text-violet-400"}>{totalWords} / 50 Words</span>
               </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full ${totalWords >= 50 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-violet-600"}`}
                   animate={{ width: `${Math.min((totalWords / 50) * 100, 100)}%` }}
@@ -216,13 +216,13 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
           </div>
 
           {/* Action Footer */}
-          <div className="mt-8 pt-8 border-t border-white/5">
+          <div className="mt-8 pt-8 border-t border-border/50">
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit || isEvaluating}
               className={`w-full h-16 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden group ${canSubmit
                   ? "bg-violet-600 text-white shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:scale-[1.02] active:scale-[0.98]"
-                  : "bg-white/5 text-white/10 border border-white/10"
+                  : "bg-muted/20 text-muted-foreground border border-border/50"
                 }`}
             >
               {isEvaluating ? (
@@ -234,14 +234,14 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                 </div>
               )}
               {canSubmit && !isEvaluating && (
-                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-muted/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               )}
             </Button>
           </div>
         </motion.div>
 
         {/* Zone B: Neural Drafting Canvas (Main Area) */}
-        <div className="flex-1 flex flex-col relative bg-[#050506] min-h-[calc(100vh-80px)] sm:min-h-0">
+        <div className="flex-1 flex flex-col relative bg-background min-h-[calc(100vh-80px)] sm:min-h-0">
           {/* Canvas Background Grid */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #8b5cf6 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
@@ -258,7 +258,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                   <textarea
                     autoFocus
                     placeholder="Focus deep. Draft your synthesis here..."
-                    className="flex-1 bg-transparent border-0 focus:ring-0 text-white text-lg sm:text-xl leading-relaxed sm:leading-loose resize-none placeholder:text-white/[0.03] custom-scrollbar font-medium caret-violet-500 selection:bg-violet-500/30 p-8 sm:p-16"
+                    className="flex-1 bg-transparent border-0 focus:ring-0 text-foreground text-lg sm:text-xl leading-relaxed sm:leading-loose resize-none placeholder:text-muted-foreground custom-scrollbar font-medium caret-violet-500 selection:bg-violet-500/30 p-8 sm:p-16"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                   />
@@ -268,7 +268,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-12 text-center"
+                    className="absolute inset-0 bg-muted/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-12 text-center"
                   >
                     <div className="w-32 h-32 mb-10 relative">
                       <div className="absolute inset-0 rounded-full border border-violet-500/10" />
@@ -279,7 +279,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                         <Bot className="w-10 h-10 text-violet-400" />
                       </div>
                     </div>
-                    <h3 className="text-3xl font-black text-white mb-3 uppercase tracking-tighter">Neural Evaluation</h3>
+                    <h3 className="text-3xl font-black text-foreground mb-3 uppercase tracking-tighter">Neural Evaluation</h3>
                     <div className="flex items-center gap-2 text-violet-400/60 font-mono text-[10px] uppercase tracking-widest">
                       <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
                       Scanning Syntactic Integrity
@@ -301,10 +301,10 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                     </div>
 
                     <div className="mb-8">
-                      <div className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20 mb-3">Neural Feedback Score</div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground mb-3">Neural Feedback Score</div>
                       <div className="flex items-end gap-3 justify-center lg:justify-start">
-                        <span className="text-8xl font-black text-white leading-none">{result.score}</span>
-                        <span className="text-3xl text-white/10 font-black mb-2">/ 10</span>
+                        <span className="text-8xl font-black text-foreground leading-none">{result.score}</span>
+                        <span className="text-3xl text-muted-foreground font-black mb-2">/ 10</span>
                       </div>
                     </div>
 
@@ -312,7 +312,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                       {!result.passed ? (
                         <Button
                           onClick={() => setResult(null)}
-                          className="h-16 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                          className="h-16 rounded-2xl bg-muted/20 border border-border/50 text-muted-foreground font-black uppercase tracking-widest hover:bg-muted/30 transition-all"
                         >
                           <RotateCcw className="w-4 h-4 mr-2" /> Revise Manuscript
                         </Button>
@@ -327,7 +327,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                           <Button
                             variant="ghost"
                             onClick={() => setResult(null)}
-                            className="h-14 rounded-2xl text-white/20 font-black uppercase tracking-widest hover:text-white"
+                            className="h-14 rounded-2xl text-muted-foreground font-black uppercase tracking-widest hover:text-foreground"
                           >
                             <RotateCcw className="w-3.5 h-3.5 mr-2" /> Repeat Analysis
                           </Button>
@@ -338,12 +338,12 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
 
                   <div className="relative group">
                     <div className="absolute -inset-4 bg-violet-500/5 blur-2xl rounded-[40px] group-hover:bg-violet-500/10 transition-all" />
-                    <div className="relative bg-white/[0.02] border border-white/10 p-10 rounded-[40px] backdrop-blur-xl">
+                    <div className="relative bg-card border border-border/50 p-10 rounded-[40px] backdrop-blur-xl">
                       <div className="flex items-center gap-3 mb-6">
                         <Sparkles className="w-5 h-5 text-violet-400" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">AI Intelligence Report</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">AI Intelligence Report</span>
                       </div>
-                      <p className="text-xl text-white/70 leading-relaxed font-medium italic">
+                      <p className="text-xl text-muted-foreground leading-relaxed font-medium italic">
                         "{result.feedback}"
                       </p>
                     </div>

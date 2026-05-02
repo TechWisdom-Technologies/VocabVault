@@ -12,7 +12,14 @@ import { Button } from "@/components/ui/button";
 export default function ChallengeResultsPage() {
   const params = useParams();
   const { user, getAuthHeaders } = useAuthStore();
-  const [challenge, setChallenge] = useState<any>(null);
+  type Challenge = {
+    challenger?: { name?: string };
+    challengerScore?: number;
+    challengedScore?: number;
+    word?: { word?: string };
+  };
+
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +69,7 @@ export default function ChallengeResultsPage() {
             <Trophy className={`w-10 h-10 ${isWinner ? 'text-yellow-500' : 'text-muted-foreground'}`} />
           </div>
           <h1 className="text-3xl font-bold mb-2">Challenge Complete!</h1>
-          <p className="text-muted-foreground italic capitalize">"{challenge.word.word}"</p>
+          <p className="text-muted-foreground italic capitalize"><em>{challenge.word?.word}</em></p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -73,9 +80,9 @@ export default function ChallengeResultsPage() {
             </div>
             <CardContent className="p-6 flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3">
-                <span className="text-xl font-bold">{challenge.challenger.name[0].toUpperCase()}</span>
+                <span className="text-xl font-bold">{(challenge.challenger?.name?.[0] ?? "").toString().toUpperCase()}</span>
               </div>
-              <p className="font-bold text-lg">{challenge.challenger.name}</p>
+              <p className="font-bold text-lg">{challenge.challenger?.name ?? "Opponent"}</p>
               <div className="mt-4 flex flex-col items-center">
                 <span className="text-4xl font-bold text-primary">{challenge.challengerScore || 0}</span>
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-1">Total Score</span>
@@ -90,9 +97,9 @@ export default function ChallengeResultsPage() {
             </div>
             <CardContent className="p-6 flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-3">
-                <span className="text-xl font-bold text-primary">{user?.name[0].toUpperCase()}</span>
+                <span className="text-xl font-bold text-primary">{(user?.name?.[0] ?? "").toString().toUpperCase()}</span>
               </div>
-              <p className="font-bold text-lg">{user?.name}</p>
+              <p className="font-bold text-lg">{user?.name ?? "You"}</p>
               <div className="mt-4 flex flex-col items-center">
                 <span className="text-4xl font-bold text-primary">{challenge.challengedScore}</span>
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-1">Total Score</span>
@@ -111,9 +118,13 @@ export default function ChallengeResultsPage() {
             {isWinner ? "🏆 You Won!" : "👏 Great Effort!"}
           </h2>
           <p className="text-muted-foreground mb-8">
-            {isWinner 
-              ? `You beat ${challenge.challenger.name}'s score! Your mastery of "${challenge.word.word}" is superior.`
-              : `${challenge.challenger.name} had a higher score this time. Keep practicing to improve your recall!`}
+            {isWinner ? (
+              <>
+                You beat {challenge.challenger?.name ?? 'your opponent'}&apos;s score! Your mastery of <strong>{challenge.word?.word}</strong> is superior.
+              </>
+            ) : (
+              <>{challenge.challenger?.name ?? 'Your opponent'} had a higher score this time. Keep practicing to improve your recall!</>
+            )}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/dashboard">

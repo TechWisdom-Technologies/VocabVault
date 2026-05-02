@@ -90,51 +90,51 @@ export default function Stage5Article({ word, onComplete }: Stage5Props) {
   const timeFormatted = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col sm:flex-row overflow-hidden bg-[#09090b] relative pt-20">
+    <div className="flex-1 w-full h-full flex flex-col sm:flex-row overflow-hidden bg-background relative pt-20">
       {/* Sidebar: Article Navigation (Left) */}
-      <div className="hidden sm:flex flex-col w-72 border-r border-white/5 bg-white/[0.02] p-6 shrink-0">
+      <div className="hidden sm:flex flex-col w-72 border-r border-border/50 bg-muted/10 p-6 shrink-0">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
               <BookOpen className="w-5 h-5 text-violet-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Article Set</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Article Set</span>
           </div>
-          <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-white/10">
+          <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-muted/20 border border-border/50">
             <span className="text-[9px] font-black text-violet-400">{currentArticleIndex + 1}/{articles.length}</span>
           </div>
         </div>
 
         <div className="space-y-4 mb-6">
-          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
             <motion.div className="h-full bg-violet-600 shadow-[0_0_8px_rgba(139,92,246,0.4)]" animate={{ width: `${((currentArticleIndex + 1) / articles.length) * 100}%` }} />
           </div>
         </div>
 
         <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-2">
           {articles.map((article: any, idx: number) => (
-            <button
+                <button
               key={idx}
               onClick={() => setCurrentArticleIndex(idx)}
               className={`w-full text-left p-4 rounded-2xl transition-all border ${
                 idx === currentArticleIndex
                   ? "bg-violet-600 border-violet-400 shadow-lg shadow-violet-600/20"
-                  : "bg-white/5 border-white/5 hover:bg-white/10"
+                  : "bg-muted/20 border-border/50 hover:bg-muted/30"
               }`}
             >
               <div className="flex items-center gap-3 mb-1">
-                <Hash className={`w-3 h-3 ${idx === currentArticleIndex ? "text-white/60" : "text-white/20"}`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${idx === currentArticleIndex ? "text-white" : "text-white/40"}`}>Reading {idx + 1}</span>
+                <Hash className={`w-3 h-3 ${idx === currentArticleIndex ? "text-muted-foreground" : "text-muted-foreground"}`} />
+                <span className={`text-[10px] font-black uppercase tracking-widest ${idx === currentArticleIndex ? "text-foreground" : "text-muted-foreground"}`}>Reading {idx + 1}</span>
               </div>
-              <p className={`text-xs font-bold truncate ${idx === currentArticleIndex ? "text-white" : "text-white/60"}`}>
+              <p className={`text-xs font-bold truncate ${idx === currentArticleIndex ? "text-foreground" : "text-muted-foreground"}`}>
                 {article.title || "Untitled Context"}
               </p>
             </button>
           ))}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-white/5">
-          <Button variant="ghost" onClick={handleRepeat} className="w-full justify-start text-white/30 hover:text-white/80 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest gap-3 px-4">
+        <div className="mt-6 pt-6 border-t border-border/50">
+          <Button variant="ghost" onClick={handleRepeat} className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/20 text-[10px] font-black uppercase tracking-widest gap-3 px-4">
             <RotateCcw className="w-4 h-4" /> Reset Stage
           </Button>
         </div>
@@ -147,8 +147,8 @@ export default function Stage5Article({ word, onComplete }: Stage5Props) {
         </div>
 
         {/* Mobile Header */}
-        <div className="sm:hidden flex items-center justify-between p-4 border-b border-white/5 bg-white/5 backdrop-blur-md shrink-0">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Reading {currentArticleIndex + 1}/{articles.length}</span>
+          <div className="sm:hidden flex items-center justify-between p-4 border-b border-border/50 bg-muted/10 backdrop-blur-md shrink-0">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Reading {currentArticleIndex + 1}/{articles.length}</span>
           <span className="text-sm font-mono font-bold text-violet-400">{timeFormatted}</span>
         </div>
 
@@ -165,11 +165,11 @@ export default function Stage5Article({ word, onComplete }: Stage5Props) {
                 <Sparkles className="w-3.5 h-3.5 text-violet-500/40" />
                 <span className="text-[9px] font-black uppercase tracking-[0.4em] text-violet-500/60">Authentic Context</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight tracking-tight mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground leading-tight tracking-tight mb-6 sm:mb-8">
                 {currentArticle?.title || "Reading Article"}
               </h1>
-              <div className="prose prose-invert prose-lg sm:prose-xl max-w-none">
-                <p className="text-base sm:text-xl text-white/60 leading-relaxed sm:leading-loose font-medium italic sm:not-italic">
+              <div className="prose prose-lg sm:prose-xl max-w-none">
+                <p className="text-base sm:text-xl text-muted-foreground leading-relaxed sm:leading-loose font-medium italic sm:not-italic">
                   {currentArticle ? renderContent(currentArticle.content) : "No content available."}
                 </p>
               </div>
@@ -179,27 +179,27 @@ export default function Stage5Article({ word, onComplete }: Stage5Props) {
 
         {/* Bottom Floating Action Bar */}
         <div className="p-6 sm:p-10 shrink-0 flex justify-center">
-          <div className="w-full max-w-3xl bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[32px] p-4 flex items-center gap-4 shadow-2xl">
-            <div className="flex-1 flex flex-col gap-2 pl-4">
+          <div className="w-full max-w-3xl bg-muted/20 backdrop-blur-3xl border border-border/50 rounded-[32px] p-4 flex items-center gap-4 shadow-2xl">
+              <div className="flex-1 flex flex-col gap-2 pl-4">
               <div className="flex justify-between items-center pr-4">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Session Progress</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Session Progress</span>
                 <span className="text-[10px] font-mono font-bold text-violet-400">{timeFormatted}</span>
               </div>
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-muted/20 rounded-full overflow-hidden">
                 <motion.div className="h-full bg-violet-600" animate={{ width: `${progress}%` }} />
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {!isFinished ? (
-                <Button 
+                  <Button 
                   onClick={() => setCurrentArticleIndex(prev => prev + 1)}
                   size="lg"
-                  className="rounded-2xl h-14 px-8 bg-white/10 hover:bg-white/20 text-white font-bold transition-all"
+                  className="rounded-2xl h-14 px-8 bg-muted/30 hover:bg-muted/40 text-foreground font-bold transition-all"
                 >
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              ) : (
+                ) : (
                 <Button
                   onClick={timeLeft === 0 ? handleComplete : undefined}
                   size="lg"
@@ -207,11 +207,11 @@ export default function Stage5Article({ word, onComplete }: Stage5Props) {
                   className={`rounded-2xl h-14 px-10 text-lg font-black transition-all shadow-xl ${
                     timeLeft === 0
                       ? "bg-violet-600 text-white shadow-violet-600/30"
-                      : "bg-white/5 text-white/20 border border-white/10 cursor-not-allowed"
+                      : "bg-muted/20 text-muted-foreground border border-border/50 cursor-not-allowed"
                   }`}
                 >
                   {timeLeft === 0 ? (
-                    <div className="flex items-center gap-2">Finish <CheckCircle2 className="w-5 h-5" /></div>
+                    <div className="flex items-center gap-2">Finish <CheckCircle2 className="w-5 h-5 text-foreground" /></div>
                   ) : (
                     "Reading..."
                   )}
