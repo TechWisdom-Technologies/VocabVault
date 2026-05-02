@@ -4,14 +4,15 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
 
   try {
+    const resolvedParams = await params;
     const challenge = await prisma.challenge.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         word: true,
         challenger: {

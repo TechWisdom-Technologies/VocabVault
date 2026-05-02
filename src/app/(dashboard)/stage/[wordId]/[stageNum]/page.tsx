@@ -31,6 +31,43 @@ const STAGE_NAMES: Record<number, string> = {
   10: "Speaking Practice",
 };
 
+const WORD_STAGE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+type StageWordData = Record<string, unknown> & {
+  word?: string;
+};
+
+type StageProgressData = Record<string, unknown> & {
+  currentStage?: number;
+  status?: string;
+};
+
+type WordStageCacheEntry = {
+  word: StageWordData;
+  progress: StageProgressData;
+  fetchedAt: number;
+};
+
+const wordStageCache = new Map<string, WordStageCacheEntry>();
+
+function getCachedWordStage(wordId: string): WordStageCacheEntry | null {
+  const cached = wordStageCache.get(wordId);
+  if (!cached) return null;
+  if (Date.now() - cached.fetchedAt > WORD_STAGE_CACHE_TTL_MS) {
+    wordStageCache.delete(wordId);
+    return null;
+  }
+  return cached;
+}
+
+function setCachedWordStage(wordId: string, word: StageWordData, progress: StageProgressData) {
+  wordStageCache.set(wordId, {
+    word,
+    progress,
+    fetchedAt: Date.now(),
+  });
+}
+
 export default function StagePage() {
   const params = useParams();
   const router = useRouter();
@@ -41,12 +78,20 @@ export default function StagePage() {
   const searchParams = useSearchParams();
   const challengeId = searchParams.get("challengeId");
 
-  const [wordData, setWordData] = useState<any>(null);
-  const [progress, setProgress] = useState<any>(null);
+  const [wordData, setWordData] = useState<StageWordData | null>(null);
+  const [progress, setProgress] = useState<StageProgressData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
   useEffect(() => {
     const fetchWord = async () => {
+      const cached = getCachedWordStage(wordId);
+      if (cached) {
+        setWordData(cached.word);
+        setProgress(cached.progress);
+        setIsLoading(false);
+      }
+
       try {
         const headers = await getAuthHeaders();
         const res = await fetch(`/api/words/${wordId}`, { headers });
@@ -73,6 +118,7 @@ export default function StagePage() {
 
         setWordData(data.word);
         setProgress(data.progress);
+        setCachedWordStage(wordId, data.word, data.progress);
       } catch (error) {
         console.error("Failed to load word data:", error);
       } finally {
@@ -85,8 +131,21 @@ export default function StagePage() {
     }
   }, [wordId, stageNum, getAuthHeaders, router]);
 
-  const handleStageComplete = async (score: number, mistakes: any[] = [], timeSpent: number = 0) => {
+  useEffect(() => {
+    if (!wordData) return;
+    const challengeQuery = challengeId ? `?challengeId=${challengeId}` : "";
+
+    if (stageNum < 10) {
+      router.prefetch(`/stage/${wordId}/${stageNum + 1}${challengeQuery}`);
+    }
+
+    router.prefetch(`/stage/${wordId}/summary${challengeQuery}`);
+    router.prefetch("/dashboard");
+  }, [wordData, stageNum, router, wordId, challengeId]);
+
+  const handleStageComplete = async (score: number, mistakes: unknown[] = [], timeSpent: number = 0) => {
     try {
+      setIsAdvancing(true);
       const headers = await getAuthHeaders();
       const res = await fetch("/api/progress/stage", {
         method: "POST",
@@ -104,23 +163,48 @@ export default function StagePage() {
       const data = await res.json();
 
       if (data.success) {
+        const challengeQuery = challengeId ? `?challengeId=${challengeId}` : "";
+
         if (data.status === "COMPLETED") {
+          if (wordData && progress) {
+            setCachedWordStage(wordId, wordData, {
+              ...progress,
+              status: "COMPLETED",
+              currentStage: 10,
+            });
+          }
           if (challengeId) {
-            router.push(`/dashboard/challenges/results/${challengeId}`);
+            const resultPath = `/dashboard/challenges/results/${challengeId}`;
+            router.prefetch(resultPath);
+            router.push(resultPath);
           } else {
+            router.prefetch("/dashboard");
             router.push("/dashboard");
           }
         } else if (data.status === "RETRY" && data.nextStage === "summary") {
-          router.push(`/stage/${wordId}/summary${challengeId ? `?challengeId=${challengeId}` : ""}`);
+          const nextPath = `/stage/${wordId}/summary${challengeQuery}`;
+          router.prefetch(nextPath);
+          router.push(nextPath);
         } else {
           // IN_PROGRESS -> just advance
-          router.push(`/stage/${wordId}/${data.nextStage}${challengeId ? `?challengeId=${challengeId}` : ""}`);
+          if (wordData && progress) {
+            setCachedWordStage(wordId, wordData, {
+              ...progress,
+              status: "IN_PROGRESS",
+              currentStage: data.nextStage,
+            });
+          }
+          const nextPath = `/stage/${wordId}/${data.nextStage}${challengeQuery}`;
+          router.prefetch(nextPath);
+          router.push(nextPath);
         }
       } else {
+        setIsAdvancing(false);
         alert("Failed to save progress. Please try again.");
         window.location.reload();
       }
     } catch (error) {
+      setIsAdvancing(false);
       console.error("Failed to submit stage:", error);
     }
   };
@@ -159,6 +243,7 @@ export default function StagePage() {
             variant="ghost"
             size="icon"
             onClick={() => router.push("/dashboard")}
+            disabled={isAdvancing}
             className="h-10 w-10 rounded-xl text-white/20 hover:text-white/80 hover:bg-white/5 transition-all"
           >
             <X className="w-5 h-5" />
@@ -213,6 +298,15 @@ export default function StagePage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         {renderStage()}
       </main>
+
+      {isAdvancing && (
+        <div className="fixed inset-0 z-100 bg-background/70 backdrop-blur-sm flex items-center justify-center">
+          <div className="rounded-2xl border border-border/60 bg-card/90 px-5 py-4 shadow-2xl flex items-center gap-3">
+            <Loader2 className="w-5 h-5 text-primary animate-spin" />
+            <span className="text-sm font-semibold text-foreground">Advancing...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
