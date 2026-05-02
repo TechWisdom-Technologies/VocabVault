@@ -5,6 +5,43 @@ const globalForFirebaseAdmin = globalThis as unknown as {
   firebaseAdmin: App | undefined;
 };
 
+type ServiceAccountInput = {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+};
+
+function getServiceAccountFromEnv(): ServiceAccountInput {
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  // Prefer split env vars to keep per-function environment payload small on Netlify/AWS Lambda.
+  if (projectId && clientEmail && privateKey) {
+    return { projectId, clientEmail, privateKey };
+  }
+
+  const rawServiceAccount = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || "{}";
+  const cleanServiceAccount =
+    rawServiceAccount.startsWith("'") && rawServiceAccount.endsWith("'")
+      ? rawServiceAccount.slice(1, -1)
+      : rawServiceAccount;
+
+  const parsed = JSON.parse(cleanServiceAccount) as Partial<ServiceAccountInput>;
+
+  if (!parsed.projectId || !parsed.clientEmail || !parsed.privateKey) {
+    throw new Error(
+      "Firebase Admin credentials missing. Set FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY or FIREBASE_ADMIN_SERVICE_ACCOUNT."
+    );
+  }
+
+  return {
+    projectId: parsed.projectId,
+    clientEmail: parsed.clientEmail,
+    privateKey: parsed.privateKey.replace(/\\n/g, "\n"),
+  };
+}
+
 function getFirebaseAdminApp(): App {
   if (globalForFirebaseAdmin.firebaseAdmin) {
     return globalForFirebaseAdmin.firebaseAdmin;
@@ -16,12 +53,7 @@ function getFirebaseAdminApp(): App {
     return app;
   }
 
-  const rawServiceAccount = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || "{}";
-  const cleanServiceAccount = rawServiceAccount.startsWith("'") && rawServiceAccount.endsWith("'")
-    ? rawServiceAccount.slice(1, -1)
-    : rawServiceAccount;
-
-  const serviceAccount = JSON.parse(cleanServiceAccount);
+  const serviceAccount = getServiceAccountFromEnv();
 
   const app = initializeApp({
     credential: cert(serviceAccount),
