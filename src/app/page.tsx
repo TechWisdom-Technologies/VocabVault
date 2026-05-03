@@ -93,7 +93,7 @@ const testimonials = [
   }
 ];
 
-function StageCard({ stage, index }: { stage: any, index: number }) {
+function StageCard({ stage, index, isMobile }: { stage: any, index: number, isMobile: boolean }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseXSpring = useSpring(x);
@@ -127,7 +127,12 @@ function StageCard({ stage, index }: { stage: any, index: number }) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      whileTap={{ scale: 0.98 }}
+      style={{ 
+        rotateX: isMobile ? 0 : rotateX, 
+        rotateY: isMobile ? 0 : rotateY, 
+        transformStyle: "preserve-3d" 
+      }}
       className="group relative h-full"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-[2.5rem] -z-10 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -170,7 +175,7 @@ function StageCard({ stage, index }: { stage: any, index: number }) {
   );
 }
 
-function TestimonialCard({ t, index }: { t: any, index: number }) {
+function TestimonialCard({ t, index, isMobile }: { t: any, index: number, isMobile: boolean }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseXSpring = useSpring(x);
@@ -190,10 +195,15 @@ function TestimonialCard({ t, index }: { t: any, index: number }) {
         y.set((e.clientY - rect.top) / rect.height - 0.5);
       }}
       onMouseLeave={() => { x.set(0); y.set(0); }}
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      whileTap={{ scale: 0.98 }}
+      style={{ 
+        rotateX: isMobile ? 0 : rotateX, 
+        rotateY: isMobile ? 0 : rotateY, 
+        transformStyle: "preserve-3d" 
+      }}
       className="group relative"
     >
-      <div className="bg-white/[0.02] border border-white/5 hover:border-[#fb731f]/30 transition-all duration-500 rounded-[3rem] p-10 space-y-8 backdrop-blur-3xl relative overflow-hidden text-left">
+      <div className="bg-white/[0.02] border border-white/5 hover:border-[#fb731f]/30 transition-all duration-500 rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-8 backdrop-blur-3xl relative overflow-hidden text-left">
           <Quote className="absolute top-8 right-8 w-12 h-12 text-[#fb731f]/10" />
           
           <div className="space-y-4">
@@ -225,12 +235,20 @@ export default function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("");
   const [hoveredFeature, setHoveredFeature] = useState(features[0]);
+  const [isMobile, setIsMobile] = useState(false);
 
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   const navBackground = useTransform(scrollY, [0, 50], ["rgba(2, 2, 3, 0)", "rgba(2, 2, 3, 0.8)"]);
   const navBorder = useTransform(scrollY, [0, 50], ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.05)"]);
   const navPadding = useTransform(scrollY, [0, 50], ["24px", "16px"]);
-  const navWidth = useTransform(scrollY, [0, 50], ["100%", "90%"]);
+  const navWidth = useTransform(scrollY, [0, 50], ["100%", mounted && window.innerWidth < 1024 ? "100%" : "90%"]);
   const navRadius = useTransform(scrollY, [0, 50], ["0px", "24px"]);
   const navY = useTransform(scrollY, [0, 50], ["0px", "12px"]);
 
@@ -277,13 +295,13 @@ export default function HomePage() {
           borderColor: navBorder,
           paddingTop: navPadding,
           paddingBottom: navPadding,
-          width: navWidth,
-          borderRadius: navRadius,
-          y: navY
+          width: isMobile ? "100%" : navWidth,
+          borderRadius: isMobile ? "0px" : navRadius,
+          y: isMobile ? "0px" : navY
         }}
         className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] border-b backdrop-blur-xl transition-all duration-300"
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex items-center justify-between h-12">
             <Link href="/" className="flex items-center gap-3 group">
               <motion.div 
@@ -293,8 +311,8 @@ export default function HomePage() {
                 <BookMarked className="w-5 h-5 text-white" />
               </motion.div>
               <div className="flex flex-col">
-                <span className="text-xl font-serif font-black tracking-tight text-white uppercase italic leading-none">VocabVault</span>
-                <span className="text-[10px] font-bold text-white/20 uppercase leading-none mt-1 font-sans">by TechWisdom Technologies</span>
+                <span className="text-lg sm:text-xl font-serif font-black tracking-tight text-white uppercase italic leading-none">VocabVault</span>
+                <span className="text-[8px] sm:text-[10px] font-bold text-white/20 uppercase leading-none mt-1 font-sans">by TechWisdom Technologies</span>
               </div>
             </Link>
 
@@ -329,19 +347,19 @@ export default function HomePage() {
               {!mounted ? (
                 <div className="h-10 w-32 rounded-xl bg-white/5 animate-pulse" />
               ) : user ? (
-                <Link href="/dashboard">
+                <Link href="/dashboard" className="hidden lg:block">
                   <Button className="h-11 px-6 bg-[#fb731f] hover:bg-[#ff853c] text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-[#fb731f]/20">
                     Dashboard
                   </Button>
                 </Link>
               ) : (
                 <>
-                  <Link href="/login" className="hidden sm:block">
+                  <Link href="/login" className="hidden lg:block">
                     <Button variant="ghost" className="text-[15px] font-bold text-white/40 hover:text-white transition-colors">
                       Sign in
                     </Button>
                   </Link>
-                  <Link href="/signup">
+                  <Link href="/signup" className="hidden sm:block">
                     <Button className="h-11 px-6 bg-white text-black font-bold rounded-xl transition-all active:scale-[0.95]">
                       Sign up
                     </Button>
@@ -350,7 +368,7 @@ export default function HomePage() {
               )}
               
               <button 
-                className="lg:hidden w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+                className="lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -358,7 +376,71 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* ─── Premium Mobile Dropdown ─── */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden border-t border-white/5 bg-[#020203]/98 backdrop-blur-3xl overflow-hidden w-full"
+            >
+              <div className="p-6 space-y-10">
+                <div className="flex flex-col gap-6 font-sans">
+                  {[
+                    { name: "Features", href: "#features" },
+                    { name: "Stages", href: "#stages" },
+                    { name: "Pricing", href: "#pricing" },
+                    ...(user ? [{ name: "Dashboard", href: "/dashboard" }] : [])
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Link 
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="text-2xl font-serif font-black uppercase italic text-white/40 hover:text-[#fb731f] transition-colors flex items-center justify-between group"
+                      >
+                        {item.name}
+                        <ChevronRight className="w-5 h-5 opacity-100 text-[#fb731f]" />
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="space-y-4 font-sans border-t border-white/5 pt-8">
+                  {!user ? (
+                    <>
+                      <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)} className="block">
+                        <Button className="w-full h-14 bg-[#fb731f] text-white text-lg font-bold rounded-2xl shadow-xl shadow-[#fb731f]/20">
+                          Join the Institute
+                        </Button>
+                      </Link>
+                      <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="block">
+                        <Button variant="ghost" className="w-full h-14 text-sm font-bold text-white/30 hover:text-white">
+                          Sign in to Account
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block">
+                      <Button className="w-full h-14 bg-[#fb731f] text-white text-lg font-bold rounded-2xl">
+                        Enter Dashboard
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
+
+
 
       {/* ─── Scholarly Hero ─── */}
       <section className="relative min-h-[90vh] flex items-center justify-center py-20 lg:py-32 px-6 overflow-hidden">
@@ -367,7 +449,7 @@ export default function HomePage() {
         <div className="absolute bottom-0 left-0 w-full h-[400px] bg-gradient-to-t from-[#fb731f]/5 to-transparent pointer-events-none" />
 
         <div className="max-w-[1400px] mx-auto w-full grid lg:grid-cols-[1.2fr_0.8fr] gap-12 items-center relative z-10">
-          <div className="space-y-10 text-center">
+          <div className="space-y-10 text-center px-4 sm:px-0">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -376,7 +458,7 @@ export default function HomePage() {
               <Badge className="bg-white/5 border-white/10 text-[#fb731f] px-4 py-2 text-[11px] font-bold uppercase rounded-full mb-6 font-sans">
                 Proven Learning System 2.1
               </Badge>
-              <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-serif font-black leading-[0.9] tracking-tight text-white uppercase italic">
+              <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-[7rem] font-serif font-black leading-[0.9] tracking-tight text-white uppercase italic">
                 Master <br />
                 <span className="text-transparent stroke-text">Vocabulary.</span>
               </h1>
@@ -397,8 +479,8 @@ export default function HomePage() {
                 transition={{ delay: 0.8 }}
                 className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-12 font-sans"
             >
-              <Link href="/signup">
-                <Button className="h-20 px-12 bg-[#fb731f] hover:bg-[#ff853c] text-white font-bold rounded-3xl shadow-2xl shadow-[#fb731f]/30 transition-all hover:scale-105 active:scale-95 text-lg group">
+              <Link href="/signup" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto h-16 sm:h-20 px-12 bg-[#fb731f] hover:bg-[#ff853c] text-white font-bold rounded-3xl shadow-2xl shadow-[#fb731f]/30 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg group">
                   Get started now
                   <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-2 transition-transform" />
                 </Button>
@@ -469,24 +551,24 @@ export default function HomePage() {
       </section>
 
       {/* ─── Methodology (The 10 Stages) ─── */}
-      <section id="stages" className="py-48 px-6 relative border-t border-white/5 bg-gradient-to-b from-transparent to-[#050506]/50">
+      <section id="stages" className="py-24 lg:py-48 px-6 relative border-t border-white/5 bg-gradient-to-b from-transparent to-[#050506]/50">
         <div className="max-w-7xl mx-auto">
-            <div className="max-w-2xl mb-32 space-y-6 text-center mx-auto">
+            <div className="max-w-2xl mb-16 sm:mb-32 space-y-6 text-center mx-auto">
                 <Badge className="bg-[#fb731f]/10 text-[#fb731f] border-[#fb731f]/20 font-bold px-4 py-1.5 rounded-full font-sans uppercase text-[10px]">Methodology</Badge>
-                <h2 className="text-5xl md:text-8xl font-serif font-black tracking-tight uppercase italic leading-none">The 10 Stages.</h2>
-                <p className="text-xl text-white/30 font-serif italic max-w-xl mx-auto">Our proven 10-stage process ensures you learn every word through multiple cognitive channels.</p>
+                <h2 className="text-4xl sm:text-6xl md:text-8xl font-serif font-black tracking-tight uppercase italic leading-none">The 10 Stages.</h2>
+                <p className="text-base sm:text-xl text-white/30 font-serif italic max-w-xl mx-auto">Our proven 10-stage process ensures you learn every word through multiple cognitive channels.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {stages.map((stage, i) => (
-                    <StageCard key={stage.num} stage={stage} index={i} />
+                    <StageCard key={stage.num} stage={stage} index={i} isMobile={isMobile} />
                 ))}
             </div>
         </div>
       </section>
 
       {/* ─── Interactive Capabilities Hub ─── */}
-      <section id="features" className="py-48 px-6 bg-[#050506] relative overflow-hidden">
+      <section id="features" className="py-24 lg:py-48 px-6 bg-[#050506] relative overflow-hidden">
         {/* Dynamic Background Pulse */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-[#fb731f]/5 blur-[200px] rounded-full pointer-events-none" />
 
@@ -504,7 +586,7 @@ export default function HomePage() {
                             animate={{ opacity: 1, scale: 1, rotate: 0 }}
                             exit={{ opacity: 0, scale: 1.1, rotate: 10 }}
                             transition={{ duration: 0.6, ease: "circOut" }}
-                            className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl rounded-[4rem] border border-white/10 p-12 flex flex-col items-center justify-center text-center space-y-8"
+                            className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl rounded-[2.5rem] sm:rounded-[4rem] p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8"
                         >
                             <div className="relative">
                                 <motion.div 
@@ -515,7 +597,7 @@ export default function HomePage() {
                                     transition={{ duration: 3, repeat: Infinity }}
                                     className="absolute inset-0 bg-[#fb731f]/20 blur-3xl rounded-full"
                                 />
-                                <hoveredFeature.icon className="w-32 h-32 text-[#fb731f] relative z-10" strokeWidth={1} />
+                                <hoveredFeature.icon className="w-20 h-20 sm:w-32 sm:h-32 text-[#fb731f] relative z-10" strokeWidth={1} />
                             </div>
                             <div className="space-y-4">
                                 <h3 className="text-4xl font-serif font-black text-white uppercase italic tracking-tight">{hoveredFeature.title}</h3>
@@ -564,17 +646,19 @@ export default function HomePage() {
                         <motion.div 
                             key={f.id}
                             onMouseEnter={() => setHoveredFeature(f)}
+                            onClick={() => setHoveredFeature(f)}
                             whileHover={{ x: 10 }}
-                            className={`p-6 rounded-[2rem] border transition-all duration-500 cursor-pointer flex items-center gap-6 group ${
+                            whileTap={{ scale: 0.97 }}
+                            className={`p-4 sm:p-6 rounded-[2rem] border transition-all duration-500 cursor-pointer flex items-center gap-4 sm:gap-6 group ${
                                 hoveredFeature.id === f.id 
                                 ? "bg-white/[0.05] border-white/20 shadow-xl" 
                                 : "bg-transparent border-transparent opacity-40 hover:opacity-100"
                             }`}
                         >
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${
                                 hoveredFeature.id === f.id ? "bg-[#fb731f] text-white" : "bg-white/5 text-white/30"
                             }`}>
-                                <f.icon className="w-6 h-6" />
+                                <f.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
                             <div className="flex-1">
                                 <h4 className="text-lg font-black text-white uppercase italic font-serif tracking-tight">{f.title}</h4>
@@ -599,7 +683,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Voices of Mastery (Testimonials) ─── */}
-      <section className="py-48 px-6 relative overflow-hidden bg-[#020203]">
+      <section className="py-24 lg:py-48 px-6 relative overflow-hidden bg-[#020203]">
         <div className="max-w-7xl mx-auto">
             <div className="max-w-2xl mb-32 space-y-6 text-center mx-auto">
                 <Badge className="bg-[#fb731f]/10 text-[#fb731f] border-[#fb731f]/20 font-bold px-4 py-1.5 rounded-full font-sans uppercase text-[10px]">Scholarly Success</Badge>
@@ -609,14 +693,14 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {testimonials.map((t, i) => (
-                    <TestimonialCard key={i} t={t} index={i} />
+                    <TestimonialCard key={i} t={t} index={i} isMobile={isMobile} />
                 ))}
             </div>
         </div>
       </section>
 
       {/* ─── Interactive Pricing Portal ─── */}
-      <section id="pricing" className="py-48 px-6 relative overflow-hidden bg-gradient-to-b from-[#020203] to-[#050506]">
+      <section id="pricing" className="py-24 lg:py-48 px-6 relative overflow-hidden bg-gradient-to-b from-[#020203] to-[#050506]">
         {/* Cinematic Backdrop */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[#fb731f]/5 blur-[200px] rounded-full pointer-events-none" />
         
@@ -637,15 +721,19 @@ export default function HomePage() {
                         pricingY.set((e.clientY - rect.top) / rect.height - 0.5);
                     }}
                     onMouseLeave={() => { pricingX.set(0); pricingY.set(0); }}
-                    style={{ rotateX: pricingRotateX, rotateY: pricingRotateY, transformStyle: "preserve-3d" }}
-                    className="group"
+                    style={{ 
+                      rotateX: isMobile ? 0 : pricingRotateX, 
+                      rotateY: isMobile ? 0 : pricingRotateY, 
+                      transformStyle: "preserve-3d" 
+                    }}
+                    className="group h-full"
                 >
-                    <div className="h-full bg-white/[0.02] border border-white/5 rounded-[4rem] p-12 space-y-12 transition-all duration-500 group-hover:bg-white/[0.04] group-hover:border-white/10 backdrop-blur-3xl relative overflow-hidden">
+                    <div className="h-full bg-white/[0.02] border border-white/5 rounded-[2.5rem] sm:rounded-[4rem] p-6 sm:p-12 space-y-8 sm:space-y-12 transition-all duration-500 group-hover:bg-white/[0.04] group-hover:border-white/10 backdrop-blur-3xl relative overflow-hidden">
                         <div className="space-y-4">
-                            <h3 className="text-4xl font-serif font-black uppercase italic text-white/60">Foundation</h3>
+                            <h3 className="text-2xl sm:text-4xl font-serif font-black uppercase italic text-white/60">Foundation</h3>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-7xl font-black text-white/10 tracking-tighter uppercase leading-none">Free</span>
-                                <span className="text-sm font-bold text-white/20 uppercase">No Enrollment Fee</span>
+                                <span className="text-5xl sm:text-7xl font-black text-white/10 tracking-tighter uppercase leading-none">Free</span>
+                                <span className="text-[10px] sm:text-sm font-bold text-white/20 uppercase">No Enrollment Fee</span>
                             </div>
                         </div>
 
@@ -689,22 +777,22 @@ export default function HomePage() {
                         className="absolute inset-0 bg-[#fb731f]/20 blur-[100px] rounded-[4rem] -z-10"
                     />
 
-                    <div className="h-full bg-white text-black rounded-[4rem] p-12 space-y-12 relative overflow-hidden shadow-[0_0_100px_rgba(251,115,31,0.2)]">
+                    <div className="h-full bg-white text-black rounded-[2.5rem] sm:rounded-[4rem] p-8 sm:p-12 space-y-8 sm:space-y-12 relative overflow-hidden shadow-[0_0_100px_rgba(251,115,31,0.2)]">
                         <motion.div 
                             animate={{ x: ["-100%", "200%"] }}
                             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 pointer-events-none"
                         />
 
-                        <div className="flex justify-between items-start relative z-10">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0 relative z-10">
                             <div className="space-y-4">
-                                <h3 className="text-4xl font-serif font-black uppercase italic">Professional</h3>
+                                <h3 className="text-2xl sm:text-4xl font-serif font-black uppercase italic">Professional</h3>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-7xl font-black text-[#fb731f] tracking-tighter leading-none">৳499</span>
-                                    <span className="text-sm font-bold text-black/40 uppercase">Lifetime</span>
+                                    <span className="text-5xl sm:text-7xl font-black text-[#fb731f] tracking-tighter leading-none">৳499</span>
+                                    <span className="text-[10px] sm:text-sm font-bold text-black/40 uppercase">Lifetime</span>
                                 </div>
                             </div>
-                            <Badge className="bg-black text-white font-bold uppercase text-[10px] px-4 py-2 rounded-full font-sans shadow-lg">Most Popular</Badge>
+                            <Badge className="bg-black text-white font-bold uppercase text-[9px] sm:text-[10px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-sans shadow-lg">Most Popular</Badge>
                         </div>
 
                         <ul className="space-y-6 relative z-10">
@@ -731,11 +819,11 @@ export default function HomePage() {
                             ))}
                         </ul>
 
-                        <div className="pt-8 relative z-10">
+                        <div className="pt-6 sm:pt-8 relative z-10">
                             <Button 
                                 onClick={handleUpgrade}
                                 disabled={isRedirecting}
-                                className="w-full h-20 rounded-3xl bg-black text-white font-black uppercase tracking-tight text-sm hover:scale-[1.02] active:scale-[0.98] shadow-2xl transition-all group"
+                                className="w-full h-16 sm:h-20 rounded-[1.5rem] sm:rounded-3xl bg-black text-white font-black uppercase tracking-tight text-sm hover:scale-[1.02] active:scale-[0.98] shadow-2xl transition-all group"
                             >
                                 {isRedirecting ? "Connecting..." : (
                                     <span className="flex items-center justify-center gap-3">
@@ -752,19 +840,19 @@ export default function HomePage() {
       </section>
 
       {/* ─── Final CTA ─── */}
-      <section className="py-40 px-6 text-center space-y-16 relative border-t border-white/5">
+      <section className="py-24 lg:py-40 px-6 text-center space-y-16 relative border-t border-white/5">
         <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             className="space-y-10"
         >
-            <h2 className="text-7xl md:text-9xl font-serif font-black tracking-tight text-white uppercase italic leading-none">MASTER WORDS.</h2>
-            <p className="text-white/20 text-xl md:text-3xl font-serif font-black max-w-4xl mx-auto italic">
+            <h2 className="text-5xl sm:text-7xl md:text-9xl font-serif font-black tracking-tight text-white uppercase italic leading-none">MASTER WORDS.</h2>
+            <p className="text-white/20 text-base sm:text-xl md:text-3xl font-serif font-black max-w-4xl mx-auto italic px-4">
                 Join the most effective learning system for permanent word mastery.
             </p>
-            <Link href="/signup">
-                <Button className="h-24 px-16 bg-[#fb731f] hover:bg-[#ff853c] text-white font-bold rounded-[2.5rem] shadow-2xl shadow-[#fb731f]/30 transition-all hover:scale-105 active:scale-95 text-lg font-sans">
+            <Link href="/signup" className="block sm:inline-block">
+                <Button className="w-full sm:w-auto h-20 sm:h-24 px-12 sm:px-16 bg-[#fb731f] hover:bg-[#ff853c] text-white font-bold rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#fb731f]/30 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg font-sans">
                     Get started now
                 </Button>
             </Link>
@@ -779,7 +867,7 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24 mb-24">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-24 mb-16 sm:mb-24">
                 {/* Column 1: The Institute */}
                 <div className="space-y-8">
                     <Link href="/" className="flex items-center gap-3 group">
