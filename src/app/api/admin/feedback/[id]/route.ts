@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
 
@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { id } = params;
+  const { id } = await params;
   const { status } = await req.json();
 
   if (!["PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"].includes(status)) {

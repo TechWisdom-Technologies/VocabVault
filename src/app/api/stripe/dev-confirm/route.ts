@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   // ONLY allow this in development mode
@@ -17,7 +18,6 @@ export async function POST(req: NextRequest) {
     // Try to find the real customer ID from Stripe first
     let stripeCustomerId = "cus_dev_" + user.id.slice(0, 8);
     try {
-      const { stripe } = require("@/lib/stripe");
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       if (customers.data.length > 0) {
         stripeCustomerId = customers.data[0].id;

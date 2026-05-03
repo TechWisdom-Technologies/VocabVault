@@ -44,7 +44,7 @@ function getServiceAccountFromEnv(): ServiceAccountInput {
   // Standard Firebase exports use snake_case
   const pId = parsed.projectId || parsed.project_id;
   const cEmail = parsed.clientEmail || parsed.client_email;
-  let pKey = parsed.privateKey || parsed.private_key;
+  const pKey = parsed.privateKey || parsed.private_key;
 
   if (!pId || !cEmail || !pKey) {
     console.error("Critical: All Firebase Admin Credential methods failed.");

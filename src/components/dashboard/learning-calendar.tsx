@@ -175,7 +175,7 @@ export default function LearningCalendar() {
             </div>
 
             <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              {selectedDay && dailyData.get(selectedDay)?.mastered.length! > 0 && (
+              {selectedDay && (dailyData.get(selectedDay)?.mastered.length ?? 0) > 0 && (
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
                     <CheckCircle2 className="w-3 h-3" /> Mastered Today
@@ -192,7 +192,7 @@ export default function LearningCalendar() {
                 </div>
               )}
 
-              {selectedDay && dailyData.get(selectedDay)?.activity.length! > 0 && (
+              {selectedDay && (dailyData.get(selectedDay)?.activity.length ?? 0) > 0 && (
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                     <Activity className="w-3 h-3" /> Active Progress
