@@ -28,9 +28,10 @@ export async function POST(req: NextRequest) {
     let decodedToken;
     try {
       decodedToken = await getAdminAuth().verifyIdToken(firebaseToken);
-    } catch {
+    } catch (err: any) {
+      console.error("Firebase ID Token verification failed:", err.message);
       return NextResponse.json(
-        { error: "Invalid Firebase token" },
+        { error: "Invalid Firebase token", details: err.message },
         { status: 401 }
       );
     }

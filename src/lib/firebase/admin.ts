@@ -29,7 +29,7 @@ function getServiceAccountFromEnv(): ServiceAccountInput {
       : rawServiceAccount;
 
   const parsed = JSON.parse(cleanServiceAccount);
-  
+
   // Standard Firebase exports use snake_case
   const pId = parsed.projectId || parsed.project_id;
   const cEmail = parsed.clientEmail || parsed.client_email;
