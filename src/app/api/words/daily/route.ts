@@ -25,6 +25,33 @@ const DAILY_WORDS_RESPONSE_CACHE_TTL = 15_000;
 /**
  * GET /api/words/daily
  * Fetch or generate the daily word set for the user.
+import { NextRequest, NextResponse } from "next/server";
+import { validateRequest } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { getToday } from "@/lib/utils";
+import { redis } from "@/lib/redis";
+import { Ratelimit } from "@upstash/ratelimit";
+
+const ratelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 requests per minute
+  analytics: true,
+});
+
+const DAILY_LIMIT = 5;
+const FREE_PLAN_LIMIT = 25;
+
+interface CachedDailyResponse {
+  data: unknown;
+  timestamp: number;
+}
+
+const DAILY_WORDS_RESPONSE_CACHE = new Map<string, CachedDailyResponse>();
+const DAILY_WORDS_RESPONSE_CACHE_TTL = 15_000;
+
+/**
+ * GET /api/words/daily
+ * Fetch or generate the daily word set for the user.
  */
 export async function GET(req: NextRequest) {
   const authResult = await validateRequest(req);
@@ -93,18 +120,20 @@ export async function GET(req: NextRequest) {
 
       // Check if the word BEFORE the first word of this daily set is completed
       let isPrecedingWordCompleted = true;
-      const minOrderIndex = Math.min(...words.map(w => w.orderIndex));
-      if (minOrderIndex > 0) {
-        const prevWord = await prisma.word.findFirst({
-          where: { orderIndex: minOrderIndex - 1 },
-          select: { id: true }
-        });
-        if (prevWord) {
-          const prevProgress = await prisma.wordProgress.findUnique({
-            where: { userId_wordId: { userId: user.id, wordId: prevWord.id } },
-            select: { status: true }
+      if (words.length > 0) {
+        const minOrderIndex = Math.min(...words.map(w => w.orderIndex));
+        if (minOrderIndex > 0) {
+          const prevWord = await prisma.word.findFirst({
+            where: { orderIndex: minOrderIndex - 1 },
+            select: { id: true }
           });
-          isPrecedingWordCompleted = prevProgress?.status === "COMPLETED";
+          if (prevWord) {
+            const prevProgress = await prisma.wordProgress.findUnique({
+              where: { userId_wordId: { userId: user.id, wordId: prevWord.id } },
+              select: { status: true }
+            });
+            isPrecedingWordCompleted = prevProgress?.status === "COMPLETED";
+          }
         }
       }
 
@@ -163,13 +192,7 @@ export async function GET(req: NextRequest) {
     });
     const startedWordIds = startedRows.map((r) => r.wordId);
 
-    // Debug: log counts to help diagnose missing daily words
-    try {
-      const totalWordsInDb = await prisma.word.count();
-      console.info(`dailyWords: user=${user.id} totalStarted=${startedWordIds.length} totalWordsInDb=${totalWordsInDb} totalWordsStarted=${totalWordsStarted}`);
-    } catch (e) {
-      console.warn("dailyWords: failed to log counts", e);
-    }
+    const totalWordsInDb = await prisma.word.count();
 
     const newWords = await prisma.word.findMany({
       where: {
@@ -183,8 +206,6 @@ export async function GET(req: NextRequest) {
     let chosenWords = newWords;
 
     if (newWords.length === 0) {
-      const totalWordsInDb = await prisma.word.count();
-
       // If the user has historically started every word, allow a fallback
       // to reassign the first N words so they still get a daily set.
       if (startedWordIds.length >= totalWordsInDb) {
@@ -199,7 +220,6 @@ export async function GET(req: NextRequest) {
           dailySet: null,
           words: [],
           progress: [],
-          // Help debug why no words: include counts
           debug: {
             totalWordsStarted,
             startedWordIdsCount: startedWordIds.length,
@@ -315,11 +335,8 @@ export async function GET(req: NextRequest) {
       timestamp: Date.now(),
     });
 
-    // Log creation for debugging / retention checks
-    console.info(`Created DailyWordSet for user=${user.id} date=${startOfDay.toISOString()} words=${newWordIds.length} fallback=${usedFallback}`);
-
     return NextResponse.json(responsePayload);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching daily words:", error);
     return NextResponse.json(
       { error: "Failed to fetch daily words" },

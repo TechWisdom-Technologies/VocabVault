@@ -28,18 +28,23 @@ function getServiceAccountFromEnv(): ServiceAccountInput {
       ? rawServiceAccount.slice(1, -1)
       : rawServiceAccount;
 
-  const parsed = JSON.parse(cleanServiceAccount) as Partial<ServiceAccountInput>;
+  const parsed = JSON.parse(cleanServiceAccount);
+  
+  // Standard Firebase exports use snake_case
+  const pId = parsed.projectId || parsed.project_id;
+  const cEmail = parsed.clientEmail || parsed.client_email;
+  const pKey = parsed.privateKey || parsed.private_key;
 
-  if (!parsed.projectId || !parsed.clientEmail || !parsed.privateKey) {
+  if (!pId || !cEmail || !pKey) {
     throw new Error(
       "Firebase Admin credentials missing. Set FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY or FIREBASE_ADMIN_SERVICE_ACCOUNT."
     );
   }
 
   return {
-    projectId: parsed.projectId,
-    clientEmail: parsed.clientEmail,
-    privateKey: parsed.privateKey.replace(/\\n/g, "\n"),
+    projectId: pId,
+    clientEmail: cEmail,
+    privateKey: pKey.replace(/\\n/g, "\n"),
   };
 }
 

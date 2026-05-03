@@ -118,7 +118,7 @@ export async function validateRequest(
         const decodedToken = await getAdminAuth().verifyIdToken(firebaseToken);
         firebaseUid = decodedToken.uid;
         TOKEN_CACHE.set(firebaseToken, { uid: firebaseUid, timestamp: Date.now() });
-      } catch {
+      } catch (err: any) {
         AUTH_RESULT_CACHE.delete(authCacheKey);
         return {
           error: NextResponse.json(
@@ -202,7 +202,7 @@ export async function validateRequest(
     AUTH_RESULT_CACHE.set(authCacheKey, { user, timestamp: Date.now() });
 
     return { user };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Auth validation error:", error);
     return {
       error: NextResponse.json(

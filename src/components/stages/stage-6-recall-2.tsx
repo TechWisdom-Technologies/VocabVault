@@ -75,6 +75,17 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
   }, [hasLoadedState, phase, spellingAttempt, spellingInput, spellingResults, spellingFeedback, matchedPairs, selectedDefinition, getAuthHeaders, word.id]);
 
   const matchingData = useMemo(() => {
+    // Priority: Custom Pairs from Admin
+    if (word.recall2Pairs && word.recall2Pairs.length > 0) {
+      const items = word.recall2Pairs.map((p: any) => ({
+        word: p.word,
+        definition: p.definition,
+      }));
+      const shuffledDefs = [...items].map((i) => i.definition).sort(() => Math.random() - 0.5);
+      return { items, shuffledDefs };
+    }
+
+    // Fallback: Algorithmic selection
     const synonyms = (word.synonyms || []).slice(0, 3);
     const antonyms = (word.antonyms || []).slice(0, 2);
     const items = [...synonyms, ...antonyms].map((item: any) => ({
@@ -126,7 +137,7 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
     const spellingScore = Math.round((correctSpellings / 3) * 5);
     let matchCorrect = 0;
     matchedPairs.forEach((def, w) => {
-      const item = matchingData.items.find((i) => i.word === w);
+      const item = matchingData.items.find((i: { word: string; definition: string }) => i.word === w);
       if (item && item.definition === def) matchCorrect++;
     });
     const matchScore = Math.round((matchCorrect / (matchingData.items.length || 1)) * 5);
@@ -217,7 +228,7 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
               <div className="flex-1 grid grid-cols-2 gap-3 sm:gap-4 min-h-0 overflow-hidden">
                 <div className="flex flex-col min-h-0">
                   <div className="flex-1 space-y-1.5 pr-1">
-                    {matchingData.shuffledDefs.map((def, idx) => {
+                    {matchingData.shuffledDefs.map((def: string, idx: number) => {
                       const isUsed = Array.from(matchedPairs.values()).includes(def);
                       const isSelected = selectedDefinition === def;
                       return (
@@ -232,7 +243,7 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
 
                 <div className="flex flex-col min-h-0">
                   <div className="flex-1 space-y-1.5 pr-1">
-                    {matchingData.items.map((item, idx) => {
+                    {matchingData.items.map((item: { word: string; definition: string }, idx: number) => {
                       const isMatched = matchedPairs.has(item.word);
                       return (
                         <button key={idx} onClick={() => handleSelectWord(item.word)} disabled={isMatched || !selectedDefinition} className={`w-full h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 flex items-center justify-center font-black text-[10px] sm:text-sm transition-all ${isMatched ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : selectedDefinition ? "bg-violet-500/5 border-violet-500/40 hover:bg-violet-500/10 hover:border-violet-500 cursor-pointer shadow-lg shadow-violet-600/5" : "bg-muted/10 border-border/50 opacity-90"}`}>

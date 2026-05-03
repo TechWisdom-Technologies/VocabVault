@@ -132,6 +132,8 @@ model Word {
   paragraphTargetCount  Int      @map("paragraph_target_count")
   paragraphSynonymCount Int      @map("paragraph_synonym_count")
   paragraphAntonymCount Int      @map("paragraph_antonym_count")
+  recall1Questions      Json?    @map("recall_1_questions") // Custom Qs for Stage 4
+  recall2Pairs          Json?    @map("recall_2_pairs")     // Custom Matching for Stage 6
   orderIndex            Int      @unique @map("order_index")
   createdAt             DateTime @default(now()) @map("created_at")
 

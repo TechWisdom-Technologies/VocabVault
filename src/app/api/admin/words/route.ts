@@ -46,40 +46,58 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // Calculate next orderIndex
-    const lastWord = await prisma.word.findFirst({
-      orderBy: { orderIndex: "desc" },
-      select: { orderIndex: true },
-    });
+    // Calculate next orderIndex if not provided
+    let nextIdx = body.orderIndex;
+    if (!nextIdx) {
+      const lastWord = await prisma.word.findFirst({
+        orderBy: { orderIndex: "desc" },
+        select: { orderIndex: true },
+      });
+      nextIdx = lastWord ? lastWord.orderIndex + 1 : 1;
+    }
     
-    const nextOrderIndex = lastWord ? lastWord.orderIndex + 1 : 1;
+    const { recall1Questions, recall2Pairs, ...rest } = body;
 
     const newWord = await prisma.word.create({
       data: {
-        word: body.word,
-        phonetic: body.phonetic,
-        partOfSpeech: body.partOfSpeech,
-        definition: body.definition,
-        tenseForms: body.tenseForms || [],
-        pronunciationAudioUrl: body.pronunciationAudioUrl,
-        definitionAudioUrl: body.definitionAudioUrl,
-        synonyms: body.synonyms || [],
-        antonyms: body.antonyms || [],
-        sentences: body.sentences || [],
-        articles: body.articles || [],
-        paragraph: body.paragraph || "",
-        audioClipUrls: body.audioClipUrls || [],
-        correctAudioCounts: body.correctAudioCounts || [],
-        paragraphTargetCount: body.paragraphTargetCount || 0,
-        paragraphSynonymCount: body.paragraphSynonymCount || 0,
-        paragraphAntonymCount: body.paragraphAntonymCount || 0,
-        orderIndex: nextOrderIndex,
+        word: rest.word,
+        phonetic: rest.phonetic,
+        partOfSpeech: rest.partOfSpeech,
+        definition: rest.definition,
+        tenseForms: rest.tenseForms || [],
+        pronunciationAudioUrl: rest.pronunciationAudioUrl,
+        definitionAudioUrl: rest.definitionAudioUrl,
+        synonyms: rest.synonyms || [],
+        antonyms: rest.antonyms || [],
+        sentences: rest.sentences || [],
+        articles: rest.articles || [],
+        paragraph: rest.paragraph || "",
+        audioClipUrls: rest.audioClipUrls || [],
+        correctAudioCounts: rest.correctAudioCounts || [],
+        paragraphTargetCount: parseInt(rest.paragraphTargetCount) || 0,
+        paragraphSynonymCount: parseInt(rest.paragraphSynonymCount) || 0,
+        paragraphAntonymCount: parseInt(rest.paragraphAntonymCount) || 0,
+        orderIndex: parseInt(nextIdx) || 1,
       },
     });
 
+    // Manually update the new JSON fields using raw SQL to ensure they save even if the client is stale
+    if (recall1Questions !== undefined || recall2Pairs !== undefined) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "words" SET "recall_1_questions" = $1, "recall_2_pairs" = $2 WHERE "id" = $3`,
+        JSON.stringify(recall1Questions || []),
+        JSON.stringify(recall2Pairs || []),
+        newWord.id
+      );
+    }
+
     return NextResponse.json({ word: newWord });
   } catch (error) {
-    console.error("Error creating word:", error);
-    return NextResponse.json({ error: "Failed to create word" }, { status: 500 });
+    const err = error as any;
+    console.error("Error creating word:", err);
+    return NextResponse.json({ 
+      error: err.message || "Failed to create word",
+      details: err.code === 'P2002' ? 'Unique constraint failed on ' + err.meta?.target : undefined
+    }, { status: 500 });
   }
 }

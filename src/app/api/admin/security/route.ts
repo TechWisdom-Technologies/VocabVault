@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       include: {
         user: {
           select: {
+            id: true,
             name: true,
             email: true,
           },
@@ -23,10 +24,25 @@ export async function GET(req: NextRequest) {
       orderBy: {
         lastActive: "desc",
       },
-      take: 100, // Top 100 recent sessions
+      take: 200,
     });
 
-    return NextResponse.json({ sessions });
+    // Get device counts for these users
+    const userIds = Array.from(new Set(sessions.map(s => s.userId)));
+    const counts = await prisma.deviceSession.groupBy({
+      by: ['userId'],
+      _count: { _all: true },
+      where: { userId: { in: userIds } }
+    });
+
+    const countMap = Object.fromEntries(counts.map(c => [c.userId, c._count._all]));
+
+    const sessionsWithCounts = sessions.map(s => ({
+      ...s,
+      userDeviceCount: countMap[s.userId] || 0
+    }));
+
+    return NextResponse.json({ sessions: sessionsWithCounts });
   } catch (error) {
     console.error("Error fetching sessions:", error);
     return NextResponse.json({ error: "Failed to fetch security logs" }, { status: 500 });

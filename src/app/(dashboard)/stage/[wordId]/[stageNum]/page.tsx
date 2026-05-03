@@ -17,6 +17,7 @@ import Stage9Writing from "@/components/stages/stage-9-writing";
 import Stage10Speaking from "@/components/stages/stage-10-speaking";
 import { FeedbackModal } from "@/components/dashboard/feedback-modal";
 import HowItWorksModal from "@/components/stages/how-it-works-modal";
+import LoadingScreen from "@/components/ui/loading-screen";
 
 const STAGE_NAMES: Record<number, string> = {
   1: "Word Briefing",
@@ -211,9 +212,10 @@ export default function StagePage() {
 
   if (isLoading || !wordData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
+      <LoadingScreen 
+        message={`Entering ${STAGE_NAMES[stageNum] || "Task Phase"}`}
+        submessage={`Preparing your session for "${wordId.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}"...`}
+      />
     );
   }
 
@@ -300,10 +302,20 @@ export default function StagePage() {
       </main>
 
       {isAdvancing && (
-        <div className="fixed inset-0 z-100 bg-background/70 backdrop-blur-sm flex items-center justify-center">
-          <div className="rounded-2xl border border-border/60 bg-card/90 px-5 py-4 shadow-2xl flex items-center gap-3">
-            <Loader2 className="w-5 h-5 text-primary animate-spin" />
-            <span className="text-sm font-semibold text-foreground">Advancing...</span>
+        <div className="fixed inset-0 z-[1000] bg-background/40 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
+            <div className="relative rounded-3xl border border-white/10 bg-card/50 backdrop-blur-xl px-8 py-6 shadow-2xl flex flex-col items-center gap-4 min-w-[200px]">
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 rounded-xl bg-primary/20 animate-spin [animation-duration:3s]" />
+                <div className="absolute inset-2 rounded-lg bg-primary animate-pulse" />
+                <Loader2 className="absolute inset-0 w-12 h-12 text-primary animate-spin" />
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm font-bold text-foreground tracking-tight">Syncing Progress</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Please wait...</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

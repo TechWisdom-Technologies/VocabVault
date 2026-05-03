@@ -21,16 +21,40 @@ export async function GET(req: NextRequest) {
         role: true,
         totalScore: true,
         wordsLearned: true,
+        isLocked: true,
+        lockReason: true,
+        dob: true,
+        nationality: true,
+        profession: true,
+        reason: true,
         createdAt: true,
         updatedAt: true,
       },
       orderBy: {
         createdAt: "desc",
       },
-      take: 100, // Fetch top 100 for now
+      take: 200,
     });
 
-    return NextResponse.json({ users });
+    // Fetch logs for these users
+    const userIds = users.map(u => u.id);
+    const logs = await prisma.adminLog.findMany({
+      where: {
+        targetType: "USER",
+        targetId: { in: userIds },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Attach logs to users
+    const usersWithLogs = users.map(user => ({
+      ...user,
+      logs: logs.filter(l => l.targetId === user.id),
+    }));
+
+    return NextResponse.json({ users: usersWithLogs });
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(

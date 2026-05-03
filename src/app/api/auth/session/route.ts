@@ -95,13 +95,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Capture real IP from headers
+    const forwarded = req.headers.get("x-forwarded-for");
+    const realIp = forwarded ? forwarded.split(",")[0] : (req.headers.get("x-real-ip") || "127.0.0.1");
+    
+    // Capture location from deployment headers (e.g. Vercel)
+    const city = req.headers.get("x-vercel-ip-city") || deviceInfo.locationCity;
+    const country = req.headers.get("x-vercel-ip-country") || deviceInfo.locationCountry;
+
+    // Ensure deviceInfo has the real IP and location
+    const enrichedDeviceInfo = {
+      ...deviceInfo,
+      ipAddress: realIp,
+      locationCity: city || "Unknown",
+      locationCountry: country || "Unknown"
+    };
+
     // Generate session token and create session
     const sessionToken = generateSessionToken();
     const { invalidatedAll } = await createSession(
       user.id,
       firebaseUid,
       sessionToken,
-      deviceInfo
+      enrichedDeviceInfo
     );
 
     return NextResponse.json({

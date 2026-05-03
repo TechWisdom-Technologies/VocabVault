@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore, initializeAuthListener } from "@/stores/auth-store";
-import { Loader2 } from "lucide-react";
+import LoadingScreen from "@/components/ui/loading-screen";
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, isInitialized } = useAuthStore();
@@ -35,11 +35,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   }, [user, isInitialized, router, pathname]);
 
   if (!isInitialized || !isAuthorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
+    return <LoadingScreen message="Accessing Admin Portal" submessage="Verifying administrative credentials..." />;
   }
 
   return <>{children}</>;

@@ -80,6 +80,13 @@ export default function Stage4Recall1({ word, onComplete }: Stage4Props) {
     const sentences = word.sentences || [];
 
     const fillBlanks: Question[] = [];
+    // Custom Questions from Admin
+    const customQs = (word.recall1Questions || []).map((q: any, i: number) => ({
+      ...q,
+      id: `custom-${i}`
+    }));
+
+    // Algorithmic Questions
     for (let i = 0; i < 4; i++) {
       const sent = sentences[i];
       if (sent?.sentence) {
@@ -112,7 +119,7 @@ export default function Stage4Recall1({ word, onComplete }: Stage4Props) {
       { id: 10, type: "true_false", text: `"${ants[0] || "sad"}" is a synonym for "${word.word}".`, isTrue: false },
     ];
 
-    return [...fillBlanks, ...mcqs, ...tfs];
+    return [...customQs, ...fillBlanks, ...mcqs, ...tfs].slice(0, 10);
   }, [word]);
 
   function shuffleWithCorrect(options: string[], correctIdx: number) {

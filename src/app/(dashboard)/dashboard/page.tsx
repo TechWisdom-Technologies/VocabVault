@@ -83,11 +83,14 @@ export default function DashboardPage() {
           setActivities(activityData.activities || []);
         }
 
-        const wordsData = await wordsRes.json();
+        let wordsData: any = null;
+        if (wordsRes.headers.get("content-type")?.includes("application/json")) {
+          wordsData = await wordsRes.json();
+        }
 
-        if (wordsRes.status === 403 && wordsData.isPaywalled) {
+        if (wordsRes.status === 403 && wordsData?.isPaywalled) {
           setIsPaywalled(true);
-        } else if (wordsRes.ok) {
+        } else if (wordsRes.ok && wordsData) {
           setWords(wordsData.words || []);
           setIsPaywalled(wordsData.isPaywalled || false);
           setIsPrecedingWordCompleted(wordsData.isPrecedingWordCompleted ?? true);
@@ -98,6 +101,8 @@ export default function DashboardPage() {
             });
           }
           setProgressMap(pMap);
+        } else {
+          console.warn(`Unexpected response from /api/words/daily: ${wordsRes.status}`);
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
@@ -242,9 +247,18 @@ export default function DashboardPage() {
           </h2>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="h-32 rounded-2xl bg-muted/30 animate-pulse border border-border/50" />
+                <div 
+                  key={n} 
+                  className="h-32 rounded-2xl bg-background/50 backdrop-blur-md border border-border/50 relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                  <div className="p-5 flex flex-col justify-between h-full">
+                    <div className="w-12 h-3 bg-muted/40 rounded-full" />
+                    <div className="w-24 h-5 bg-muted/60 rounded-full" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : isPaywalled ? (

@@ -33,6 +33,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Notify all admins
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { id: true }
+    });
+
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map(admin => ({
+          userId: admin.id,
+          type: "FEEDBACK_RECEIVED",
+          title: "New User Feedback",
+          message: `${user.name || user.email} submitted a ${category.replace('_', ' ')} report: "${subject}"`,
+          metadata: { feedbackId: feedback.id }
+        }))
+      });
+    }
+
     return NextResponse.json({ success: true, feedbackId: feedback.id });
   } catch (error) {
     console.error("Feedback creation error:", error);
