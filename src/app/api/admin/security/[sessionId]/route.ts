@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ sessionId: string }> }
+  context: { params: Promise<{ sessionId: string }> }
 ) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -14,7 +14,7 @@ export async function DELETE(
   }
 
   try {
-    const { sessionId } = await params;
+    const { sessionId } = await context.params;
 
     const session = await prisma.deviceSession.findUnique({
       where: { id: sessionId },

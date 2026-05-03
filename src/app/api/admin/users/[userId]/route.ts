@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -14,7 +14,7 @@ export async function PUT(
   }
 
   try {
-    const { userId } = await params;
+    const { userId } = await context.params;
     const body = await req.json();
     const { isLocked, lockReason, role, resetProgress } = body;
 

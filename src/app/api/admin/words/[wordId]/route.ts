@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ wordId: string }> }
+  context: { params: Promise<{ wordId: string }> }
 ) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -14,7 +14,7 @@ export async function GET(
   }
 
   try {
-    const { wordId } = await params;
+    const { wordId } = await context.params;
     const word = await prisma.word.findUnique({
       where: { id: wordId },
     });
@@ -32,7 +32,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ wordId: string }> }
+  context: { params: Promise<{ wordId: string }> }
 ) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -42,7 +42,7 @@ export async function PUT(
   }
 
   try {
-    const { wordId } = await params;
+    const { wordId } = await context.params;
     const body = await req.json();
     
     // Separate new fields to handle them via raw SQL if needed (bypassing client validation issues in dev)
@@ -94,7 +94,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ wordId: string }> }
+  context: { params: Promise<{ wordId: string }> }
 ) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -104,7 +104,7 @@ export async function DELETE(
   }
 
   try {
-    const { wordId } = await params;
+    const { wordId } = await context.params;
     await prisma.word.delete({
       where: { id: wordId },
     });
