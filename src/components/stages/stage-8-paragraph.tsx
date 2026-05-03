@@ -101,8 +101,19 @@ export default function Stage8Paragraph({ word, onComplete }: Stage8Props) {
   }, [targetCount, synonymCount, antonymCount, actualTargetCount, actualSynonymCount, actualAntonymCount, onComplete]);
 
   const handleRepeat = async () => {
-    await saveStageSessionState(getAuthHeaders, word.id, {});
-    window.location.reload();
+    try {
+      setHasLoadedState(false);
+      const headers = await getAuthHeaders();
+      await fetch("/api/progress/state", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ wordId: word.id, sessionState: null }),
+      });
+      window.location.href = window.location.pathname;
+    } catch (e) {
+      console.error(e);
+      window.location.reload();
+    }
   };
 
   const timeFormatted = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;

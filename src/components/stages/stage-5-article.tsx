@@ -61,8 +61,19 @@ export default function Stage5Article({ word, onComplete }: Stage5Props) {
   }, [timeLeft]);
 
   const handleRepeat = async () => {
-    await saveStageSessionState(getAuthHeaders, word.id, {});
-    window.location.reload();
+    try {
+      setHasLoadedState(false);
+      const headers = await getAuthHeaders();
+      await fetch("/api/progress/state", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ wordId: word.id, sessionState: null }),
+      });
+      window.location.href = window.location.pathname;
+    } catch (e) {
+      console.error(e);
+      window.location.reload();
+    }
   };
 
   const handleComplete = () => {

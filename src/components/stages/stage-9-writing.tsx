@@ -73,6 +73,22 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
   const totalWords = text.split(/\s+/).filter((w: string) => w.length > 0).length;
   const canSubmit = localWordCount >= 3 && totalWords >= 50;
 
+  const handleRepeat = async () => {
+    try {
+      setHasLoadedState(false);
+      const headers = await getAuthHeaders();
+      await fetch("/api/progress/state", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ wordId: word.id, sessionState: null }),
+      });
+      window.location.href = window.location.pathname;
+    } catch (e) {
+      console.error(e);
+      window.location.reload();
+    }
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
@@ -326,7 +342,7 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
                           </Button>
                           <Button
                             variant="ghost"
-                            onClick={() => setResult(null)}
+                            onClick={handleRepeat}
                             className="h-14 rounded-2xl text-muted-foreground font-black uppercase tracking-widest hover:text-foreground"
                           >
                             <RotateCcw className="w-3.5 h-3.5 mr-2" /> Repeat Analysis

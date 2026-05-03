@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { wordId, sessionState } = body;
 
-    if (!wordId || !sessionState) {
+    if (!wordId) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.wordProgress.update({
       where: { id: progress.id },
-      data: { sessionState },
+      data: { sessionState: sessionState || null },
     });
 
     return NextResponse.json({ success: true });

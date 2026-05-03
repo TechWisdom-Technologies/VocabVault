@@ -111,8 +111,19 @@ export default function Stage1Briefing({ word, onComplete }: Stage1Props) {
   };
 
   const handleRepeat = async () => {
-    await saveStageSessionState(getAuthHeaders, word.id, {});
-    window.location.reload();
+    try {
+      setHasLoadedState(false);
+      const headers = await getAuthHeaders();
+      await fetch("/api/progress/state", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ wordId: word.id, sessionState: null }),
+      });
+      window.location.href = window.location.pathname;
+    } catch (e) {
+      console.error(e);
+      window.location.reload();
+    }
   };
 
   useEffect(() => {
@@ -229,12 +240,28 @@ export default function Stage1Briefing({ word, onComplete }: Stage1Props) {
         <div className="mt-4 sm:mt-auto pt-4 sm:pt-6 border-t border-border/30 flex flex-col gap-2 sm:gap-3 shrink-0">
           <div className="flex gap-2 sm:gap-3">
             <Button
-              variant="outline" size="lg"
-              onClick={handleRepeat}
-              className="flex-1 rounded-lg sm:rounded-xl h-10 sm:h-12 text-xs sm:text-sm font-bold border-border/60"
-            >
-              <RotateCcw className="w-3.5 h-3.5 mr-1.5 sm:mr-2" /> Repeat
-            </Button>
+          variant="outline"
+          size="lg"
+          onClick={async () => {
+            try {
+              setHasLoadedState(false);
+              const headers = await getAuthHeaders();
+              await fetch("/api/progress/state", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ wordId: word.id, sessionState: null }),
+              });
+              window.location.href = window.location.pathname;
+            } catch (e) {
+              console.error(e);
+              window.location.reload();
+            }
+          }}
+          className="tap-target px-8 rounded-full h-14 text-lg border-primary/20 hover:bg-primary/5 text-primary w-full sm:w-auto"
+        >
+          <RotateCcw className="w-5 h-5 mr-2" />
+          Repeat Stage
+        </Button>
             <div className="flex-[2] relative">
               <Button
                 onClick={handleComplete} size="lg" disabled={!canProceed}

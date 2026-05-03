@@ -344,7 +344,21 @@ export default function Stage10Speaking({ word, onComplete }: Stage10Props) {
         <Button
           variant="outline"
           size="lg"
-          onClick={() => window.location.reload()}
+          onClick={async () => {
+            try {
+              setHasLoadedState(false);
+              const headers = await getAuthHeaders();
+              await fetch("/api/progress/state", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ wordId: word.id, sessionState: null }),
+              });
+              window.location.href = window.location.pathname;
+            } catch (e) {
+              console.error(e);
+              window.location.reload();
+            }
+          }}
           className="tap-target px-8 rounded-full h-14 text-lg border-primary/20 hover:bg-primary/5 text-primary w-full sm:w-auto"
         >
           <RotateCcw className="w-5 h-5 mr-2" />

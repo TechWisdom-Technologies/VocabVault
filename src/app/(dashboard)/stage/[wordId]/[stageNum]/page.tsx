@@ -157,7 +157,7 @@ export default function StagePage() {
           stageNumber: stageNum,
           score,
           timeSpentSeconds: timeSpent,
-          mistakes,
+          responseData: mistakes,
           challengeId,
         }),
       });

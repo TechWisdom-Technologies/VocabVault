@@ -181,8 +181,19 @@ export default function Stage2Immersion({ word, onComplete }: Stage2Props) {
   };
 
   const handleRepeat = async () => {
-    await saveStageSessionState(getAuthHeaders, word.id, {});
-    window.location.reload();
+    try {
+      setHasLoadedState(false); // Stop the auto-save effect
+      const headers = await getAuthHeaders();
+      await fetch("/api/progress/state", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ wordId: word.id, sessionState: null }),
+      });
+      window.location.href = window.location.pathname; // Hard reload to clear all states
+    } catch (e) {
+      console.error(e);
+      window.location.reload();
+    }
   };
 
   const isFinished = results.length === sentences.length && sentences.length > 0;
