@@ -232,7 +232,14 @@ export default function Stage9Writing({ word, onComplete }: Stage9Props) {
           </div>
 
           {/* Action Footer */}
-          <div className="mt-8 pt-8 border-t border-border/50">
+          <div className="mt-8 pt-8 border-t border-border/50 flex flex-col gap-4">
+            <Button
+              variant="outline"
+              onClick={handleRepeat}
+              className="w-full h-12 rounded-xl border-border/50 text-muted-foreground hover:text-foreground font-bold"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" /> Repeat Stage
+            </Button>
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit || isEvaluating}

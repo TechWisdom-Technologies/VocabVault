@@ -30,8 +30,18 @@ export async function POST(req: NextRequest) {
     let totalScore = 0;
     bestScores.forEach((s) => (totalScore += s));
 
-    if (totalScore < 80) {
-      return NextResponse.json({ error: "Insufficient score" }, { status: 400 });
+    // Check if every stage 1-10 has best score >= 8
+    const flaggedStages: number[] = [];
+    for (let i = 1; i <= 10; i++) {
+      if ((bestScores.get(i) || 0) < 8) flaggedStages.push(i);
+    }
+
+    if (totalScore < 80 || flaggedStages.length > 0) {
+      return NextResponse.json({ 
+        error: "Insufficient mastery", 
+        message: totalScore < 80 ? "Total score must be at least 80" : "All stages must have at least 8/10 score",
+        flaggedStages 
+      }, { status: 400 });
     }
 
     await prisma.wordProgress.update({

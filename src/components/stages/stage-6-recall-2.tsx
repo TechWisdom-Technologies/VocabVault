@@ -282,18 +282,26 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
               </div>
 
               <div className="shrink-0 flex justify-center py-2">
-                <Button
-                  onClick={allMatched ? handleComplete : undefined}
-                  disabled={!allMatched}
-                  size="lg"
-                  className={`w-full max-w-sm h-12 rounded-xl text-sm font-black transition-all shadow-xl ${
-                    allMatched
-                      ? "bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-violet-600/20"
-                      : "bg-muted/20 text-muted-foreground border border-border/50 cursor-not-allowed"
-                  }`}
-                >
-                  {allMatched ? <div className="flex items-center gap-2">Complete Recall II <ArrowRight className="w-4 h-4" /></div> : <span className="text-[9px] font-black uppercase tracking-widest opacity-20">Awaiting Linkage</span>}
-                </Button>
+                <div className="flex gap-4 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={handleRepeat}
+                    className="flex-1 h-12 rounded-xl border-border/50 text-muted-foreground hover:text-foreground"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" /> Repeat Stage
+                  </Button>
+                  <Button
+                    onClick={allMatched ? handleComplete : undefined}
+                    disabled={!allMatched}
+                    className={`flex-[2] h-12 rounded-xl text-sm font-black transition-all shadow-xl ${
+                      allMatched
+                        ? "bg-linear-to-r from-violet-600 to-indigo-600 text-white shadow-violet-600/20"
+                        : "bg-muted/20 text-muted-foreground border border-border/50 cursor-not-allowed"
+                    }`}
+                  >
+                    {allMatched ? <div className="flex items-center gap-2">Complete Recall II <ArrowRight className="w-4 h-4" /></div> : <span className="text-[9px] font-black uppercase tracking-widest opacity-20">Awaiting Linkage</span>}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )}

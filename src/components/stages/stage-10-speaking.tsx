@@ -243,19 +243,45 @@ export default function Stage10Speaking({ word, onComplete }: Stage10Props) {
                 </div>
               )}
 
-              <Button
-                onClick={handleRecordToggle}
-                size="icon"
-                className={`w-24 h-24 rounded-full transition-all duration-300 ${
-                  isRecording
-                    ? "bg-destructive hover:bg-destructive/90 scale-110 shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse"
-                    : "bg-linear-to-br from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 shadow-xl"
-                }`}
-              >
-                <Mic
-                  className={`w-10 h-10 text-foreground ${isRecording ? "animate-bounce" : ""}`}
-                />
-              </Button>
+              <div className="flex flex-col items-center gap-4">
+                <Button
+                  onClick={handleRecordToggle}
+                  size="icon"
+                  className={`w-24 h-24 rounded-full transition-all duration-300 ${
+                    isRecording
+                      ? "bg-destructive hover:bg-destructive/90 scale-110 shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse"
+                      : "bg-linear-to-br from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 shadow-xl"
+                  }`}
+                >
+                  <Mic
+                    className={`w-10 h-10 text-foreground ${isRecording ? "animate-bounce" : ""}`}
+                  />
+                </Button>
+                
+                {!isRecording && (
+                  <Button
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        setHasLoadedState(false);
+                        const headers = await getAuthHeaders();
+                        await fetch("/api/progress/state", {
+                          method: "POST",
+                          headers,
+                          body: JSON.stringify({ wordId: word.id, sessionState: null }),
+                        });
+                        window.location.href = window.location.pathname;
+                      } catch (e) {
+                        console.error(e);
+                        window.location.reload();
+                      }
+                    }}
+                    className="text-muted-foreground hover:text-foreground text-[10px] font-black uppercase tracking-widest gap-2"
+                  >
+                    <RotateCcw className="w-3 h-3" /> Reset Stage
+                  </Button>
+                )}
+              </div>
               <p className="mt-6 text-sm text-muted-foreground font-medium">
                 {isRecording
                   ? "Speak now... Tap to stop and evaluate"

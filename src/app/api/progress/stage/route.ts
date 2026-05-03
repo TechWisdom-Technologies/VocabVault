@@ -178,18 +178,23 @@ export async function POST(req: NextRequest) {
     }
 
     // If fully completed, update user stats
-    if (newStatus === "COMPLETED" && progress.status !== "COMPLETED") {
-      const word = await prisma.word.findUnique({ where: { id: wordId } });
-      const currentUser = await prisma.user.findUnique({ where: { id: user.id } });
+    if (newStatus === "COMPLETED") {
+      const isFirstTime = progress.status !== "COMPLETED";
+      const scoreDelta = finalTotalScore - progress.totalScore;
       
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          wordsLearned: { increment: 1 },
-          totalScore: { increment: totalScore },
-          maxUnlockedIndex: Math.max(currentUser?.maxUnlockedIndex || 0, (word?.orderIndex || 0) + 1),
-        },
-      });
+      if (isFirstTime || scoreDelta > 0) {
+        const word = await prisma.word.findUnique({ where: { id: wordId } });
+        const currentUser = await prisma.user.findUnique({ where: { id: user.id } });
+        
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            ...(isFirstTime ? { wordsLearned: { increment: 1 } } : {}),
+            ...(scoreDelta > 0 ? { totalScore: { increment: scoreDelta } } : {}),
+            maxUnlockedIndex: Math.max(currentUser?.maxUnlockedIndex || 0, (word?.orderIndex || 0) + 1),
+          },
+        });
+      }
     }
 
     // Recompute flagged stages for response if needed

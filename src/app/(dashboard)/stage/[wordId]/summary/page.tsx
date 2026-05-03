@@ -88,7 +88,8 @@ export default function SummaryPage({ params }: { params: Promise<{ wordId: stri
     );
   }
 
-  const passed = totalScore >= 80;
+  const hasLowScores = scores.some(s => s.score < 8);
+  const passed = totalScore >= 80 && !hasLowScores;
 
   return (
     <div className="min-h-screen bg-background relative pb-20">

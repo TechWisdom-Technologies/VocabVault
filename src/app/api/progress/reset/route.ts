@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const authResult = await validateRequest(req);
@@ -23,20 +24,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No progress found for this word" }, { status: 404 });
     }
 
-    // Delete all stage scores for this progress, then reset the progress record
-    await prisma.$transaction([
-      prisma.stageScore.deleteMany({
-        where: { wordProgressId: progress.id },
-      }),
-      prisma.wordProgress.update({
-        where: { id: progress.id },
-        data: {
-          status: "IN_PROGRESS",
-          currentStage: 1,
-          totalScore: 0,
-        },
-      }),
-    ]);
+    // Reset only currentStage and sessionState. 
+    // Do NOT delete scores or change status to preserve mastery history.
+    await prisma.wordProgress.update({
+      where: { id: progress.id },
+      data: {
+        currentStage: 1,
+        sessionState: Prisma.DbNull,
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
