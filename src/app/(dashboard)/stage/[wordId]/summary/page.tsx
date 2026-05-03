@@ -131,39 +131,45 @@ export default function SummaryPage({ params }: { params: Promise<{ wordId: stri
                     Score: {s.score}/10
                   </p>
                 </div>
-                {s.score < 8 ? (
+                <div className="flex items-center gap-3">
+                  {s.score >= 8 && (
+                    <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-success" />
+                    </div>
+                  )}
                   <motion.div whileTap={{ scale: 0.9 }}>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="border-amber-500/50 hover:bg-amber-500/10 text-amber-600"
+                      className={`border-border/50 hover:bg-muted/50 ${s.score < 8 ? "border-amber-500/50 text-amber-600" : "text-muted-foreground"}`}
                       onClick={() => router.push(`/stage/${wordId}/${s.stageNumber}`)}
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Retry
                     </Button>
                   </motion.div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                  </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="flex justify-center pt-8">
+        <div className="flex flex-col items-center gap-4 pt-8">
           {passed ? (
-            <motion.div whileTap={{ scale: 0.95 }}>
-              <Button size="lg" className="px-12 text-lg h-14 bg-linear-to-r from-primary to-primary-600 shadow-lg shadow-primary/25" onClick={handleFinish}>
-                Finish & Return <ArrowRight className="w-5 h-5 ml-2" />
+            <motion.div whileTap={{ scale: 0.95 }} className="w-full max-w-sm">
+              <Button size="lg" className="w-full px-12 text-lg h-14 bg-linear-to-r from-primary to-primary-600 shadow-lg shadow-primary/25" onClick={handleFinish}>
+                Mastery Complete <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </motion.div>
           ) : (
-            <Button size="lg" variant="outline" className="px-12 text-lg h-14" disabled>
-              Need {80 - totalScore} more points
-            </Button>
+            <div className="w-full max-w-sm space-y-3">
+              <Button size="lg" variant="outline" className="w-full text-lg h-14 cursor-not-allowed opacity-80" disabled>
+                {totalScore < 80 ? `Need ${80 - totalScore} more points` : "All stages must be 8/10"}
+              </Button>
+              <p className="text-[10px] text-center font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
+                {totalScore < 80 ? "Improve stage scores to reach 80" : "Retry stages with scores below 8"}
+              </p>
+            </div>
           )}
         </div>
       </div>

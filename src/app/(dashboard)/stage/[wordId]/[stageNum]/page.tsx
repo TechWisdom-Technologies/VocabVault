@@ -183,7 +183,7 @@ export default function StagePage() {
             router.prefetch("/dashboard");
             router.push("/dashboard");
           }
-        } else if (data.status === "RETRY" && data.nextStage === "summary") {
+        } else if (data.nextStage === "summary") {
           const nextPath = `/stage/${wordId}/summary${challengeQuery}`;
           router.prefetch(nextPath);
           router.push(nextPath);

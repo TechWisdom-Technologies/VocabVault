@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const authResult = await validateRequest(req);
@@ -88,37 +89,42 @@ export async function POST(req: NextRequest) {
     bestScores.forEach((s) => (totalScore += s));
 
     // Determine next state
+    // Once COMPLETED, always COMPLETED
+    let newStatus: any = progress.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS";
     let newStage = progress.currentStage;
-    let newStatus = progress.status;
-
-    let nextStageResponse: number | "summary" = newStage;
+    let nextStageResponse: number | "summary" = stageNumber;
 
     const flaggedForRetry: number[] = [];
-    // Calculate flagged stages (any stage with a best score < 8)
     for (let i = 1; i <= 10; i++) {
       const best = bestScores.get(i) || 0;
       if (best < 8) flaggedForRetry.push(i);
     }
 
+    const hasPassedCurrent = clampedScore >= 8;
+
     if (stageNumber === 10) {
-      // Must have at least 80 total AND no stage with score < 8
       if (totalScore >= 80 && flaggedForRetry.length === 0) {
         newStatus = "COMPLETED";
         newStage = 10;
         nextStageResponse = 10;
       } else {
-        newStatus = "IN_PROGRESS"; // Still in progress because some stages failed
-        newStage = 10;
-        
-        // After finishing stage 10, if failed stages exist, go to summary
+        // If not completed yet, keep current status (which might be COMPLETED if they are just re-practicing)
+        newStage = Math.max(progress.currentStage, 10);
         nextStageResponse = "summary";
       }
     } else {
-      // Normal progression 1 to 9
-      newStage = stageNumber + 1;
-      newStatus = "IN_PROGRESS";
-      nextStageResponse = newStage;
+      if (hasPassedCurrent) {
+        if (stageNumber === progress.currentStage) {
+          newStage = stageNumber + 1;
+        }
+        nextStageResponse = stageNumber < progress.currentStage ? "summary" : stageNumber + 1;
+      } else {
+        nextStageResponse = "summary";
+      }
     }
+
+    // Only update totalScore if the NEW total is better than the OLD one
+    const finalTotalScore = Math.max(progress.totalScore, totalScore);
 
     // Update progress
     await prisma.wordProgress.update({
@@ -126,8 +132,9 @@ export async function POST(req: NextRequest) {
       data: {
         currentStage: newStage,
         status: newStatus,
-        totalScore,
-        ...(newStatus === "COMPLETED" ? { completedAt: new Date() } : {}),
+        totalScore: finalTotalScore,
+        sessionState: Prisma.DbNull,
+        ...(newStatus === "COMPLETED" && progress.status !== "COMPLETED" ? { completedAt: new Date() } : {}),
       },
     });
 

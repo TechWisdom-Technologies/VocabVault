@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const authResult = await validateRequest(req);
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.wordProgress.update({
       where: { id: progress.id },
-      data: { sessionState: sessionState || null },
+      data: { sessionState: sessionState || Prisma.DbNull },
     });
 
     return NextResponse.json({ success: true });
