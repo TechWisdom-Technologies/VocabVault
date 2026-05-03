@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, Brain } from "lucide-react";
@@ -241,15 +242,17 @@ export default function StagePage() {
       {/* Global Fixed Pro Header */}
       <header className="fixed top-0 left-0 w-full h-16 border-b border-white/5 bg-[#0a0a0b] flex items-center justify-between px-6 z-[100] shadow-2xl">
         <div className="flex items-center gap-6 flex-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/dashboard")}
-            disabled={isAdvancing}
-            className="h-10 w-10 rounded-xl text-white/20 hover:text-white/80 hover:bg-white/5 transition-all"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/dashboard")}
+              disabled={isAdvancing}
+              className="h-10 w-10 rounded-xl text-white/20 hover:text-white/80 hover:bg-white/5 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </motion.div>
 
           <div className="flex items-center gap-4">
             <div className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">

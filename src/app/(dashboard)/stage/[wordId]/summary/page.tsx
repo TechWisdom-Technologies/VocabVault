@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
@@ -91,13 +93,15 @@ export default function SummaryPage({ params }: { params: Promise<{ wordId: stri
   return (
     <div className="min-h-screen bg-background relative pb-20">
 
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-40 hidden sm:block">
-        <Link href="/dashboard">
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </Link>
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-40">
+        <motion.div whileTap={{ scale: 0.9 }}>
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+        </motion.div>
       </div>
       <div className="px-4 py-8 max-w-3xl mx-auto space-y-8 mt-12 sm:mt-8">
         <div className="text-center space-y-4">
@@ -128,15 +132,17 @@ export default function SummaryPage({ params }: { params: Promise<{ wordId: stri
                   </p>
                 </div>
                 {s.score < 8 ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-amber-500/50 hover:bg-amber-500/10 text-amber-600"
-                    onClick={() => router.push(`/stage/${wordId}/${s.stageNumber}`)}
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Retry
-                  </Button>
+                  <motion.div whileTap={{ scale: 0.9 }}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-amber-500/50 hover:bg-amber-500/10 text-amber-600"
+                      onClick={() => router.push(`/stage/${wordId}/${s.stageNumber}`)}
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Retry
+                    </Button>
+                  </motion.div>
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center">
                     <CheckCircle2 className="w-5 h-5 text-success" />
@@ -149,9 +155,11 @@ export default function SummaryPage({ params }: { params: Promise<{ wordId: stri
 
         <div className="flex justify-center pt-8">
           {passed ? (
-            <Button size="lg" className="px-12 text-lg h-14 bg-linear-to-r from-primary to-primary-600 shadow-lg shadow-primary/25" onClick={handleFinish}>
-              Finish & Return <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            <motion.div whileTap={{ scale: 0.95 }}>
+              <Button size="lg" className="px-12 text-lg h-14 bg-linear-to-r from-primary to-primary-600 shadow-lg shadow-primary/25" onClick={handleFinish}>
+                Finish & Return <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </motion.div>
           ) : (
             <Button size="lg" variant="outline" className="px-12 text-lg h-14" disabled>
               Need {80 - totalScore} more points

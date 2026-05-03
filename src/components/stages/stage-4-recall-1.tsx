@@ -271,24 +271,29 @@ export default function Stage4Recall1({ word, onComplete }: Stage4Props) {
                 {currentQ.type === "mcq" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {currentQ.options?.map((option, idx) => (
-                      <Button
-                        key={idx}
-                        variant="outline"
-                        className="h-14 sm:h-16 text-sm border-2 hover:border-primary hover:bg-primary/5 rounded-xl justify-start px-6 group relative overflow-hidden"
-                        onClick={() => handleAnswer(String(idx))}
-                      >
-                        <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black mr-3 group-hover:bg-primary group-hover:text-white transition-colors">{String.fromCharCode(65 + idx)}</span>
-                        <span className="font-medium truncate">{option}</span>
-                      </Button>
+                      <motion.div key={idx} whileTap={{ scale: 0.98 }}>
+                        <Button
+                          variant="outline"
+                          className="w-full h-14 sm:h-16 text-sm border-2 hover:border-primary hover:bg-primary/5 rounded-xl justify-start px-6 group relative overflow-hidden text-left"
+                          onClick={() => handleAnswer(String(idx))}
+                        >
+                          <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <span className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-black mr-3 group-hover:bg-primary group-hover:text-white transition-colors shrink-0">{String.fromCharCode(65 + idx)}</span>
+                          <span className="font-medium truncate">{option}</span>
+                        </Button>
+                      </motion.div>
                     ))}
                   </div>
                 )}
 
                 {currentQ.type === "true_false" && (
                   <div className="flex gap-4 max-w-sm mx-auto">
-                    <Button onClick={() => handleAnswer(true)} variant="outline" className="flex-1 h-20 text-xl font-black border-2 hover:border-success hover:bg-success/5 rounded-2xl transition-all shadow-sm">True</Button>
-                    <Button onClick={() => handleAnswer(false)} variant="outline" className="flex-1 h-20 text-xl font-black border-2 hover:border-destructive hover:bg-destructive/5 rounded-2xl transition-all shadow-sm">False</Button>
+                    <motion.div className="flex-1" whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => handleAnswer(true)} variant="outline" className="w-full h-20 text-xl font-black border-2 hover:border-success hover:bg-success/5 rounded-2xl transition-all shadow-sm">True</Button>
+                    </motion.div>
+                    <motion.div className="flex-1" whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => handleAnswer(false)} variant="outline" className="w-full h-20 text-xl font-black border-2 hover:border-destructive hover:bg-destructive/5 rounded-2xl transition-all shadow-sm">False</Button>
+                    </motion.div>
                   </div>
                 )}
               </motion.div>

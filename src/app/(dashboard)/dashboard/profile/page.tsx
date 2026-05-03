@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -142,23 +144,29 @@ export default function ProfilePage() {
       {/* Simple Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl border">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon" className="rounded-xl border">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+          </motion.div>
           <h1 className="text-3xl font-black tracking-tight">My Profile</h1>
         </div>
         <div className="flex gap-2">
           {!isEditing && (
-            <Button onClick={() => setIsEditing(true)} className="rounded-xl px-6">
-              <Settings2 className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
+            <motion.div whileTap={{ scale: 0.95 }}>
+              <Button onClick={() => setIsEditing(true)} className="rounded-xl px-6">
+                <Settings2 className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+            </motion.div>
           )}
-          <Button variant="outline" onClick={() => logout()} className="rounded-xl text-rose-500 hover:bg-rose-500/10">
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button variant="outline" onClick={() => logout()} className="rounded-xl text-rose-500 hover:bg-rose-500/10">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </motion.div>
         </div>
       </div>
 
@@ -237,12 +245,16 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="flex gap-3 pt-6 border-t border-white/5">
-                    <Button onClick={saveProfile} disabled={isSaving} className="rounded-xl px-8">
-                      {isSaving ? "Saving..." : "Save Changes"}
-                    </Button>
-                    <Button variant="ghost" onClick={() => setIsEditing(false)} className="rounded-xl">
-                      Cancel
-                    </Button>
+                    <motion.div whileTap={{ scale: 0.95 }}>
+                      <Button onClick={saveProfile} disabled={isSaving} className="rounded-xl px-8">
+                        {isSaving ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </motion.div>
+                    <motion.div whileTap={{ scale: 0.95 }}>
+                      <Button variant="ghost" onClick={() => setIsEditing(false)} className="rounded-xl">
+                        Cancel
+                      </Button>
+                    </motion.div>
                   </div>
                 </div>
               ) : (

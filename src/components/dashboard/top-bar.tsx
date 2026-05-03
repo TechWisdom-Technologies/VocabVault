@@ -167,7 +167,7 @@ export default function TopBar() {
   };
 
   return (
-    <header className="h-20 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-6 sm:px-8">
+    <header className="h-20 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-4 sm:px-8 lg:px-8 pl-14 sm:pl-16 lg:pl-8">
       <div className="flex-1 max-w-md hidden md:block" ref={searchRef}>
         <div className="relative group">
           {isSearching ? (
@@ -242,9 +242,11 @@ export default function TopBar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setShowHowItWorks(true)} className="rounded-full w-10 h-10">
-            <HelpCircle className="w-5 h-5 text-muted-foreground" />
-          </Button>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button variant="ghost" size="icon" onClick={() => setShowHowItWorks(true)} className="rounded-full w-10 h-10">
+              <HelpCircle className="w-5 h-5 text-muted-foreground" />
+            </Button>
+          </motion.div>
 
           <div
             onMouseEnter={handleNotificationMouseEnter}
@@ -252,20 +254,22 @@ export default function TopBar() {
             className="relative"
           >
             <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
-              <DropdownMenuTrigger
-                onClick={() => router.push("/dashboard/notifications")}
-                className={cn(
-                  "relative rounded-full w-10 h-10 flex items-center justify-center transition-all outline-none border-none hover:bg-muted focus:bg-muted",
-                  showNotifications ? "bg-muted text-foreground" : "bg-transparent text-muted-foreground"
-                )}
-              >
-                <Bell className="w-5 h-5" />
-                {unreadNotifications.length > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-background">
-                    {unreadNotifications.length}
-                  </span>
-                )}
-              </DropdownMenuTrigger>
+              <motion.div whileTap={{ scale: 0.9 }}>
+                <DropdownMenuTrigger
+                  onClick={() => router.push("/dashboard/notifications")}
+                  className={cn(
+                    "relative rounded-full w-10 h-10 flex items-center justify-center transition-all outline-none border-none hover:bg-muted focus:bg-muted",
+                    showNotifications ? "bg-muted text-foreground" : "bg-transparent text-muted-foreground"
+                  )}
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadNotifications.length > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-background">
+                      {unreadNotifications.length}
+                    </span>
+                  )}
+                </DropdownMenuTrigger>
+              </motion.div>
               <DropdownMenuContent
                 align="end"
                 className="w-80 mt-2 p-0 rounded-2xl border-border/50 shadow-2xl overflow-hidden bg-popover"
@@ -313,20 +317,22 @@ export default function TopBar() {
           </div>
 
           <DropdownMenu modal={false}>
-            <DropdownMenuTrigger className={cn(
-              "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground p-0 h-10 w-10 sm:w-auto sm:px-3 sm:gap-2",
-            )}>
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.avatarUrl || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                  {user?.name?.[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden sm:flex flex-col items-start text-left">
-                <span className="text-xs font-bold truncate max-w-[100px]">{user?.name}</span>
-                <span className="text-[10px] text-muted-foreground leading-none">{user?.plan}</span>
-              </div>
-            </DropdownMenuTrigger>
+            <motion.div whileTap={{ scale: 0.95 }}>
+              <DropdownMenuTrigger className={cn(
+                "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground p-0 h-10 w-10 sm:w-auto sm:px-3 sm:gap-2",
+              )}>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={user?.avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                    {user?.name?.[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden sm:flex flex-col items-start text-left">
+                  <span className="text-xs font-bold truncate max-w-[100px]">{user?.name}</span>
+                  <span className="text-[10px] text-muted-foreground leading-none">{user?.plan}</span>
+                </div>
+              </DropdownMenuTrigger>
+            </motion.div>
             <DropdownMenuContent align="end" className="w-56 mt-2">
               <div className="p-3 bg-muted/30 flex items-center gap-3">
                 <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
