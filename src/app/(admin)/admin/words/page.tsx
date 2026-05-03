@@ -23,8 +23,21 @@ import {
   Upload,
   Download,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Copy,
+  ExternalLink,
+  Trash2,
+  Info
 } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuGroup
+} from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/utils";
 import * as XLSX from "xlsx";
 
@@ -121,12 +134,115 @@ export default function AdminWordsPage() {
     reader.readAsBinaryString(file);
   };
 
+  const handleDeleteWord = async (wordId: string) => {
+    if (!confirm("Are you sure you want to delete this word? This action cannot be undone.")) return;
+
+    try {
+      const res = await fetch(`/api/admin/words/${wordId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete word");
+
+      setWords(prev => prev.filter(w => w.id !== wordId));
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to delete word");
+    }
+  };
+
   const getPOSColor = (pos: string) => {
     const p = pos?.toLowerCase() || '';
     if (p.includes('noun')) return 'bg-sky-500/10 text-sky-500 border-sky-500/20';
     if (p.includes('verb')) return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
     if (p.includes('adj')) return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
     return 'bg-white/5 text-white/40 border-white/10';
+  };
+
+  const handleDownloadGuide = () => {
+    const content = `VOCABVAULT - MASTER IMPORT GUIDE
+================================
+
+COLUMN MAPPING & TECHNICAL REQUIREMENTS
+---------------------------------------
+
+1. word (Required)
+   Description: The vocabulary word (Unique)
+   Example: Resilient
+
+2. phonetic (Required)
+   Description: IPA pronunciation notation
+   Example: /rɪˈzɪliənt/
+
+3. partOfSpeech (Required)
+   Description: Noun, Verb, Adjective, etc.
+   Example: Adjective
+
+4. definition (Required)
+   Description: Core dictionary definition
+   Example: Able to withstand or recover quickly from difficult conditions.
+
+5. tenseForms (Required)
+   Description: Comma separated list
+   Example: Resilience, Resiliently
+
+6. synonyms (JSON Required)
+   Description: Array of 3 entries with context
+   Structure: [{"word": "Tough", "sentence": "He is a tough competitor."}, ...]
+
+7. antonyms (JSON Required)
+   Description: Array of 3 entries with context
+   Structure: [{"word": "Fragile", "sentence": "Handle with care."}, ...]
+
+8. sentences (JSON Required)
+   Description: Array of 6 entries for all tenses
+   Structure: [{"tense": "Present", "sentence": "I am resilient."}, ...]
+
+9. articles (JSON Required)
+   Description: Array of 3 short articles (~50 words each)
+   Structure: [{"title": "News", "content": "..."}, ...]
+
+10. paragraph (Required)
+    Description: 200+ word paragraph for Stage 8 context
+    Example: In the heart of the storm...
+
+11. paragraphTargetCount / paragraphSynonymCount / paragraphAntonymCount
+    Description: Integer counts of target/synonym/antonym words in paragraph.
+
+12. audioClipUrls (JSON Required)
+    Description: Array of S3 URLs for multi-accent audio
+    Structure: [{"accent": "US", "url": "..."}, {"accent": "UK", "url": "..."}]
+
+13. correctAudioCounts (JSON Required)
+    Description: Array of counts for audio challenges
+    Structure: [{"accent": "US", "count": 5}, ...]
+
+14. orderIndex (Required)
+    Description: Unique integer for sorting order.
+
+---------------------------------------
+IMPORTANT TECHNICAL NOTE:
+All columns marked as (JSON Required) MUST be valid JSON strings in your Excel file.
+Example: ["A", "B"] is valid. A, B is INVALID and will cause import failure.
+================================`;
+
+    const blob = new Blob([content], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'VocabVault_Import_Guide.doc';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleBulkExport = () => {
+    if (words.length === 0) return;
+    
+    const ws = XLSX.utils.json_to_sheet(words);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "VocabVault_Words");
+    XLSX.writeFile(wb, `VocabVault_Words_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   return (
@@ -141,6 +257,24 @@ export default function AdminWordsPage() {
         </div>
         
         <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost"
+            onClick={handleDownloadGuide}
+            className="h-11 px-6 rounded-2xl bg-white/5 border border-white/5 text-white/40 hover:text-white hover:border-white/10 text-xs font-black uppercase tracking-widest flex items-center justify-center cursor-pointer transition-colors outline-none"
+          >
+            <Info className="w-4 h-4 mr-2" />
+            Import Guide
+          </Button>
+
+          <Button 
+            variant="ghost"
+            onClick={handleBulkExport}
+            className="h-11 px-6 rounded-2xl bg-white/5 border border-white/5 text-white/40 hover:text-white hover:border-white/10 text-xs font-black uppercase tracking-widest flex items-center justify-center transition-colors"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Bulk Export
+          </Button>
+
           <input 
             type="file" 
             id="bulk-import" 
@@ -279,9 +413,47 @@ export default function AdminWordsPage() {
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-white/20 hover:text-white hover:bg-white/5">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger 
+                              render={
+                                <button type="button" className="w-10 h-10 rounded-xl text-white/20 hover:text-white hover:bg-white/5 flex items-center justify-center cursor-pointer transition-colors outline-none border-0 bg-transparent">
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                              }
+                            />
+                            <DropdownMenuContent align="end" className="w-56 bg-[#0A0A0B] border-white/5 rounded-2xl p-2 shadow-2xl">
+                              <DropdownMenuGroup>
+                                <DropdownMenuLabel className="text-[10px] font-black text-white/20 uppercase tracking-widest px-3 py-2">Management</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-white/5" />
+                                <DropdownMenuItem 
+                                  onClick={() => navigator.clipboard.writeText(word.id)}
+                                  className="rounded-xl hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-white/60 hover:text-white"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                  Copy Reference ID
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => window.open(`https://www.oxfordlearnersdictionaries.com/definition/english/${word.word.toLowerCase()}`, '_blank')}
+                                  className="rounded-xl hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-white/60 hover:text-white"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  Oxford Reference
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                              
+                              <DropdownMenuSeparator className="bg-white/5" />
+                              
+                              <DropdownMenuGroup>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteWord(word.id)}
+                                  className="rounded-xl hover:bg-rose-500/10 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-rose-500/60 hover:text-rose-500"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Delete Entry
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>
@@ -292,8 +464,12 @@ export default function AdminWordsPage() {
           )}
         </CardContent>
       </Card>
-
-
     </div>
   );
+}
+
+
+
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(" ");
 }

@@ -25,8 +25,10 @@ import {
 import Link from "next/link";
 import LearningCalendar from "@/components/dashboard/learning-calendar";
 import { useBookmarkStore } from "@/stores/bookmark-store";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import RulesModal from "@/components/dashboard/rules-modal";
+import PerformanceAnalytics from "@/components/dashboard/performance-analytics";
 
 interface Word {
   id: string;
@@ -51,13 +53,55 @@ interface ActivityItem {
   timestamp: string;
 }
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 export default function DashboardPage() {
-  const { user, getAuthHeaders } = useAuthStore();
+  const { user, getAuthHeaders, syncUser } = useAuthStore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const handleAcknowledgeRules = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/user/acknowledge-rules", { 
+        method: "POST", 
+        headers 
+      });
+      if (res.ok) {
+        await syncUser();
+      }
+    } catch (e) {
+      console.error("Failed to acknowledge rules", e);
+    }
+  };
   const [words, setWords] = useState<Word[]>([]);
   const [progressMap, setProgressMap] = useState<Record<string, WordProgress>>({});
   const [userStats, setUserStats] = useState<any>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+
+  useEffect(() => {
+    const plan = searchParams.get("plan");
+    if (plan === "pro" && user?.plan === "FREE") {
+      const startCheckout = async () => {
+        try {
+          setIsCheckoutLoading(true);
+          const headers = await getAuthHeaders();
+          const res = await fetch("/api/stripe/checkout", { method: "POST", headers });
+          if (res.ok) {
+            const { url } = await res.json();
+            window.location.href = url;
+          }
+        } catch (error) {
+          console.error("Auto checkout failed", error);
+        } finally {
+          setIsCheckoutLoading(false);
+        }
+      };
+      startCheckout();
+    }
+  }, [searchParams, user, getAuthHeaders]);
   const [isPaywalled, setIsPaywalled] = useState(false);
   const [relearnLoading, setRelearnLoading] = useState<string | null>(null);
   const [wordOfTheDay, setWordOfTheDay] = useState<any>(null);
@@ -65,13 +109,48 @@ export default function DashboardPage() {
   const freeLimit = 25;
 
   useEffect(() => {
+    if (user?.id) {
+      const isSuccess = searchParams.get("checkout") === "success";
+      const sessionId = searchParams.get("session_id");
+
+      if (isSuccess && sessionId) {
+        const verifySession = async () => {
+          try {
+            const headers = await getAuthHeaders();
+            const res = await fetch("/api/stripe/verify-session", { 
+              method: "POST",
+              headers,
+              body: JSON.stringify({ sessionId })
+            });
+            
+            if (res.ok) {
+              await syncUser();
+              alert("🎉 Welcome to VocabVault PRO! Your payment has been verified.");
+              router.replace("/dashboard");
+            }
+          } catch (e) {
+            console.error("Session verification failed", e);
+          }
+        };
+        verifySession();
+      } else if (isSuccess) {
+        // Fallback for old success URLs without session_id
+        syncUser();
+      } else {
+        syncUser();
+      }
+    }
+  }, [user?.id, searchParams, syncUser, router, getAuthHeaders]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const headers = await getAuthHeaders();
-        const [profileRes, wordsRes, activityRes] = await Promise.all([
+        const [profileRes, wordsRes, activityRes, wotdRes] = await Promise.all([
           fetch("/api/user/profile", { headers }),
           fetch("/api/words/daily", { headers }),
           fetch("/api/user/activity", { headers }),
+          fetch("/api/words/word-of-the-day", { headers }),
         ]);
 
         if (profileRes.ok) {
@@ -83,16 +162,14 @@ export default function DashboardPage() {
           setActivities(activityData.activities || []);
         }
 
-        let wordsData: any = null;
-        if (wordsRes.headers.get("content-type")?.includes("application/json")) {
-          wordsData = await wordsRes.json();
+        if (wotdRes.ok) {
+          const data = await wotdRes.json();
+          setWordOfTheDay(data.word);
         }
 
-        if (wordsRes.status === 403 && wordsData?.isPaywalled) {
-          setIsPaywalled(true);
-        } else if (wordsRes.ok && wordsData) {
+        if (wordsRes.ok) {
+          const wordsData = await wordsRes.json();
           setWords(wordsData.words || []);
-          setIsPaywalled(wordsData.isPaywalled || false);
           setIsPrecedingWordCompleted(wordsData.isPrecedingWordCompleted ?? true);
           const pMap: Record<string, WordProgress> = {};
           if (wordsData.progress) {
@@ -101,6 +178,7 @@ export default function DashboardPage() {
             });
           }
           setProgressMap(pMap);
+          setIsPaywalled(wordsData.isPaywalled || false);
         } else {
           console.warn(`Unexpected response from /api/words/daily: ${wordsRes.status}`);
         }
@@ -124,7 +202,7 @@ export default function DashboardPage() {
         } catch (e) { console.error(e); }
       })();
     }
-  }, [user, getAuthHeaders]);
+  }, [user?.id, getAuthHeaders]);
 
   const [isPrecedingWordCompleted, setIsPrecedingWordCompleted] = useState(true);
 
@@ -195,6 +273,21 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <AnimatePresence>
+        {isCheckoutLoading && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+          >
+            <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
+            <h3 className="text-xl font-bold tracking-tight">Initiating Secure Checkout</h3>
+            <p className="text-muted-foreground text-sm font-medium">Please wait while we redirect you to Stripe...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       {/* Background Aesthetic */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/5 blur-[100px] rounded-full pointer-events-none" />
@@ -210,7 +303,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3 tracking-tight">
               Welcome back, <span className="font-black text-primary">{user?.name?.split(" ")[0] || "Learner"}</span>
               {user?.plan === "PRO" && (
-                <Badge className="bg-linear-to-r from-violet-600 to-purple-600 text-white border-none shadow-sm px-3 font-bold text-[10px] uppercase tracking-wider">
+                <Badge className="bg-linear-to-r from-primary to-primary-600 text-white border-none shadow-sm px-3 font-bold text-[10px] uppercase tracking-wider">
                   <Crown className="w-3.5 h-3.5 mr-1" /> PRO
                 </Badge>
               )}
@@ -221,20 +314,129 @@ export default function DashboardPage() {
           </div>
 
           {user?.plan === "FREE" && (
-            <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5 text-sm sm:max-w-xs group cursor-pointer hover:bg-primary/10 transition-all" onClick={handleUpgrade}>
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Lock className="w-4 h-4 text-primary" />
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="relative group cursor-pointer"
+              onClick={handleUpgrade}
+            >
+              <div className="absolute -inset-0.5 bg-linear-to-r from-primary to-primary-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+              <div className="relative flex items-center gap-4 p-4 rounded-2xl border border-primary/20 bg-background/50 backdrop-blur-md text-sm sm:max-w-sm">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-black text-xs uppercase tracking-widest text-primary">Unlock Full Potential</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight font-bold mt-0.5 uppercase opacity-70">Get Lifetime access to all 5,000+ words</p>
+                </div>
+                <Button size="sm" className="h-9 px-4 bg-primary text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-lg shadow-primary/20">
+                  Upgrade
+                </Button>
               </div>
-              <div className="flex-1">
-                <p className="font-bold text-xs uppercase tracking-wider">Free Plan Active</p>
-                <p className="text-[10px] text-muted-foreground leading-tight font-medium">Unlock full curriculum</p>
-              </div>
-              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2 font-bold uppercase tracking-wider">
-                Upgrade
-              </Button>
-            </div>
+            </motion.div>
           )}
         </motion.div>
+
+        {/* --- Mastery Hero (Active Word) --- */}
+        {words.length > 0 && !isLoading && (
+          <motion.div 
+            variants={itemVariants} 
+            className="mb-14 flex justify-center"
+          >
+            {(() => {
+              // Logic: Show pending word first, otherwise latest unlocked
+              const pendingWord = words.find(w => {
+                const p = progressMap[w.id];
+                return p && p.status !== "COMPLETED";
+              });
+              
+              // If no pending, find latest unlocked (highest orderIndex)
+              const activeWord = pendingWord || [...words].sort((a, b) => b.orderIndex - a.orderIndex)[0];
+              
+              const progress = progressMap[activeWord.id];
+              const stage = progress?.currentStage || 1;
+              const isRetry = progress?.status === "RETRY";
+              const targetUrl = isRetry ? `/stage/${activeWord.id}/summary` : `/stage/${activeWord.id}/${stage}`;
+              const completionPercent = (stage / 10) * 100;
+
+              return (
+                <div className="relative w-full max-w-2xl group">
+                  {/* Hyper-Glow Background */}
+                  <div className="absolute -inset-4 bg-linear-to-r from-primary/20 via-primary/20 to-primary/20 rounded-[3rem] blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000" />
+                  
+                  <Card className="relative min-h-[280px] bg-background/40 backdrop-blur-3xl border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center text-center p-10 shadow-2xl border-t-white/20">
+                    {/* Animated Decorative Orbs */}
+                    <motion.div 
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 90, 0],
+                        x: [0, 20, 0],
+                        y: [0, -20, 0]
+                      }}
+                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                      className="absolute top-10 left-10 w-32 h-32 bg-primary/10 blur-[60px] rounded-full pointer-events-none" 
+                    />
+                      <motion.div 
+                        animate={{ 
+                          scale: [1, 1.5, 1],
+                          rotate: [0, -90, 0],
+                          x: [0, -30, 0],
+                          y: [0, 30, 0]
+                        }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute bottom-10 right-10 w-40 h-40 bg-primary/10 blur-[80px] rounded-full pointer-events-none" 
+                      />
+
+                    <div className="relative z-10 space-y-4 mb-8">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] drop-shadow-sm">Mastery Objective</span>
+                        <div className="h-0.5 w-12 bg-primary/30 rounded-full" />
+                      </div>
+                      
+                      <h2 className="text-6xl sm:text-7xl font-black tracking-tighter text-foreground capitalize drop-shadow-2xl">
+                        {activeWord.word}
+                      </h2>
+                      
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="px-3 py-1 rounded-full bg-background/50 border border-white/10 backdrop-blur-md flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            Stage {stage} of 10
+                          </span>
+                        </div>
+                        {isRetry && (
+                          <Badge className="bg-rose-500/10 text-rose-500 border-none font-bold text-[9px] tracking-widest px-3 py-1 rounded-full animate-pulse">
+                            RETRY MODE
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 w-full max-w-xs space-y-4">
+                      {/* Progress Bar Mini */}
+                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-6">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${completionPercent}%` }}
+                          className="h-full bg-linear-to-r from-primary to-violet-500 shadow-[0_0_10px_rgba(var(--primary),0.5)]"
+                        />
+                      </div>
+
+                      <Link href={targetUrl} className="block w-full">
+                        <Button className="w-full h-16 rounded-[1.25rem] bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] group/btn border-t border-white/20">
+                          {isRetry ? "Resume Mastery" : "Initiate Word"}
+                          <div className="ml-3 w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center group-hover/btn:bg-white group-hover/btn:text-primary transition-all">
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                </div>
+              );
+            })()}
+          </motion.div>
+        )}
 
         {/* Word Queue Section */}
         <motion.section variants={itemVariants} className="mb-8">
@@ -264,7 +466,7 @@ export default function DashboardPage() {
           ) : isPaywalled ? (
             <Card className="border-primary/20 bg-background/50 backdrop-blur-md shadow-lg overflow-hidden rounded-3xl">
               <CardContent className="p-10 text-center flex flex-col items-center">
-                <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                <div className="w-16 h-16 bg-linear-to-br from-primary to-primary-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                   <Lock className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-2 tracking-tight">You&apos;ve mastered 25 words!</h3>
@@ -273,7 +475,7 @@ export default function DashboardPage() {
                 </p>
                 <Button
                   onClick={handleUpgrade}
-                  className="bg-linear-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-10 h-14 font-bold uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                  className="bg-linear-to-r from-primary to-primary-600 hover:from-primary/90 hover:to-primary-700 text-white px-10 h-14 font-bold uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                   Upgrade to Pro <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -401,7 +603,7 @@ export default function DashboardPage() {
         {wordOfTheDay && (
           <motion.section variants={itemVariants} className="mb-8">
             <Card className="border-primary/20 bg-background/50 backdrop-blur-md overflow-hidden relative rounded-3xl group shadow-sm">
-              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-violet-600 via-purple-500 to-indigo-600" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary via-primary-600 to-primary/80" />
               <CardContent className="p-4 sm:p-5">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -510,6 +712,11 @@ export default function DashboardPage() {
           </div>
         </motion.section>
 
+        {/* Performance Analytics Section */}
+        <motion.section variants={itemVariants} className="mb-12">
+          <PerformanceAnalytics />
+        </motion.section>
+
         {/* Learning Calendar - Smaller Container */}
         <motion.section variants={itemVariants} className="mb-8 mx-auto max-w-2xl w-full rounded-3xl border border-border/50 bg-background/50 backdrop-blur-md p-6 shadow-xs">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
@@ -521,6 +728,13 @@ export default function DashboardPage() {
           </div>
         </motion.section>
       </motion.div>
+
+      {/* Mandatory Rules Orientation */}
+      <AnimatePresence>
+        {user && !user.rulesAcknowledged && (
+          <RulesModal onAcknowledge={handleAcknowledgeRules} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

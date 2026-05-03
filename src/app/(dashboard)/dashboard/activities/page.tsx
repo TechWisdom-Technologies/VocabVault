@@ -260,9 +260,9 @@ export default function ActivitiesPage() {
                                   <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider opacity-60">Status: {item.status}</Badge>
                                   </div>
-                                  <Link href={`/dashboard/word/${item.word.id}`}>
+                                  <Link href={`/stage/${item.word.id}/summary`}>
                                     <Button variant="link" size="sm" className="text-primary font-bold text-xs uppercase tracking-wider">
-                                      View word details <ArrowLeft className="w-3 h-3 ml-1 rotate-180" />
+                                      View mastery summary <ArrowLeft className="w-3 h-3 ml-1 rotate-180" />
                                     </Button>
                                   </Link>
                                 </div>

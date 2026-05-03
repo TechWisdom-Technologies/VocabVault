@@ -130,8 +130,46 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // --- SELF-HEALING ACHIEVEMENTS: Virtually unlock if missing ---
+    const virtualStreakRewards = [...(fullUser.streakRewards || [])];
+    const streakMilestones = [3, 7, 30, 90, 100];
+    streakMilestones.forEach(m => {
+      if (fullUser.currentStreak >= m && !virtualStreakRewards.some(r => r.milestone === m)) {
+        virtualStreakRewards.push({
+          id: `virtual-streak-${m}`,
+          userId: user.id,
+          milestone: m,
+          claimedAt: new Date(),
+          isVirtual: true
+        } as any);
+      }
+    });
+
+    const virtualAchievements = [...(fullUser.achievements || [])];
+    if (fullUser.wordsLearned >= 10 && !virtualAchievements.some(a => a.type === "FIRST_TEN_WORDS")) {
+      virtualAchievements.push({ 
+        id: "v-1", 
+        userId: user.id,
+        type: "FIRST_TEN_WORDS", 
+        unlockedAt: new Date(),
+        metadata: {}
+      });
+    }
+    if (dayAvgScore >= 90 && fullUser.wordsLearned >= 5 && !virtualAchievements.some(a => a.type === "MASTERY_ELITE")) {
+      virtualAchievements.push({ 
+        id: "v-2", 
+        userId: user.id,
+        type: "MASTERY_ELITE", 
+        unlockedAt: new Date(),
+        metadata: {}
+      });
+    }
+    // -------------------------------------------------------------
+
     const responsePayload = {
       ...fullUser,
+      achievements: virtualAchievements,
+      streakRewards: virtualStreakRewards,
       todayScore: todayScoreAgg._sum.score || 0,
       wordsLearnedToday,
       dayAvgScore,

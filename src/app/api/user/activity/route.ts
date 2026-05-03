@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
     const activities = recentLogs.map((entry) => ({
       id: entry.id,
       type: entry.actionType,
+      wordId: entry.wordId,
       word: entry.wordId ? wordMap.get(entry.wordId) || entry.wordId : "",
       stageIndex: entry.stageNumber || 0,
       score: entry.score || 0,
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest) {
         activities: recentScores.map((score) => ({
           id: score.id,
           type: "STAGE_COMPLETED",
+          wordId: score.wordProgress.word.id,
           word: score.wordProgress.word.word,
           stageIndex: score.stageNumber,
           score: score.score,

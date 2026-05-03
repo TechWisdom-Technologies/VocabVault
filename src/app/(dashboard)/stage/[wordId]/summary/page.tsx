@@ -149,7 +149,7 @@ export default function SummaryPage({ params }: { params: Promise<{ wordId: stri
 
         <div className="flex justify-center pt-8">
           {passed ? (
-            <Button size="lg" className="px-12 text-lg h-14 bg-linear-to-r from-violet-600 to-purple-600 shadow-lg shadow-primary/25" onClick={handleFinish}>
+            <Button size="lg" className="px-12 text-lg h-14 bg-linear-to-r from-primary to-primary-600 shadow-lg shadow-primary/25" onClick={handleFinish}>
               Finish & Return <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           ) : (

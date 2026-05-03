@@ -62,7 +62,10 @@ export default function Sidebar() {
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/20">
               <span className="text-white font-black text-xl">V</span>
             </div>
-            <h1 className="text-xl font-black tracking-tight">VocabVault</h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-black tracking-tight leading-none">VocabVault</h1>
+              <span className="text-[10px] font-medium text-muted-foreground leading-none mt-1">By TechWisdom Technologies</span>
+            </div>
           </div>
 
           <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2 custom-scrollbar">

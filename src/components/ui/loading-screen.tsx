@@ -58,6 +58,9 @@ export default function LoadingScreen({
             <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic animate-[reveal-up_0.8s_cubic-bezier(0.23,1,0.32,1)_forwards]">
               {message}
             </h1>
+            <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em] mt-2 animate-in fade-in duration-1000 delay-300">
+              By TechWisdom Technologies
+            </p>
           </div>
           
           <div className="flex items-center gap-3">

@@ -13,6 +13,7 @@ export interface AuthenticatedUser {
   onboardingComplete: boolean;
   isLocked: boolean;
   lockReason: string | null;
+  stripeCustomerId: string | null;
 }
 
 // ─── In-Memory User Cache ────────────────────────────────
@@ -153,6 +154,11 @@ export async function validateRequest(
     }
 
     // 3. Get user from database (with in-memory cache)
+    const refreshHeader = req.headers.get("x-refresh-user");
+    if (refreshHeader === "true") {
+      invalidateUserCache(firebaseUid);
+    }
+    
     let user = getCachedUser(firebaseUid);
 
     if (!user) {
@@ -168,6 +174,7 @@ export async function validateRequest(
           onboardingComplete: true,
           isLocked: true,
           lockReason: true,
+          stripeCustomerId: true,
         },
       });
 

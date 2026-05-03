@@ -3,19 +3,22 @@
 import AdminGuard from "@/components/admin/admin-guard";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  Settings, 
-  AlertTriangle, 
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Settings,
+  AlertTriangle,
   ShieldAlert,
   ChevronRight,
   LogOut,
-  Bell
+  Bell,
+  Menu,
+  X
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, color: "text-violet-500" },
@@ -28,6 +31,7 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const getBreadcrumb = () => {
     const parts = pathname.split("/").filter(Boolean);
@@ -41,7 +45,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-[#0a0a0b] text-foreground flex overflow-hidden">
+      <div className="dark">
+        <div className="min-h-screen bg-[#0a0a0b] text-slate-200 flex overflow-hidden">
         {/* Decorative Background Glows */}
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-[40%] h-[40%] rounded-full bg-violet-600/5 blur-[120px]" />
@@ -49,7 +54,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Sidebar */}
-        <aside className="w-72 border-r border-white/5 bg-background/50 backdrop-blur-xl shrink-0 hidden lg:flex flex-col relative z-20">
+        <aside className={`
+          fixed inset-y-0 left-0 z-[100] w-72 border-r border-white/5 bg-background/50 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
           <div className="p-8">
             <Link href="/admin" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-transform group-hover:scale-105">
@@ -57,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <h2 className="text-lg font-black tracking-tight text-white leading-none">VocabVault</h2>
-                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] leading-none mt-1 block">Admin Core</span>
+                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] leading-none mt-1 block">By TechWisdom Technologies</span>
               </div>
             </Link>
           </div>
@@ -71,8 +79,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link key={item.href} href={item.href}>
                   <div className={`
                     flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all relative group
-                    ${isActive 
-                      ? 'text-white bg-white/5' 
+                    ${isActive
+                      ? 'text-white bg-white/5'
                       : 'text-muted-foreground hover:text-white hover:bg-white/5'}
                   `}>
                     {isActive && (
@@ -100,9 +108,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <p className="text-[10px] text-white/40 truncate">{user?.email}</p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={logout}
                 className="w-full justify-start gap-2 h-8 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-[10px] font-bold uppercase tracking-wider"
               >
@@ -110,7 +118,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 Sign Out
               </Button>
             </div>
-            
+
             <Link href="/admin/settings">
               <div className={`
                 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all
@@ -126,12 +134,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Content Area */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Top Header */}
-          <header className="h-20 border-b border-white/5 bg-background/30 backdrop-blur-md flex items-center justify-between px-8 shrink-0 relative z-10">
-            <div className="flex items-center gap-4 text-xs font-bold text-white/40">
-              <Link href="/admin" className="hover:text-white transition-colors">Admin</Link>
-              <ChevronRight className="w-3 h-3 opacity-30" />
-              <div className="text-white flex items-center gap-1">
-                {getBreadcrumb()}
+          <header className="h-20 border-b border-white/5 bg-background/30 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 shrink-0 relative z-10">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden text-white/40 hover:text-white"
+              >
+                {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+              
+              <div className="flex items-center gap-4 text-xs font-bold text-white/40">
+                <Link href="/admin" className="hidden sm:block hover:text-white transition-colors">Admin</Link>
+                <ChevronRight className="hidden sm:block w-3 h-3 opacity-30" />
+                <div className="text-white flex items-center gap-1">
+                  {getBreadcrumb()}
+                </div>
               </div>
             </div>
 
@@ -142,9 +161,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Button>
                 <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-[#0a0a0b]" />
               </div>
-              
+
               <div className="h-8 w-[1px] bg-white/5" />
-              
+
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Status</span>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
@@ -162,6 +181,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </main>
         </div>
+        </div>
+
+        {/* Mobile Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
       </div>
     </AdminGuard>
   );

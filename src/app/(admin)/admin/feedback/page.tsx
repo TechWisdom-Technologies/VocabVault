@@ -22,7 +22,7 @@ import {
   Clock,
   ExternalLink
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
 
 interface FeedbackItem {
   id: string;
@@ -49,6 +49,7 @@ export default function AdminFeedbackPage() {
   const { getAuthHeaders } = useAuthStore();
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingStatus, setIsLoadingStatus] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
 
   const fetchFeedback = async () => {
@@ -63,6 +64,25 @@ export default function AdminFeedbackPage() {
       console.error("Failed to fetch feedback", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (id: string, status: string) => {
+    setIsLoadingStatus(id);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/feedback/${id}`, {
+        method: "PUT",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        await fetchFeedback();
+      }
+    } catch (error) {
+      console.error("Failed to update feedback status", error);
+    } finally {
+      setIsLoadingStatus(null);
     }
   };
 
@@ -189,24 +209,41 @@ export default function AdminFeedbackPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 pt-6 border-t border-white/5">
-                      <div className="flex items-center gap-3 text-xs font-bold text-white/40">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
-                          <MapPin className="w-3.5 h-3.5" />
-                        </div>
-                        {item.user.nationality || "Global Citizen"}
+                    <div className="pt-6 border-t border-white/5 space-y-3">
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/20 mb-2">
+                        <span>Governance Actions</span>
+                        <Badge variant="outline" className={cn(
+                          "border-none text-[8px] px-2 h-4",
+                          item.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-500' : 
+                          item.status === 'IN_PROGRESS' ? 'bg-sky-500/10 text-sky-500' : 'bg-white/5 text-white/40'
+                        )}>
+                          {item.status}
+                        </Badge>
                       </div>
-                      <div className="flex items-center gap-3 text-xs font-bold text-white/40">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
-                          <Zap className="w-3.5 h-3.5" />
-                        </div>
-                        {item.user.profession || "Independent Learner"}
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          onClick={() => handleStatusUpdate(item.id, 'IN_PROGRESS')}
+                          disabled={isLoadingStatus === item.id || item.status === 'IN_PROGRESS'}
+                          variant="ghost" 
+                          className="h-9 rounded-xl bg-white/5 border border-white/5 text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 text-[9px] font-black uppercase tracking-widest"
+                        >
+                          {isLoadingStatus === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'In Progress'}
+                        </Button>
+                        <Button 
+                          onClick={() => handleStatusUpdate(item.id, 'RESOLVED')}
+                          disabled={isLoadingStatus === item.id || item.status === 'RESOLVED'}
+                          variant="ghost" 
+                          className="h-9 rounded-xl bg-white/5 border border-white/5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-[9px] font-black uppercase tracking-widest"
+                        >
+                          {isLoadingStatus === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Resolve'}
+                        </Button>
                       </div>
-                    </div>
 
-                    <Button variant="ghost" className="w-full h-11 rounded-xl bg-white/5 border border-white/5 text-white/40 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest">
-                      View Full Profile
-                    </Button>
+                      <Button variant="ghost" className="w-full h-9 rounded-xl bg-white/5 border border-white/5 text-white/20 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest">
+                        View Full Profile
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>

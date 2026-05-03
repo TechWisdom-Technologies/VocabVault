@@ -67,14 +67,15 @@ export default function SettingsPage() {
     emailNewsletter: false,
   });
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
         const headers = await getAuthHeaders();
-        const [profileRes, devicesRes] = await Promise.all([
+        const [profileRes, sessionsRes] = await Promise.all([
           fetch("/api/user/profile", { headers }),
-          fetch("/api/user/devices", { headers }),
+          fetch("/api/user/sessions", { headers }),
         ]);
         if (profileRes.ok) {
           const data = await profileRes.json();
@@ -86,9 +87,9 @@ export default function SettingsPage() {
             emailNewsletter: false,
           });
         }
-        if (devicesRes.ok) {
-          const data = await devicesRes.json();
-          setDevices(data.devices);
+        if (sessionsRes.ok) {
+          const data = await sessionsRes.json();
+          setDevices(data.sessions);
         }
       } catch (error) {
         console.error("Failed to fetch settings data", error);
@@ -98,6 +99,23 @@ export default function SettingsPage() {
     };
     if (user) fetchAll();
   }, [user, getAuthHeaders]);
+
+  const handleLogoutDevice = async (sessionId: string) => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/auth/session/remote-logout", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ sessionId })
+      });
+
+      if (res.ok) {
+        setDevices(prev => prev.filter(d => d.id !== sessionId));
+      }
+    } catch (e) {
+      console.error("Failed to logout device", e);
+    }
+  };
 
   const togglePreference = (key: string) => {
     setNotificationPreferences(prev => ({ ...prev, [key]: !prev[key as keyof typeof notificationPreferences] }));
@@ -127,10 +145,53 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: "account", label: "Account", icon: User, desc: "Personal info & profile" },
+    { id: "billing", label: "Billing", icon: CreditCard, desc: "Plan & subscription" },
     { id: "notifications", label: "Alerts", icon: Bell, desc: "Manage notifications" },
     { id: "appearance", label: "Theme", icon: Palette, desc: "Custom style & UI" },
     { id: "security", label: "Security", icon: Shield, desc: "Devices & auth" },
   ];
+
+  const handleUpgrade = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers,
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Failed to start checkout", error);
+    }
+  };
+  const handleManageBilling = async () => {
+    try {
+      setIsPortalLoading(true);
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers,
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        window.location.href = url;
+      } else {
+        const data = await res.json();
+        if (data.error === "Simulated Billing Portal") {
+          alert("🛠️ Dev Mode: This is a simulated PRO account.\n\nTo see the REAL Stripe Billing Portal, please perform a test checkout using the 'Upgrade' button with a test card (4242...).");
+        } else {
+          alert(`Billing Error: ${data.error}\n\n${data.details || ""}`);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to open billing portal", error);
+      alert("An unexpected error occurred while connecting to the billing portal.");
+    } finally {
+      setIsPortalLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-muted/20 pb-20 overflow-hidden">
@@ -259,6 +320,106 @@ export default function SettingsPage() {
                   </Card>
                 )}
 
+                {activeTab === "billing" && (
+                  <Card className="border-border/50 shadow-xl rounded-3xl overflow-hidden border-t-emerald-500/20">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold uppercase tracking-tight">Subscription Hub</CardTitle>
+                      <CardDescription className="font-medium">Manage your membership and linguistic privileges</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-10">
+                      <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-2xl bg-muted/10 border border-border/50 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="w-8 h-8 text-primary" />
+                        </div>
+                        <div className="flex-1 text-center md:text-left">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Current Membership</p>
+                          <h3 className="text-2xl font-black tracking-tight flex items-center justify-center md:justify-start gap-3">
+                            VocabVault {user?.plan}
+                            {user?.plan === "PRO" && <Badge className="bg-emerald-500 text-white border-none">Active</Badge>}
+                          </h3>
+                        </div>
+                        {user?.plan === "FREE" && (
+                          <Button 
+                            onClick={handleUpgrade}
+                            className="w-full md:w-auto h-12 px-8 rounded-xl bg-linear-to-r from-primary to-violet-600 font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                          >
+                            Upgrade to Lifetime PRO
+                          </Button>
+                        )}
+                        {user?.plan === "PRO" && (
+                          <Button 
+                            onClick={handleManageBilling}
+                            disabled={isPortalLoading}
+                            variant="outline"
+                            className="w-full md:w-auto h-12 px-8 rounded-xl border-primary/30 hover:border-primary bg-background shadow-sm hover:shadow-primary/10 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 font-black uppercase tracking-widest text-[10px] transition-all group/btn relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 bg-linear-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
+                            {isPortalLoading ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                            ) : (
+                              <CreditCard className="w-3.5 h-3.5 mr-2 group-hover/btn:rotate-12 transition-transform" />
+                            )}
+                            Manage Subscription
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4 p-6 rounded-2xl border border-border/50 bg-background/50">
+                          <h4 className="font-black text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                             <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                             Free Tier Limits
+                          </h4>
+                          <ul className="space-y-3">
+                            {[
+                              "5 New words per day",
+                              "Basic AI feedback",
+                              "Limited audio accents",
+                              "Standard support"
+                            ].map((feat, i) => (
+                              <li key={i} className="text-xs font-medium flex items-center gap-2 text-muted-foreground">
+                                <ChevronRight className="w-3 h-3 text-muted-foreground/40" />
+                                {feat}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="space-y-4 p-6 rounded-2xl border-2 border-primary/20 bg-primary/5 relative">
+                          <div className="absolute -top-3 right-4 px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">Recommended</div>
+                          <h4 className="font-black text-xs uppercase tracking-widest text-primary flex items-center gap-2">
+                             <Sparkles className="w-3 h-3" />
+                             Pro privileges
+                          </h4>
+                          <ul className="space-y-3">
+                            {[
+                              "Unlimited daily words",
+                              "Advanced neural AI evaluation",
+                              "Full multi-accent audio engine",
+                              "Priority executive support",
+                              "Early access to new modules"
+                            ].map((feat, i) => (
+                              <li key={i} className="text-xs font-bold flex items-center gap-2 text-foreground">
+                                <Sparkles className="w-3 h-3 text-primary" />
+                                {feat}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {user?.plan === "PRO" && (
+                        <div className="p-4 rounded-xl bg-muted/10 border border-dashed border-border/50 text-center">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">
+                            You have Lifetime Access. No further payments are required.
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
                 {activeTab === "notifications" && (
                   <Card className="border-border/50 shadow-xl rounded-3xl overflow-hidden border-t-amber-500/20">
                     <CardHeader>
@@ -354,7 +515,7 @@ export default function SettingsPage() {
                                       {isCurrent && <Badge className="bg-primary/10 text-primary border-none text-[9px] h-5 rounded-full px-2 font-bold uppercase">Current</Badge>}
                                     </div>
                                     <p className="text-[10px] text-muted-foreground font-bold opacity-70 mt-1 uppercase">
-                                      {device.os} • {device.ipAddress}
+                                      {device.os} • {device.ipAddress} • {device.locationCity}, {device.locationCountry}
                                     </p>
                                   </div>
                                 </div>
@@ -363,7 +524,7 @@ export default function SettingsPage() {
                                     variant="ghost"
                                     size="sm"
                                     className="rounded-xl h-9 text-[10px] font-bold uppercase tracking-wider text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => revokeDevice(device.sessionToken)}
+                                    onClick={() => handleLogoutDevice(device.id)}
                                   >
                                     Revoke
                                   </Button>

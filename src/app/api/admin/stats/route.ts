@@ -6,55 +6,89 @@ export async function GET(req: NextRequest) {
   const authResult = await validateAdminRequest(req);
   if ("error" in authResult) return authResult.error;
 
+  const { searchParams } = new URL(req.url);
+  const days = parseInt(searchParams.get("days") || "30", 10);
+
   try {
     const now = new Date();
+    const periodStart = new Date();
+    periodStart.setDate(now.getDate() - days);
+
+    const prevPeriodStart = new Date();
+    prevPeriodStart.setDate(now.getDate() - (days * 2));
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - 7);
-
-    const startOfMonth = new Date();
-    startOfMonth.setDate(startOfMonth.getDate() - 30);
-
-    // Users
+    // --- Current Period Metrics ---
     const totalUsers = await prisma.user.count();
     const proUsers = await prisma.user.count({ where: { plan: "PRO" } });
-    const active7Days = await prisma.user.count({ where: { updatedAt: { gte: startOfWeek } } });
-    const active30Days = await prisma.user.count({ where: { updatedAt: { gte: startOfMonth } } });
+    const activeUsers = await prisma.user.count({ where: { updatedAt: { gte: periodStart } } });
     const signupsToday = await prisma.user.count({ where: { createdAt: { gte: startOfDay } } });
+    
+    // Words learned (sum of progress records started in period)
+    const wordsLearnedResult = await prisma.user.aggregate({ _sum: { wordsLearned: true } });
+    const totalWordsLearned = wordsLearnedResult._sum.wordsLearned || 0;
 
-    const signupsWeek = await prisma.user.count({ where: { createdAt: { gte: startOfWeek } } });
-    const signupsMonth = await prisma.user.count({ where: { createdAt: { gte: startOfMonth } } });
+    // Revenue (Estimated)
+    const revenue = proUsers * 499;
 
-    // Progress
-    const totalWordsLearnedAgg = await prisma.user.aggregate({ _sum: { wordsLearned: true } });
-    const totalWordsLearned = totalWordsLearnedAgg._sum.wordsLearned || 0;
+    // --- Growth Calculations ---
+    const usersInPrevPeriod = await prisma.user.count({ 
+      where: { createdAt: { gte: prevPeriodStart, lt: periodStart } } 
+    });
+    const usersInCurrPeriod = await prisma.user.count({ 
+      where: { createdAt: { gte: periodStart } } 
+    });
+    const userGrowth = usersInPrevPeriod > 0 
+      ? Math.round(((usersInCurrPeriod - usersInPrevPeriod) / usersInPrevPeriod) * 100) 
+      : 0;
 
-    const totalStagesCompleted = await prisma.stageScore.count({ where: { passed: true } });
+    const wordsInPrevPeriod = await prisma.wordProgress.count({
+      where: { startedAt: { gte: prevPeriodStart, lt: periodStart } }
+    });
+    const wordsInCurrPeriod = await prisma.wordProgress.count({
+      where: { startedAt: { gte: periodStart } }
+    });
+    const wordGrowth = wordsInPrevPeriod > 0
+      ? Math.round(((wordsInCurrPeriod - wordsInPrevPeriod) / wordsInPrevPeriod) * 100)
+      : 0;
 
-    // Revenue estimate based on Pro users * configured price
-    const revenue = proUsers * 499; // 499 BDT per pro user
-
-    // Locked accounts
-    const lockedAccounts = await prisma.user.count({ where: { isLocked: true } });
-
-    // Total active sessions
-    const activeSessions = await prisma.deviceSession.count();
+    // --- Recent Activity Feed ---
+    const recentActivity = await prisma.activityLog.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true
+          }
+        }
+      }
+    });
 
     return NextResponse.json({
       totalUsers,
       proUsers,
-      active7Days,
-      active30Days,
+      activeUsers,
       signupsToday,
-      signupsWeek,
-      signupsMonth,
       totalWordsLearned,
-      totalStagesCompleted,
       revenue,
-      lockedAccounts,
-      activeSessions,
+      growth: {
+        users: userGrowth,
+        words: wordGrowth,
+        platform: Math.round((userGrowth + wordGrowth) / 2) // Aggregated growth estimate
+      },
+      recentActivity: recentActivity.map(log => ({
+        id: log.id,
+        type: log.actionType,
+        message: log.actionType.replace(/_/g, ' ').toLowerCase(),
+        user: log.user,
+        createdAt: log.createdAt
+      }))
     });
   } catch (error) {
     console.error("Error fetching admin stats:", error);

@@ -79,6 +79,7 @@ interface AuthState {
   setFirebaseUser: (user: FirebaseUser | null) => void;
   getAuthHeaders: () => Promise<Record<string, string>>;
   acknowledgeRules: () => void;
+  syncUser: () => Promise<void>;
 }
 
 function getDeviceInfo(): DeviceInfo {
@@ -302,6 +303,29 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (user) {
           set({ user: { ...user, rulesAcknowledged: true } });
+        }
+      },
+      syncUser: async () => {
+        const { getAuthHeaders, user } = get();
+        if (!user) return;
+        try {
+          const headers = await getAuthHeaders();
+          // Add cache buster to bypass API response cache and server-side auth cache
+          const res = await fetch(`/api/user/profile?refresh=${Date.now()}`, { 
+            headers: {
+              ...headers,
+              "x-refresh-user": "true"
+            } 
+          });
+          if (res.ok) {
+            const data = await res.json();
+            // Only update if something important changed to avoid loops
+            if (data.plan !== user.plan || data.name !== user.name || data.avatarUrl !== user.avatarUrl) {
+              set({ user: { ...user, ...data } });
+            }
+          }
+        } catch (err) {
+          console.error("User sync failed", err);
         }
       },
     }),

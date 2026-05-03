@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,7 +23,9 @@ import {
   X,
   MessageSquare,
   Search,
-  User
+  User,
+  Loader2,
+  ArrowRight
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
@@ -33,7 +36,7 @@ import { Button } from "@/components/ui/button";
 
 export default function TopBar() {
   const router = useRouter();
-  const { user, logout, getAuthHeaders } = useAuthStore();
+  const { user, logout, getAuthHeaders, syncUser } = useAuthStore();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -41,6 +44,55 @@ export default function TopBar() {
   const [unreadNotifications, setUnreadNotifications] = useState<any[]>([]);
   const [activeToast, setActiveToast] = useState<any>(null);
   const [profileData, setProfileData] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const headers = await getAuthHeaders();
+          const res = await fetch(`/api/words/search?q=${encodeURIComponent(searchQuery)}`, { headers });
+          if (res.ok) {
+            const data = await res.json();
+            setSearchResults(data.words || []);
+            setShowResults(true);
+          }
+        } catch (err) {
+          console.error("Search failed", err);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, getAuthHeaders]);
+
+  const handleSearch = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && searchResults.length > 0) {
+      router.push(`/stage/${searchResults[0].id}/summary`);
+      setSearchQuery("");
+      setShowResults(false);
+    }
+  };
 
   const handleNotificationMouseEnter = () => {
     if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
@@ -60,6 +112,10 @@ export default function TopBar() {
   }, []);
 
   useEffect(() => {
+    if (user?.id) syncUser();
+  }, []);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const headers = await getAuthHeaders();
@@ -67,8 +123,8 @@ export default function TopBar() {
         if (res.ok) setProfileData(await res.json());
       } catch (e) { console.error(e); }
     };
-    if (user) fetchProfile();
-  }, [user, getAuthHeaders]);
+    if (user?.id) fetchProfile();
+  }, [user?.id, getAuthHeaders]);
 
   useEffect(() => {
     if (!user) return;
@@ -112,14 +168,58 @@ export default function TopBar() {
 
   return (
     <header className="h-20 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-6 sm:px-8">
-      <div className="flex-1 max-w-md hidden md:block">
+      <div className="flex-1 max-w-md hidden md:block" ref={searchRef}>
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          {isSearching ? (
+            <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />
+          ) : (
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          )}
           <input
             type="text"
             placeholder="Search words..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
+            onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
             className="w-full bg-muted/40 border border-transparent focus:border-primary/20 focus:bg-background rounded-xl py-2.5 pl-10 pr-4 text-sm transition-all outline-none"
           />
+
+          <AnimatePresence>
+            {showResults && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border/50 rounded-2xl shadow-2xl overflow-hidden z-50 p-2"
+              >
+                {searchResults.length > 0 ? (
+                  <div className="space-y-1">
+                    {searchResults.map((word) => (
+                      <button
+                        key={word.id}
+                        onClick={() => {
+                          router.push(`/stage/${word.id}/summary`);
+                          setSearchQuery("");
+                          setShowResults(false);
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted rounded-xl transition-colors text-left"
+                      >
+                        <span className="font-bold capitalize">{word.word}</span>
+                        <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <ArrowRight className="w-3 h-3" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No words found</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -257,8 +357,8 @@ export default function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <FeedbackModal 
-            open={showReportModal} 
+          <FeedbackModal
+            open={showReportModal}
             onOpenChange={setShowReportModal}
           />
         </div>
@@ -267,18 +367,26 @@ export default function TopBar() {
       <HowItWorksSheet open={showHowItWorks} onOpenChange={setShowHowItWorks} />
 
       {activeToast && (
-        <div className="fixed top-24 right-6 z-[100] max-w-sm w-full bg-background border border-primary/20 shadow-2xl rounded-2xl p-4 flex gap-4 animate-in slide-in-from-bottom-10">
+        <div className="fixed top-24 right-6 z-[100] max-w-sm w-full bg-background/95 backdrop-blur-xl border border-primary/20 shadow-2xl rounded-2xl p-4 flex gap-4 animate-in slide-in-from-right-10 duration-500">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Trophy className="w-6 h-6 text-primary" />
+            <Bell className="w-6 h-6 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-bold">{activeToast.title}</h4>
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{activeToast.message}</p>
-            <Button size="sm" variant="link" className="p-0 h-auto text-xs mt-2" onClick={() => router.push("/dashboard/notifications")}>
+            <h4 className="text-sm font-black tracking-tight text-foreground uppercase">{activeToast.title}</h4>
+            <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed font-medium">{activeToast.message}</p>
+            <Button
+              size="sm"
+              variant="link"
+              className="p-0 h-auto text-[10px] mt-2 font-black uppercase tracking-widest text-primary hover:no-underline"
+              onClick={() => {
+                router.push("/dashboard/notifications");
+                setActiveToast(null);
+              }}
+            >
               View Details
             </Button>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md" onClick={() => setActiveToast(null)}>
+          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-muted" onClick={() => setActiveToast(null)}>
             <X className="w-4 h-4 text-muted-foreground" />
           </Button>
         </div>

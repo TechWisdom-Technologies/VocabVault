@@ -119,12 +119,12 @@ function SettingItem({ title, settingKey, currentValue, onSave, isSaving, isShor
   return (
     <div className="p-4 bg-muted/20 border border-border/50 rounded-lg space-y-3">
       <p className="text-sm font-semibold">{title}</p>
-      <Textarea 
+      <Textarea
         value={val}
         onChange={(e) => setVal(e.target.value)}
         className={`font-mono text-sm bg-background ${isShort ? 'min-h-[40px] w-32' : 'min-h-[100px]'}`}
       />
-      <Button 
+      <Button
         onClick={() => onSave(settingKey, val)}
         disabled={isSaving || val === currentValue}
         size="sm"

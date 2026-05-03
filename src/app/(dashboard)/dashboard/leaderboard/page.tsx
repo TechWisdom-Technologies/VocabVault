@@ -314,6 +314,7 @@ export default function LeaderboardPage() {
               <div className="divide-y divide-border/30">
                 {users.map((leader, index) => {
                   const isCurrentUser = user?.id === leader.id;
+                  const isFollowing = leader.isFollowing;
                   const rank = index + 1;
                   
                   return (
@@ -324,7 +325,8 @@ export default function LeaderboardPage() {
                       transition={{ delay: index * 0.05 }}
                       className={cn(
                         "group grid grid-cols-[50px_1fr_auto] sm:grid-cols-[60px_1fr_120px_120px_auto] gap-4 items-center p-4 sm:p-5 transition-all hover:bg-muted/30",
-                        isCurrentUser && "bg-primary/5 border-l-4 border-l-primary"
+                        isCurrentUser && "bg-primary/5 border-l-4 border-l-primary",
+                        isFollowing && !isCurrentUser && "bg-emerald-500/5 border-l-4 border-l-emerald-500/30"
                       )}
                     >
                       {/* Rank */}
@@ -368,6 +370,7 @@ export default function LeaderboardPage() {
                           )}>
                             {leader.name}
                             {isCurrentUser && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">You</span>}
+                            {isFollowing && !isCurrentUser && <span className="bg-emerald-500/10 text-emerald-600 text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Following</span>}
                           </p>
                           <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
                             <Target className="w-3 h-3" />

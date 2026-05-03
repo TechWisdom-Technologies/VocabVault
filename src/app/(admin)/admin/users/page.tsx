@@ -23,7 +23,8 @@ import {
   MoreVertical,
   Copy,
   RefreshCw,
-  Shield
+  Shield,
+  Download
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -136,6 +137,19 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleExportUsers = () => {
+    if (users.length === 0) return;
+    const blob = new Blob([JSON.stringify(users, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `VocabVault_Users_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const filteredUsers = users.filter(u =>
     u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -144,12 +158,23 @@ export default function AdminUsersPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-white uppercase italic">User Accounts</h1>
-          <p className="text-white/40 font-bold uppercase tracking-widest text-[10px] mt-1 flex items-center gap-2">
-            <ShieldCheck className="w-3 h-3 text-emerald-500" />
-            Platform Governance & Subscriber Oversight
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center gap-6">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-white uppercase italic">User Accounts</h1>
+            <p className="text-white/40 font-bold uppercase tracking-widest text-[10px] mt-1 flex items-center gap-2">
+              <ShieldCheck className="w-3 h-3 text-emerald-500" />
+              Administrative control & account protocols
+            </p>
+          </div>
+          
+          <Button
+            variant="ghost"
+            onClick={handleExportUsers}
+            className="h-10 px-5 rounded-2xl bg-white/5 border border-white/5 text-white/40 hover:text-white hover:border-white/10 text-[10px] font-black uppercase tracking-widest transition-all w-fit"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Data
+          </Button>
         </div>
 
         <div className="relative group min-w-[300px]">

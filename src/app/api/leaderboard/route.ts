@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       currentUser = authResult.user;
     }
 
-    if (filter === "friends") {
+    if (filter === "friends" || filter === "following") {
       if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       // Find users that this user is following
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
       });
       
       const followingIds = following.map(f => f.followingId);
+      // Include current user in their own social feed
       followingIds.push(currentUser.id);
 
       whereClause.id = { in: followingIds };
@@ -42,6 +43,10 @@ export async function GET(req: NextRequest) {
         totalScore: true,
         wordsLearned: true,
         currentStreak: true,
+        followers: {
+          where: { followerId: currentUser?.id || "" },
+          select: { id: true }
+        }
       },
       orderBy:
         sortBy === "wordsLearned"
@@ -52,20 +57,24 @@ export async function GET(req: NextRequest) {
       take: 50,
     });
 
-    let leaderboard = topUsers;
+    // Transform and add social context
+    const leaderboard = topUsers.map(u => ({
+      id: u.id,
+      name: u.name,
+      avatarUrl: u.avatarUrl,
+      totalScore: u.totalScore,
+      wordsLearned: u.wordsLearned,
+      currentStreak: u.currentStreak,
+      isFollowing: u.followers.length > 0,
+      isMe: u.id === currentUser?.id,
+      // Priority flag for UI highlighting
+      priority: u.followers.length > 0 || u.id === currentUser?.id
+    }));
 
-    if (currentUser) {
-      const myFollows = await prisma.follow.findMany({
-        where: { followerId: currentUser.id },
-        select: { followingId: true }
-      });
-      const followSet = new Set(myFollows.map(f => f.followingId));
+    // If social filter, we might want to ensure ALL friends are visible even if > 50
+    // but for now 50 is a reasonable limit for active friends.
 
-      leaderboard = topUsers.map(u => ({
-        ...u,
-        isFollowing: followSet.has(u.id)
-      }));
-    }
+    return NextResponse.json({ leaderboard });
 
     return NextResponse.json({ leaderboard });
   } catch (error) {

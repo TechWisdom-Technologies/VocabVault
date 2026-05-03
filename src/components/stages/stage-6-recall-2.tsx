@@ -99,16 +99,31 @@ export default function Stage6Recall2({ word, onComplete }: Stage6Props) {
   const handleSpellingSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     const isCorrect = spellingInput.trim().toLowerCase() === word.word.toLowerCase();
-    const newResults = [...spellingResults, isCorrect];
-    setSpellingResults(newResults);
-    setSpellingFeedback(isCorrect ? "Precision Matched" : "Try Again");
-
-    setTimeout(() => {
-      setSpellingInput("");
-      setSpellingFeedback(null);
-      if (newResults.length >= 3) setPhase("matching");
-      else setSpellingAttempt((prev) => prev + 1);
-    }, 1000);
+    
+    if (isCorrect) {
+      const newResults = [...spellingResults, true];
+      setSpellingResults(newResults);
+      setSpellingFeedback("Precision Matched");
+      
+      setTimeout(() => {
+        setSpellingInput("");
+        setSpellingFeedback(null);
+        if (newResults.length >= 3) {
+          setPhase("matching");
+        } else {
+          setSpellingAttempt((prev) => prev + 1);
+        }
+      }, 800);
+    } else {
+      setSpellingFeedback("Mistake Detected — Streak Reset");
+      setSpellingResults([]);
+      setSpellingAttempt(0);
+      
+      setTimeout(() => {
+        setSpellingInput("");
+        setSpellingFeedback(null);
+      }, 1200);
+    }
   };
 
   const handleRepeat = async () => {

@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Clock, CheckCircle2, AlertCircle } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { Activity, Clock, CheckCircle2, AlertCircle, ChevronRight } from "lucide-react";
+import { formatDate, cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface ActivityItem {
   id: string;
   type: string;
+  wordId: string;
   word: string;
   stageIndex: number;
   score: number;
@@ -74,20 +76,27 @@ export default function RecentActivity({ initialActivities }: RecentActivityProp
         ) : (
           <div className="divide-y divide-border/50">
             {activities.map((item) => (
-              <div key={item.id} className="p-4 hover:bg-muted/10 transition-colors flex items-start gap-3">
+              <Link 
+                key={item.id} 
+                href={`/stage/${item.wordId}/summary`}
+                className="p-4 hover:bg-muted/30 transition-all flex items-start gap-3 group relative"
+              >
                 <div className={`mt-0.5 p-1.5 rounded-full ${item.score >= 80 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                   {item.score >= 80 ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium group-hover:text-primary transition-colors truncate">
                     Completed Stage {item.stageIndex} for <span className="font-bold capitalize">"{item.word}"</span>
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center justify-between">
+                  <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-between">
                     <span>Score: {item.score}/100</span>
                     <span className="opacity-75">{formatDate(item.timestamp)}</span>
                   </p>
                 </div>
-              </div>
+                <div className="self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ChevronRight className="w-4 h-4 text-primary" />
+                </div>
+              </Link>
             ))}
           </div>
         )}
