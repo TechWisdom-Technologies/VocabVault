@@ -67,19 +67,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Update user record
+    const updateData: any = {
+      name: parsed.data.name,
+      dob: new Date(parsed.data.dob),
+      age: parsed.data.age,
+      nationality: parsed.data.nationality,
+      phone: parsed.data.phone,
+      profession: parsed.data.profession,
+      reason: parsed.data.reason,
+      onboardingComplete: true,
+    };
+
+    if (avatarUrl) {
+      updateData.avatarUrl = avatarUrl;
+    }
+
     const user = await prisma.user.update({
       where: { id: authResult.user.id },
-      data: {
-        name: parsed.data.name,
-        dob: new Date(parsed.data.dob),
-        age: parsed.data.age,
-        nationality: parsed.data.nationality,
-        phone: parsed.data.phone,
-        profession: parsed.data.profession,
-        reason: parsed.data.reason,
-        avatarUrl,
-        onboardingComplete: true,
-      },
+      data: updateData,
     });
 
     // Send Welcome Email

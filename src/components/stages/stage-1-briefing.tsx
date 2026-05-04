@@ -134,8 +134,8 @@ export default function Stage1Briefing({ word, onComplete }: Stage1Props) {
   }, []);
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col overflow-hidden bg-background relative pt-20">
-      <div className="flex-1 flex flex-col sm:flex-row w-full h-full overflow-hidden bg-background">
+    <div className="flex-1 w-full flex flex-col bg-background relative pt-16 sm:pt-20 overflow-y-auto sm:overflow-hidden h-full">
+      <div className="flex-1 flex flex-col sm:flex-row w-full bg-background min-h-0">
         {/* Word Presentation */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -190,7 +190,7 @@ export default function Stage1Briefing({ word, onComplete }: Stage1Props) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex-1 flex flex-col p-4 sm:p-10 bg-background/40 backdrop-blur-3xl overflow-hidden"
+        className="flex-1 flex flex-col p-4 sm:p-10 bg-background/40 backdrop-blur-3xl"
       >
         <div className="flex-1 flex flex-col min-h-0 justify-center gap-4 sm:gap-8 overflow-y-auto custom-scrollbar">
           {/* Definition */}

@@ -79,12 +79,11 @@ export default function OnboardingPage() {
       }
 
       // Update local user state
-      if (user) {
-        setUser({
-          ...user,
-          name: data.name,
-          onboardingComplete: true,
-        });
+      const result = await response.json();
+
+      // Update local user state with data from server
+      if (user && result.user) {
+        setUser(result.user);
       }
 
       router.push("/dashboard");

@@ -31,7 +31,7 @@ export default function Stage2Immersion({ word, onComplete }: Stage2Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [results, setResults] = useState<{ passed: boolean; accuracy: number; feedback: string }[]>([]);
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
   const [hasLoadedState, setHasLoadedState] = useState(false);
   const startTime = useRef<number>(0);
   
@@ -200,8 +200,8 @@ export default function Stage2Immersion({ word, onComplete }: Stage2Props) {
   const timeFormatted = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")}`;
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col overflow-hidden bg-background relative pt-20">
-      <div className="flex-1 flex flex-col sm:flex-row w-full h-full overflow-hidden bg-background">
+    <div className="flex-1 w-full flex flex-col bg-background relative pt-16 sm:pt-20 overflow-y-auto sm:overflow-hidden h-full">
+      <div className="flex-1 flex flex-col sm:flex-row w-full bg-background min-h-0">
         {/* Target Word Focus */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -249,7 +249,7 @@ export default function Stage2Immersion({ word, onComplete }: Stage2Props) {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex-1 flex flex-col p-4 sm:p-12 bg-background/40 backdrop-blur-3xl overflow-hidden"
+        className="flex-1 flex flex-col p-4 sm:p-12 bg-background/40 backdrop-blur-3xl"
       >
         <div className="flex-1 flex flex-col min-h-0 justify-center">
           <AnimatePresence mode="wait">
