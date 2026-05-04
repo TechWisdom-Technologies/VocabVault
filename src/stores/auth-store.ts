@@ -326,7 +326,8 @@ export const useAuthStore = create<AuthState>()(
               data.avatarUrl !== user.avatarUrl ||
               data.rulesAcknowledged !== user.rulesAcknowledged ||
               data.onboardingComplete !== user.onboardingComplete ||
-              data.timezone !== user.timezone
+              data.timezone !== user.timezone ||
+              data.maxUnlockedIndex !== user.maxUnlockedIndex
             ) {
               set({ user: { ...user, ...data } });
             }

@@ -111,7 +111,16 @@ export default function StagePage() {
           return;
         }
 
-        if (data.progress.currentStage < stageNum && data.progress.status !== "COMPLETED") {
+        // --- STAGE LEVEL SECURITY ---
+        // 1. If no progress exists, only Stage 1 is allowed
+        if (!data.progress) {
+          if (stageNum > 1) {
+            router.replace(`/stage/${wordId}/1`);
+            return;
+          }
+        } 
+        // 2. If progress exists, you cannot skip ahead of your currentStage
+        else if (data.progress.currentStage < stageNum && data.progress.status !== "COMPLETED") {
           router.replace(`/stage/${wordId}/${data.progress.currentStage}`);
           return;
         }

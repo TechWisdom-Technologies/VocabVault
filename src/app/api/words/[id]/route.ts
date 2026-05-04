@@ -66,27 +66,20 @@ export async function GET(
     }
 
     // ─── Strict Sequential Logic ───
-    if (word.orderIndex > 0 && user.role !== "ADMIN") {
-      const prevWord = await prisma.word.findFirst({
-        where: { orderIndex: word.orderIndex - 1 },
-        select: { id: true },
-      });
-
-      if (prevWord) {
-        const prevProgress = await prisma.wordProgress.findUnique({
-          where: { userId_wordId: { userId: user.id, wordId: prevWord.id } },
-          select: { status: true },
-        });
-
-        if (!prevProgress || prevProgress.status !== "COMPLETED") {
-          return NextResponse.json(
-            { 
-              error: "Curriculum Sequence Violation", 
-              message: "You must complete the previous word before accessing this one." 
-            },
-            { status: 403 }
-          );
-        }
+    // Prevent direct URL access to words beyond the user's current progress
+    const effectiveMaxIndex = Math.max(1, user.maxUnlockedIndex);
+    if (word.orderIndex > effectiveMaxIndex && user.role !== "ADMIN") {
+      // Check if the user has already completed this word (e.g. they are revisiting it)
+      // If word.orderIndex > effectiveMaxIndex, it means it's a "future" word for them.
+      // But we should allow them to see it if they somehow have progress COMPLETED (unlikely but safe)
+      if (!progress || progress.status !== "COMPLETED") {
+        return NextResponse.json(
+          { 
+            error: "Curriculum Sequence Violation", 
+            message: "This word is currently locked. Complete your current words to unlock it." 
+          },
+          { status: 403 }
+        );
       }
     }
 

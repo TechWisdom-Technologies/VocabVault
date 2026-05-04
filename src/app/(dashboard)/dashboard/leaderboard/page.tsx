@@ -174,10 +174,10 @@ export default function LeaderboardPage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-4 sm:gap-6"
         >
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <div className="flex bg-muted/40 p-1.5 rounded-[1.25rem] border border-white/5 backdrop-blur-md shadow-inner">
+            <div className="flex bg-muted/40 p-1 rounded-[1.25rem] border border-white/5 backdrop-blur-md shadow-inner">
               {[
                 { id: "global", label: "Global", icon: Globe },
                 { id: "friends", label: "Following", icon: Users }
@@ -186,19 +186,19 @@ export default function LeaderboardPage() {
                   key={opt.id}
                   onClick={() => setFilter(opt.id as any)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-300",
+                    "flex-1 flex items-center justify-center gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-300",
                     filter === opt.id 
                       ? "bg-primary text-white shadow-lg shadow-primary/25" 
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                   )}
                 >
-                  <opt.icon className="w-3.5 h-3.5" />
+                  <opt.icon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   {opt.label}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar sm:pb-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 no-scrollbar sm:pb-0">
               {[
                 { id: "totalScore", label: "XP", icon: Zap },
                 { id: "wordsLearned", label: "Mastery", icon: Target },
@@ -208,13 +208,13 @@ export default function LeaderboardPage() {
                   key={opt.id}
                   onClick={() => setSortBy(opt.id as any)}
                   className={cn(
-                    "whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all",
+                    "whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border transition-all",
                     sortBy === opt.id 
                       ? "bg-violet-500/10 border-violet-500/50 text-violet-500 shadow-xs" 
                       : "bg-background/50 border-white/5 text-muted-foreground hover:border-primary/30"
                   )}
                 >
-                  <opt.icon className="w-3 h-3" />
+                  <opt.icon className="w-2.5 sm:w-3 h-2.5 sm:h-3" />
                   {opt.label}
                 </button>
               ))}
@@ -230,22 +230,22 @@ export default function LeaderboardPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative flex flex-col md:flex-row items-end justify-center gap-4 md:gap-0 pt-16 pb-8"
+              className="relative flex flex-col md:flex-row items-center md:items-end justify-center gap-8 md:gap-0 pt-8 md:pt-16 pb-4 md:pb-8"
             >
               {/* 2nd Place */}
-              <div className="order-2 md:order-1 flex flex-col items-center w-full md:w-64">
-                <div className="relative mb-6">
+              <div className="order-2 md:order-1 flex flex-col items-center w-full md:w-64 scale-90 md:scale-100">
+                <div className="relative mb-4 md:mb-6">
                   <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-300 shadow-xl relative z-10">
                     <AvatarImage src={podiumUsers[1].avatarUrl || undefined} />
                     <AvatarFallback className="text-2xl font-black bg-slate-100">{podiumUsers[1].name[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-400 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-background">
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-400 text-white text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-background">
                     RANK 2
                   </div>
                 </div>
-                <div className="text-center mb-4">
-                  <p className="font-black text-sm tracking-tight capitalize">{podiumUsers[1].name}</p>
-                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground font-black text-[10px]">
+                <div className="text-center mb-0 md:mb-4">
+                  <p className="font-black text-xs sm:text-sm tracking-tight capitalize">{podiumUsers[1].name}</p>
+                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground font-black text-[9px] sm:text-[10px]">
                     <Zap className="w-3 h-3 text-slate-400" />
                     {podiumUsers[1].totalScore.toLocaleString()} XP
                   </div>
@@ -255,26 +255,26 @@ export default function LeaderboardPage() {
 
               {/* 1st Place */}
               <div className="order-1 md:order-2 flex flex-col items-center w-full md:w-72 z-20">
-                <div className="relative mb-8">
+                <div className="relative mb-6 md:mb-8">
                   <div className="absolute -inset-6 bg-amber-500/20 blur-[40px] rounded-full animate-pulse" />
                   <motion.div
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 4, repeat: Infinity }}
-                    className="absolute -top-10 left-1/2 -translate-x-1/2 z-30"
+                    className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 z-30"
                   >
-                    <Trophy className="w-12 h-12 text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
+                    <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
                   </motion.div>
-                  <Avatar className="w-28 h-28 sm:w-36 sm:h-36 border-4 border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.3)] relative z-10">
+                  <Avatar className="w-24 h-24 sm:w-36 sm:h-36 border-4 border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.3)] relative z-10">
                     <AvatarImage src={podiumUsers[0].avatarUrl || undefined} />
-                    <AvatarFallback className="text-4xl font-black bg-amber-50">{podiumUsers[0].name[0]}</AvatarFallback>
+                    <AvatarFallback className="text-3xl sm:text-4xl font-black bg-amber-50">{podiumUsers[0].name[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-xl z-20 border-2 border-background animate-bounce">
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] sm:text-[11px] font-black px-4 py-1 sm:py-1.5 rounded-full shadow-xl z-20 border-2 border-background animate-bounce">
                     CHAMPION
                   </div>
                 </div>
-                <div className="text-center mb-6">
-                  <p className="font-black text-lg tracking-tighter capitalize">{podiumUsers[0].name}</p>
-                  <div className="flex items-center justify-center gap-1.5 text-amber-600 font-black text-xs">
+                <div className="text-center mb-0 md:mb-6">
+                  <p className="font-black text-base sm:text-lg tracking-tighter capitalize">{podiumUsers[0].name}</p>
+                  <div className="flex items-center justify-center gap-1.5 text-amber-600 font-black text-[10px] sm:text-xs">
                     <Sparkles className="w-3.5 h-3.5" />
                     {podiumUsers[0].totalScore.toLocaleString()} XP
                   </div>
@@ -283,19 +283,19 @@ export default function LeaderboardPage() {
               </div>
 
               {/* 3rd Place */}
-              <div className="order-3 flex flex-col items-center w-full md:w-64">
-                <div className="relative mb-6">
+              <div className="order-3 flex flex-col items-center w-full md:w-64 scale-90 md:scale-100">
+                <div className="relative mb-4 md:mb-6">
                   <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-amber-700/40 shadow-xl relative z-10">
                     <AvatarImage src={podiumUsers[2].avatarUrl || undefined} />
                     <AvatarFallback className="text-2xl font-black bg-amber-50">{podiumUsers[2].name[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-700 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-background">
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-700 text-white text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-background">
                     RANK 3
                   </div>
                 </div>
-                <div className="text-center mb-4">
-                  <p className="font-black text-sm tracking-tight capitalize">{podiumUsers[2].name}</p>
-                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground font-black text-[10px]">
+                <div className="text-center mb-0 md:mb-4">
+                  <p className="font-black text-xs sm:text-sm tracking-tight capitalize">{podiumUsers[2].name}</p>
+                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground font-black text-[9px] sm:text-[10px]">
                     <Zap className="w-3 h-3 text-amber-700" />
                     {podiumUsers[2].totalScore.toLocaleString()} XP
                   </div>
@@ -309,33 +309,33 @@ export default function LeaderboardPage() {
         {/* Premium Table Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <h2 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <Sparkles className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-primary" />
               RISING COMPETITORS
             </h2>
-            <Badge variant="ghost" className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2.5 py-1 rounded-lg">
+            <Badge variant="ghost" className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2 sm:px-2.5 py-1 rounded-lg">
               {users.length} LEARNERS
             </Badge>
           </div>
 
           {isLoading ? (
-            <div className="py-32 flex flex-col items-center justify-center text-muted-foreground">
+            <div className="py-20 sm:py-32 flex flex-col items-center justify-center text-muted-foreground">
               <div className="relative mb-6">
                 <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full" />
-                <Loader2 className="w-12 h-12 animate-spin text-primary relative z-10" />
+                <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 animate-spin text-primary relative z-10" />
               </div>
-              <p className="text-sm font-bold uppercase tracking-wider opacity-50">Syncing rankings...</p>
+              <p className="text-[10px] sm:text-sm font-bold uppercase tracking-wider opacity-50">Syncing rankings...</p>
             </div>
           ) : users.length === 0 ? (
-            <div className="py-32 flex flex-col items-center justify-center text-muted-foreground gap-4">
-              <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center">
-                <Users className="w-10 h-10 opacity-20" />
+            <div className="py-20 sm:py-32 flex flex-col items-center justify-center text-muted-foreground gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-muted flex items-center justify-center">
+                <Users className="w-8 h-8 sm:w-10 sm:h-10 opacity-20" />
               </div>
-              <p className="font-bold uppercase tracking-tight text-lg">No rivals found</p>
-              <p className="text-sm max-w-xs text-center opacity-70">Start following other learners or earn points to appear on the global list!</p>
+              <p className="font-bold uppercase tracking-tight text-base sm:text-lg">No rivals found</p>
+              <p className="text-xs sm:text-sm max-w-[240px] sm:max-w-xs text-center opacity-70">Start following other learners or earn points to appear on the global list!</p>
             </div>
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-2.5 sm:gap-3">
               {users.map((leader, index) => {
                 const isCurrentUser = user?.id === leader.id;
                 const isFollowing = leader.isFollowing;
@@ -348,17 +348,17 @@ export default function LeaderboardPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03 }}
                     className={cn(
-                      "group relative p-4 sm:p-6 rounded-[1.5rem] bg-background/40 backdrop-blur-sm border border-white/5 shadow-sm transition-all hover:bg-white/10 hover:shadow-lg active:scale-[0.98] cursor-pointer",
+                      "group relative p-3 sm:p-6 rounded-[1.25rem] sm:rounded-[1.5rem] bg-background/40 backdrop-blur-sm border border-white/5 shadow-sm transition-all hover:bg-white/10 hover:shadow-lg active:scale-[0.99] sm:active:scale-[0.98] cursor-pointer",
                       isCurrentUser && "ring-2 ring-primary bg-primary/5",
                       isFollowing && !isCurrentUser && "border-emerald-500/20"
                     )}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       {/* Rank */}
-                      <div className="flex flex-col items-center justify-center w-8">
+                      <div className="flex flex-col items-center justify-center w-6 sm:w-8">
                         <span className={cn(
-                          "text-sm font-black tabular-nums",
-                          rank === 1 ? "text-amber-500 scale-125" :
+                          "text-xs sm:text-sm font-black tabular-nums",
+                          rank === 1 ? "text-amber-500 scale-110 sm:scale-125" :
                           rank === 2 ? "text-slate-400" :
                           rank === 3 ? "text-amber-700" :
                           "text-muted-foreground/30"
@@ -370,51 +370,53 @@ export default function LeaderboardPage() {
                       {/* Avatar */}
                       <div className="relative">
                         <Avatar className={cn(
-                          "w-12 h-12 sm:w-14 sm:h-14 border-2 shadow-inner",
+                          "w-10 h-10 sm:w-14 sm:h-14 border-2 shadow-inner",
                           isCurrentUser ? "border-primary" : "border-white/10"
                         )}>
                           <AvatarImage src={leader.avatarUrl || undefined} />
-                          <AvatarFallback className="font-black text-lg bg-muted">
+                          <AvatarFallback className="font-black text-base sm:text-lg bg-muted">
                             {leader.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         {leader.currentStreak >= 5 && (
                           <div className="absolute -top-1 -right-1 bg-orange-500 rounded-full p-1 border-2 border-background shadow-lg">
-                            <Zap className="w-2.5 h-2.5 text-white fill-white" />
+                            <Zap className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white fill-white" />
                           </div>
                         )}
                       </div>
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
                           <p className={cn(
-                            "font-black text-sm sm:text-base tracking-tight truncate",
+                            "font-black text-xs sm:text-base tracking-tight truncate",
                             isCurrentUser ? "text-primary" : "text-foreground"
                           )}>
                             {leader.name}
                           </p>
-                          {isCurrentUser && <Badge className="bg-primary text-white text-[8px] font-black px-1.5 py-0 rounded-md uppercase tracking-tighter shadow-sm">YOU</Badge>}
+                          {isCurrentUser && <Badge className="bg-primary text-white text-[7px] sm:text-[8px] font-black px-1 sm:px-1.5 py-0 rounded-md uppercase tracking-tighter shadow-sm">YOU</Badge>}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <p className="text-[10px] text-muted-foreground font-black flex items-center gap-1 uppercase tracking-widest opacity-70">
-                            <Target className="w-3 h-3" />
-                            {leader.wordsLearned} MASTERED
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <p className="text-[8px] sm:text-[10px] text-muted-foreground font-black flex items-center gap-1 uppercase tracking-widest opacity-70">
+                            <Target className="w-2.5 sm:w-3 h-2.5 sm:h-3" />
+                            <span className="hidden xs:inline">{leader.wordsLearned} MASTERED</span>
+                            <span className="xs:hidden">{leader.wordsLearned}M</span>
                           </p>
-                          <p className="text-[10px] text-orange-500 font-black flex items-center gap-1 uppercase tracking-widest">
-                            <Zap className="w-3 h-3 fill-orange-500" />
-                            {leader.currentStreak}D STREAK
+                          <p className="text-[8px] sm:text-[10px] text-orange-500 font-black flex items-center gap-1 uppercase tracking-widest">
+                            <Zap className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-orange-500" />
+                            <span className="hidden xs:inline">{leader.currentStreak}D STREAK</span>
+                            <span className="xs:hidden">{leader.currentStreak}D</span>
                           </p>
                         </div>
                       </div>
 
                       {/* Score Section */}
                       <div className="text-right">
-                        <p className="text-lg sm:text-xl font-black tabular-nums tracking-tighter">
+                        <p className="text-sm sm:text-xl font-black tabular-nums tracking-tighter">
                           {leader.totalScore.toLocaleString()}
                         </p>
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                          TOTAL XP
+                        <p className="text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                          XP
                         </p>
                       </div>
 
@@ -424,14 +426,14 @@ export default function LeaderboardPage() {
                           <Button 
                             variant="ghost" size="icon" 
                             className="h-10 w-10 rounded-xl text-primary hover:bg-primary/10"
-                            onClick={() => { setTargetUser(leader); setChallengeModalOpen(true); }}
+                            onClick={(e) => { e.stopPropagation(); setTargetUser(leader); setChallengeModalOpen(true); }}
                           >
                             <Swords className="w-4 h-4" />
                           </Button>
                           <Button 
                             variant="ghost" size="icon" 
                             className={cn("h-10 w-10 rounded-xl", leader.isFollowing ? "text-emerald-500" : "text-muted-foreground")}
-                            onClick={() => toggleFollow(leader.id)}
+                            onClick={(e) => { e.stopPropagation(); toggleFollow(leader.id); }}
                           >
                             {leader.isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
                           </Button>
@@ -441,21 +443,22 @@ export default function LeaderboardPage() {
 
                     {/* Mobile Actions Drawer (Simulated) */}
                     {!isCurrentUser && (
-                      <div className="mt-4 pt-4 border-t border-white/5 flex sm:hidden items-center justify-between">
+                      <div className="mt-3 pt-3 border-t border-white/5 flex sm:hidden items-center justify-between gap-2">
                         <Button 
-                          variant="ghost" 
-                          className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary"
-                          onClick={() => { setTargetUser(leader); setChallengeModalOpen(true); }}
+                          variant="secondary" 
+                          size="sm"
+                          className="flex-1 h-8 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 hover:bg-primary/10 border-none"
+                          onClick={(e) => { e.stopPropagation(); setTargetUser(leader); setChallengeModalOpen(true); }}
                         >
-                          <Swords className="w-3.5 h-3.5 mr-2" /> Challenge
+                          <Swords className="w-3 h-3 mr-1.5" /> Challenge
                         </Button>
-                        <div className="w-px h-4 bg-white/5" />
                         <Button 
                           variant="ghost"
-                          className={cn("flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest", leader.isFollowing ? "text-emerald-500" : "text-muted-foreground")}
-                          onClick={() => toggleFollow(leader.id)}
+                          size="sm"
+                          className={cn("flex-1 h-8 rounded-lg text-[9px] font-black uppercase tracking-widest", leader.isFollowing ? "text-emerald-500 bg-emerald-500/5" : "text-muted-foreground bg-muted/5")}
+                          onClick={(e) => { e.stopPropagation(); toggleFollow(leader.id); }}
                         >
-                          {leader.isFollowing ? <><UserCheck className="w-3.5 h-3.5 mr-2" /> Following</> : <><UserPlus className="w-3.5 h-3.5 mr-2" /> Follow</>}
+                          {leader.isFollowing ? <><UserCheck className="w-3 h-3 mr-1.5" /> Following</> : <><UserPlus className="w-3 h-3 mr-1.5" /> Follow</>}
                         </Button>
                       </div>
                     )}

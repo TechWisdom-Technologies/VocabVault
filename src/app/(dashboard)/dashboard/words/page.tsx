@@ -44,7 +44,7 @@ interface DayData {
 }
 
 export default function WordsPage() {
-  const { getAuthHeaders, user } = useAuthStore();
+  const { getAuthHeaders, user, syncUser } = useAuthStore();
   const [days, setDays] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaywalled, setIsPaywalled] = useState(false);
@@ -53,6 +53,9 @@ export default function WordsPage() {
   useEffect(() => {
     const fetchWords = async () => {
       try {
+        // Sync user to get latest maxUnlockedIndex
+        await syncUser();
+        
         const headers = await getAuthHeaders();
         const res = await fetch("/api/words/future", { headers });
         if (res.ok) {
@@ -67,7 +70,7 @@ export default function WordsPage() {
       }
     };
     fetchWords();
-  }, [getAuthHeaders]);
+  }, [getAuthHeaders, syncUser]);
 
   const handleUpgrade = async () => {
     try {
@@ -189,10 +192,12 @@ export default function WordsPage() {
                     const isCompleted = word.status === "COMPLETED";
                     const isFirstGroup = day.dayIndex === 1;
 
-                    // Force LOCKED status if orderIndex is beyond maxUnlockedIndex
+                    // Trust API status primarily, but keep a safety fallback for sequential logic
                     const effectiveMaxIndex = Math.max(1, user?.maxUnlockedIndex ?? 0);
                     const isSequentiallyLocked = word.orderIndex > effectiveMaxIndex && !isCompleted;
-                    const isLocked = word.status === "LOCKED" || isSequentiallyLocked;
+                    
+                    // A word is locked if the API says so OR if it fails the local sequential check
+                    const isLocked = word.status === "LOCKED" || (isSequentiallyLocked && !isCompleted);
 
                     if (isLocked) {
                       return (
