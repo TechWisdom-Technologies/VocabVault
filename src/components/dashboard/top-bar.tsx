@@ -25,7 +25,8 @@ import {
   Search,
   User,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  Lock
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
@@ -195,22 +196,44 @@ export default function TopBar() {
               >
                 {searchResults.length > 0 ? (
                   <div className="space-y-1">
-                    {searchResults.map((word) => (
-                      <button
-                        key={word.id}
-                        onClick={() => {
-                          router.push(`/stage/${word.id}/summary`);
-                          setSearchQuery("");
-                          setShowResults(false);
-                        }}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted rounded-xl transition-colors text-left"
-                      >
-                        <span className="font-bold capitalize">{word.word}</span>
-                        <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                          <ArrowRight className="w-3 h-3" />
-                        </div>
-                      </button>
-                    ))}
+                    {searchResults.map((word) => {
+                      const effectiveMaxIndex = profileData?.maxUnlockedIndex ?? user?.maxUnlockedIndex ?? 1;
+                      const isLocked = word.orderIndex > effectiveMaxIndex;
+                      
+                      return (
+                        <button
+                          key={word.id}
+                          onClick={() => {
+                            if (isLocked) {
+                              setActiveToast({
+                                title: "Entry Locked",
+                                message: "You must finish the previous unlocked words before accessing this one."
+                              });
+                              setTimeout(() => setActiveToast(null), 5000);
+                              return;
+                            }
+                            router.push(`/stage/${word.id}/summary`);
+                            setSearchQuery("");
+                            setShowResults(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between px-4 py-3 hover:bg-muted rounded-xl transition-colors text-left",
+                            isLocked && "opacity-60"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold capitalize">{word.word}</span>
+                            {isLocked && <Lock className="w-3 h-3 text-muted-foreground" />}
+                          </div>
+                          <div className={cn(
+                            "w-6 h-6 rounded-lg flex items-center justify-center transition-colors",
+                            isLocked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                          )}>
+                            <ArrowRight className="w-3 h-3" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="p-8 text-center">

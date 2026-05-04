@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
           word: w.word,
           status,
           currentStage: progress?.currentStage || 1,
+          orderIndex: w.orderIndex
         };
       });
 

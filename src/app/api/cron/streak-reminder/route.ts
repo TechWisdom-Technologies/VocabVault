@@ -42,9 +42,23 @@ export async function POST(req: NextRequest) {
     });
 
     // Filter to only users who haven't started today
-    const usersToNotify = usersWithStreaks.filter(
+    const preliminaryUsers = usersWithStreaks.filter(
       (u) => u.dailyWordSets.length === 0
     );
+
+    // Fetch notification preferences for these users
+    const prefKeys = preliminaryUsers.map(u => `user:${u.id}:preferences`);
+    const allPreferences = await prisma.systemSetting.findMany({
+      where: { key: { in: prefKeys } }
+    });
+
+    const prefMap = new Map(allPreferences.map(p => [p.key, JSON.parse(p.value)]));
+
+    // Final filter: must have streakReminders enabled (default true)
+    const usersToNotify = preliminaryUsers.filter(u => {
+      const prefs = prefMap.get(`user:${u.id}:preferences`);
+      return prefs ? prefs.streakReminders !== false : true; // Default to true if not set
+    });
 
     let sentCount = 0;
     const errors: string[] = [];

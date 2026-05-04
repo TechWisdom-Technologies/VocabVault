@@ -5,12 +5,12 @@ import { useAuthStore } from "@/stores/auth-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Calendar, 
-  Lock, 
-  CheckCircle2, 
-  Play, 
-  Sparkles, 
+import {
+  Calendar,
+  Lock,
+  CheckCircle2,
+  Play,
+  Sparkles,
   BookOpen,
   ChevronRight,
   Clock,
@@ -19,6 +19,15 @@ import {
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Word {
   id: string;
@@ -39,6 +48,7 @@ export default function WordsPage() {
   const [days, setDays] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaywalled, setIsPaywalled] = useState(false);
+  const [isLockModalOpen, setIsLockModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchWords = async () => {
@@ -91,7 +101,7 @@ export default function WordsPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/5 blur-[100px] rounded-full pointer-events-none" />
 
-      <motion.div 
+      <motion.div
         className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto relative z-10"
         initial="hidden"
         animate="visible"
@@ -176,17 +186,32 @@ export default function WordsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {day.words.map((word: any) => {
-                    const isLocked = word.status === "LOCKED";
                     const isCompleted = word.status === "COMPLETED";
+                    const isFirstGroup = day.dayIndex === 1;
                     
+                    // Force LOCKED status if orderIndex is beyond maxUnlockedIndex
+                    const effectiveMaxIndex = Math.max(1, user?.maxUnlockedIndex ?? 0);
+                    const isSequentiallyLocked = word.orderIndex > effectiveMaxIndex && !isCompleted;
+                    const isLocked = word.status === "LOCKED" || isSequentiallyLocked;
+
                     if (isLocked) {
                       return (
-                        <div key={word.id} className="p-6 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col justify-between h-40 relative overflow-hidden group">
+                        <div 
+                          key={word.id} 
+                          onClick={() => isFirstGroup && setIsLockModalOpen(true)}
+                          className={cn(
+                            "p-6 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col justify-between h-40 relative overflow-hidden group",
+                            isFirstGroup && "cursor-pointer hover:border-primary/30 transition-all"
+                          )}
+                        >
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Locked Entry</span>
-                            <Lock className="w-4 h-4 text-primary/30" />
+                            <Lock className={cn("w-4 h-4 text-primary/30", isFirstGroup && "group-hover:text-primary/50 transition-colors")} />
                           </div>
-                          <div className="text-xl font-bold text-muted-foreground/30 blur-[3px] select-none capitalize tracking-tight">
+                          <div className={cn(
+                            "text-xl font-bold text-muted-foreground capitalize tracking-tight",
+                            isFirstGroup ? "group-hover:text-primary/70 transition-colors" : "blur-[3px] select-none opacity-30"
+                          )}>
                             {word.word}
                           </div>
                           <div className="mt-auto flex items-center gap-2 opacity-30">
@@ -198,15 +223,15 @@ export default function WordsPage() {
                     }
 
                     return (
-                      <Link 
-                        href={isCompleted ? `/stage/${word.id}/summary` : `/stage/${word.id}/${word.currentStage || 1}`} 
+                      <Link
+                        href={isCompleted ? `/stage/${word.id}/summary` : `/stage/${word.id}/${word.currentStage || 1}`}
                         key={word.id}
                       >
-                        <motion.div 
+                        <motion.div
                           className={cn(
                             "p-6 rounded-2xl border flex flex-col justify-between h-40 relative overflow-hidden group transition-all shadow-sm",
-                            isCompleted 
-                              ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10" 
+                            isCompleted
+                              ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10"
                               : "border-primary/20 bg-background/50 backdrop-blur-md hover:shadow-xl hover:shadow-primary/5"
                           )}
                           whileHover={{ y: -5, scale: 1.02 }}
@@ -248,6 +273,34 @@ export default function WordsPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Lock Modal */}
+      <Dialog open={isLockModalOpen} onOpenChange={setIsLockModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-[2rem] border-primary/20 bg-background/95 backdrop-blur-xl">
+          <DialogHeader className="flex flex-col items-center pt-6">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-black tracking-tight text-center">Entry Locked</DialogTitle>
+            <DialogDescription className="text-center font-bold text-muted-foreground uppercase tracking-wider text-[10px] mt-2">
+              Sequential Learning Protocol Active
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 text-center">
+            <p className="text-sm text-foreground/70 leading-relaxed font-medium">
+              You must complete the previous unlocked word in your curriculum before accessing this one. We follow a strict sequential path to ensure your mastery builds correctly.
+            </p>
+          </div>
+          <DialogFooter className="sm:justify-center pb-6">
+            <Button 
+              onClick={() => setIsLockModalOpen(false)}
+              className="bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] h-12 px-8 rounded-xl shadow-xl shadow-primary/20"
+            >
+              Acknowledged
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

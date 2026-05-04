@@ -87,23 +87,35 @@ export async function POST(req: NextRequest) {
       data: updateData,
     });
 
-    // Send Welcome Email
+    // Send Welcome Email & Create Notification
     try {
-      await resend.emails.send({
-        from: `VocabVault <${FROM_EMAIL}>`,
-        to: user.email,
-        subject: "Welcome to VocabVault!",
-        html: `
-          <h1>Welcome, ${user.name || "Learner"}!</h1>
-          <p>We're thrilled to have you on board. VocabVault is your personal path to English mastery.</p>
-          <p>Get started with your first daily word set today!</p>
-          <br/>
-          <p>Happy Learning,</p>
-          <p>The VocabVault Team</p>
-        `,
-      });
+      await Promise.all([
+        resend.emails.send({
+          from: `VocabVault <${FROM_EMAIL}>`,
+          to: user.email,
+          subject: "Welcome to VocabVault!",
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1>Welcome, ${user.name || "Learner"}!</h1>
+              <p>We're thrilled to have you on board. VocabVault is your personal path to English mastery.</p>
+              <p>Get started with your first daily word set today!</p>
+              <br/>
+              <p>Happy Learning,</p>
+              <p>The VocabVault Team</p>
+            </div>
+          `,
+        }),
+        prisma.notification.create({
+          data: {
+            userId: user.id,
+            type: "WELCOME",
+            title: "Welcome to VocabVault!",
+            message: "We're thrilled to have you here. Complete your first word set to start your streak!",
+          }
+        })
+      ]);
     } catch (e) {
-      console.error("Failed to send welcome email:", e);
+      console.error("Failed to send welcome communications:", e);
     }
 
     return NextResponse.json({

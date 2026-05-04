@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         word: true,
+        orderIndex: true,
       },
       take: 5,
     });

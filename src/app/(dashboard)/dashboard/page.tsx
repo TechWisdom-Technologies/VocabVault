@@ -482,7 +482,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-rose-600/70 font-bold tracking-wider uppercase mb-6">
                   We encountered a disturbance in the database link.
                 </p>
-                <Button 
+                <Button
                   onClick={() => window.location.reload()}
                   className="bg-rose-500 hover:bg-rose-600 text-white font-bold uppercase tracking-widest px-8 rounded-xl h-12"
                 >
