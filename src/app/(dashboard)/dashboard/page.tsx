@@ -172,7 +172,9 @@ export default function DashboardPage() {
           const pMap: Record<string, WordProgress> = {};
           if (wordsData.progress) {
             wordsData.progress.forEach((p: WordProgress) => {
-              pMap[p.wordId] = p;
+              if (p && p.wordId) {
+                pMap[p.wordId] = p;
+              }
             });
           }
           setProgressMap(pMap);

@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.update({
       where: { id: authResult.user.id },
       data: updateData,
-    });
+    }) as any;
 
     // Send Welcome Email & Create Notification
     try {
@@ -125,7 +125,12 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         avatarUrl: user.avatarUrl,
+        plan: user.plan,
+        role: user.role,
         onboardingComplete: user.onboardingComplete,
+        rulesAcknowledged: user.rulesAcknowledged,
+        maxUnlockedIndex: user.maxUnlockedIndex,
+        timezone: user.timezone,
       },
     });
   } catch (error) {

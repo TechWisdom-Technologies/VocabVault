@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
           isToday: s.date.getTime() === startOfDay.getTime(),
           label: `Day ${dayNumber}`,
           words: wordsForThisDay,
-          progress: (s.wordIds as string[]).map(id => progressMap.get(id)),
+          progress: (s.wordIds as string[]).map(id => progressMap.get(id)).filter(Boolean),
         };
       });
 
@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
         const responsePayload = {
           dailySet,
           words: currentWords.sort((a, b) => a.orderIndex - b.orderIndex),
-          progress: currentWordIds.map(id => progressMap.get(id)),
+          progress: currentWordIds.map(id => progressMap.get(id)).filter(Boolean),
           days,
           dayCount: currentDayCount,
           isPaywalled: false,
@@ -212,7 +212,7 @@ export async function GET(req: NextRequest) {
       isToday: s.date.getTime() === startOfDay.getTime(),
       label: `Day ${transactionResult.dayCount - idx}`,
       words: (s.wordIds as string[]).map(id => finalWordMap.get(id)).filter(Boolean).sort((a: any, b: any) => a.orderIndex - b.orderIndex),
-      progress: (s.wordIds as string[]).map(id => finalProgMap.get(id)),
+      progress: (s.wordIds as string[]).map(id => finalProgMap.get(id)).filter(Boolean),
     }));
 
     const responsePayload = {
