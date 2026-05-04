@@ -5,20 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Monitor, 
-  Smartphone, 
-  Laptop, 
-  LogOut, 
-  ShieldCheck, 
-  User, 
-  ArrowLeft, 
-  Sun, 
-  Moon, 
-  SunMoon, 
-  Eye, 
-  Type, 
-  Zap, 
+import {
+  Monitor,
+  Smartphone,
+  Laptop,
+  LogOut,
+  ShieldCheck,
+  User,
+  ArrowLeft,
+  Sun,
+  Moon,
+  SunMoon,
+  Eye,
+  Type,
+  Zap,
   Loader2,
   Bell,
   Palette,
@@ -28,7 +28,8 @@ import {
   Globe,
   Mail,
   SmartphoneNfc,
-  Sparkles
+  Sparkles,
+  Clock
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn, formatDate } from "@/lib/utils";
@@ -197,7 +198,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-muted/20 pb-20 overflow-hidden">
       {/* Background Polish */}
       <div className="absolute top-0 left-0 w-full h-64 bg-linear-to-b from-primary/5 to-transparent -z-10" />
-      
+
       <div className="px-4 sm:px-6 lg:px-8 py-10 max-w-6xl mx-auto space-y-10">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -223,8 +224,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "w-full flex items-center gap-4 p-4 rounded-2xl transition-all relative group overflow-hidden",
-                  activeTab === tab.id 
-                    ? "bg-background shadow-lg shadow-primary/5 ring-1 ring-border/50 text-primary" 
+                  activeTab === tab.id
+                    ? "bg-background shadow-lg shadow-primary/5 ring-1 ring-border/50 text-primary"
                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 )}
               >
@@ -243,7 +244,7 @@ export default function SettingsPage() {
                   activeTab === tab.id ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
                 )} />
                 {activeTab === tab.id && (
-                  <motion.div 
+                  <motion.div
                     layoutId="activeTabGlow"
                     className="absolute left-0 top-0 w-1 h-full bg-primary"
                   />
@@ -252,8 +253,8 @@ export default function SettingsPage() {
             ))}
 
             <div className="pt-6 mt-6 border-t border-border/50">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full justify-start gap-4 p-4 h-auto rounded-2xl text-destructive hover:bg-destructive/5 hover:text-destructive transition-all"
                 onClick={() => auth.signOut()}
               >
@@ -340,7 +341,7 @@ export default function SettingsPage() {
                           </h3>
                         </div>
                         {user?.plan === "FREE" && (
-                          <Button 
+                          <Button
                             onClick={handleUpgrade}
                             className="w-full md:w-auto h-12 px-8 rounded-xl bg-linear-to-r from-primary to-violet-600 font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                           >
@@ -348,7 +349,7 @@ export default function SettingsPage() {
                           </Button>
                         )}
                         {user?.plan === "PRO" && (
-                          <Button 
+                          <Button
                             onClick={handleManageBilling}
                             disabled={isPortalLoading}
                             variant="outline"
@@ -368,8 +369,8 @@ export default function SettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4 p-6 rounded-2xl border border-border/50 bg-background/50">
                           <h4 className="font-black text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                             <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-                             Free Tier Limits
+                            <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                            Free Tier Limits
                           </h4>
                           <ul className="space-y-3">
                             {[
@@ -389,8 +390,8 @@ export default function SettingsPage() {
                         <div className="space-y-4 p-6 rounded-2xl border-2 border-primary/20 bg-primary/5 relative">
                           <div className="absolute -top-3 right-4 px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">Recommended</div>
                           <h4 className="font-black text-xs uppercase tracking-widest text-primary flex items-center gap-2">
-                             <Sparkles className="w-3 h-3" />
-                             Pro privileges
+                            <Sparkles className="w-3 h-3" />
+                            Pro privileges
                           </h4>
                           <ul className="space-y-3">
                             {[
@@ -433,8 +434,8 @@ export default function SettingsPage() {
                         { key: "productUpdates", label: "Protocol Updates", desc: "New feature alerts and system improvements.", icon: Sparkles },
                         { key: "securityAlerts", label: "Vault Protection", desc: "Critical alerts regarding your account security.", icon: Shield },
                       ].map((item) => (
-                        <div 
-                          key={item.key} 
+                        <div
+                          key={item.key}
                           onClick={() => togglePreference(item.key)}
                           className="flex items-center justify-between p-5 rounded-2xl border border-border/50 bg-muted/10 hover:bg-muted/30 cursor-pointer transition-all group border-l-4 border-l-transparent hover:border-l-primary"
                         >
@@ -451,7 +452,7 @@ export default function SettingsPage() {
                             "relative w-11 h-6 rounded-full transition-all shrink-0",
                             notificationPreferences[item.key as keyof typeof notificationPreferences] ? "bg-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]" : "bg-muted-foreground/30"
                           )}>
-                            <motion.div 
+                            <motion.div
                               animate={{ x: notificationPreferences[item.key as keyof typeof notificationPreferences] ? 20 : 2 }}
                               className="absolute top-1 left-0 w-4 h-4 rounded-full bg-white shadow-md"
                             />
@@ -483,10 +484,16 @@ export default function SettingsPage() {
 
                 {activeTab === "security" && (
                   <div className="space-y-6">
-                    <Card className="border-border/50 shadow-xl rounded-3xl overflow-hidden border-t-emerald-500/20">
-                      <CardHeader>
-                        <CardTitle className="text-xl font-bold uppercase tracking-tight">Guardian Hub</CardTitle>
-                        <CardDescription className="font-medium">Active terminal sessions and device authorization</CardDescription>
+                    <Card className="border-border/50 shadow-xl rounded-3xl overflow-hidden border-t-emerald-500/20 bg-background/50 backdrop-blur-md">
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                          <CardTitle className="text-xl font-black uppercase tracking-tight">Guardian Hub</CardTitle>
+                          <CardDescription className="font-medium">Active terminal sessions and device authorization</CardDescription>
+                        </div>
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Active Protection</span>
+                        </div>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         {isLoading ? (
@@ -498,40 +505,86 @@ export default function SettingsPage() {
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Scanning network...</p>
                           </div>
                         ) : (
-                          devices.map((device) => {
-                            const isCurrent = device.sessionToken === sessionToken;
-                            return (
-                              <div key={device.id} className="flex items-center justify-between p-5 rounded-2xl border border-border/50 bg-muted/10 group transition-all">
-                                <div className="flex items-center gap-4">
-                                  <div className={cn(
-                                    "w-12 h-12 rounded-xl border flex items-center justify-center transition-all shadow-xs",
-                                    isCurrent ? "bg-primary/5 border-primary/20 text-primary" : "bg-background border-border text-muted-foreground"
-                                  )}>
-                                    {getDeviceIcon(device.deviceType)}
-                                  </div>
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <p className="font-bold text-sm uppercase tracking-tight">{device.deviceName}</p>
-                                      {isCurrent && <Badge className="bg-primary/10 text-primary border-none text-[9px] h-5 rounded-full px-2 font-bold uppercase">Current</Badge>}
+                          <div className="grid grid-cols-1 gap-4">
+                            {devices.map((device) => {
+                              const isCurrent = device.sessionToken === sessionToken;
+                              return (
+                                <motion.div
+                                  key={device.id}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className={cn(
+                                    "flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl border transition-all relative group",
+                                    isCurrent
+                                      ? "bg-primary/5 border-primary/20 shadow-lg shadow-primary/5"
+                                      : "bg-muted/10 border-border/50 hover:bg-muted/30"
+                                  )}
+                                >
+                                  {isCurrent && (
+                                    <div className="absolute top-0 right-0 p-3">
+                                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-[8px] font-black uppercase tracking-widest">Live Now</span>
+                                      </div>
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground font-bold opacity-70 mt-1 uppercase">
-                                      {device.os} • {device.ipAddress} • {device.locationCity}, {device.locationCountry}
-                                    </p>
+                                  )}
+
+                                  <div className="flex items-start gap-5">
+                                    <div className={cn(
+                                      "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110",
+                                      isCurrent ? "bg-primary text-white" : "bg-background border border-border"
+                                    )}>
+                                      {getDeviceIcon(device.deviceType)}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <div className="flex items-center gap-2">
+                                        <h4 className="font-black text-base tracking-tight">{device.deviceName}</h4>
+                                        {isCurrent && <Badge className="bg-primary/20 text-primary border-none text-[8px] h-4 rounded-full px-2 font-black uppercase">Current Session</Badge>}
+                                      </div>
+
+                                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                                          <Monitor className="w-3 h-3" />
+                                          <span className="text-[10px] font-bold uppercase tracking-wider">{device.os}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                                          <Globe className="w-3 h-3" />
+                                          <span className="text-[10px] font-bold uppercase tracking-wider">
+                                            {device.ipAddress}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                                          <Shield className="w-3 h-3" />
+                                          <span className="text-[10px] font-bold uppercase tracking-wider">
+                                            {device.locationCity && device.locationCountry
+                                              ? `${device.locationCity}, ${device.locationCountry}`
+                                              : "Geographic data pending..."
+                                            }
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest pt-1">
+                                        <Clock className="w-2.5 h-2.5" />
+                                        Last active {new Date(device.lastActive).toLocaleString()}
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                                {!isCurrent && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="rounded-xl h-9 text-[10px] font-bold uppercase tracking-wider text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => handleLogoutDevice(device.id)}
-                                  >
-                                    Revoke
-                                  </Button>
-                                )}
-                              </div>
-                            );
-                          })
+
+                                  {!isCurrent && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="mt-6 sm:mt-0 rounded-xl h-10 px-5 text-[10px] font-black uppercase tracking-[0.2em] text-destructive hover:text-destructive hover:bg-destructive/10 transition-all border border-transparent hover:border-destructive/20"
+                                      onClick={() => handleLogoutDevice(device.id)}
+                                    >
+                                      Revoke Access
+                                    </Button>
+                                  )}
+                                </motion.div>
+                              );
+                            })}
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -611,7 +664,7 @@ function ThemeSwitcher() {
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest">{opt.label}</span>
             {isActive && (
-              <motion.div 
+              <motion.div
                 layoutId="activeTheme"
                 className="absolute inset-0 ring-2 ring-primary rounded-2xl"
               />
@@ -678,9 +731,9 @@ function AccessibilityToggles() {
                 t.checked ? "bg-primary" : "bg-muted-foreground/30"
               )}
             >
-              <motion.div 
+              <motion.div
                 animate={{ x: t.checked ? 20 : 2 }}
-                className="absolute top-1 left-0 w-4 h-4 rounded-full bg-white shadow-md" 
+                className="absolute top-1 left-0 w-4 h-4 rounded-full bg-white shadow-md"
               />
             </div>
           </label>

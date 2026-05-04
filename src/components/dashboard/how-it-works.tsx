@@ -56,7 +56,7 @@ export default function HowItWorksSheet({ open, onOpenChange }: HowItWorksSheetP
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg border-l-primary/10 p-0 flex flex-col h-full bg-background/95 backdrop-blur-xl focus:outline-none">
-        <div className="p-8 pb-6 border-b border-primary/10 relative overflow-hidden shrink-0">
+        <div className="p-5 sm:p-8 pb-6 border-b border-primary/10 relative overflow-hidden shrink-0">
           {/* Background Aesthetic */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16" />
           
@@ -67,56 +67,56 @@ export default function HowItWorksSheet({ open, onOpenChange }: HowItWorksSheetP
                </div>
                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Learning Protocol</span>
             </div>
-            <SheetTitle className="text-3xl font-black tracking-tight leading-none bg-linear-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+            <SheetTitle className="text-2xl sm:text-3xl font-black tracking-tight leading-tight sm:leading-none bg-linear-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
               How VocabVault Works
             </SheetTitle>
-            <SheetDescription className="text-sm font-medium text-muted-foreground mt-2">
+            <SheetDescription className="text-xs sm:text-sm font-medium text-muted-foreground mt-2">
               The 10-stage cognitive acquisition cycle designed for total spoken mastery.
             </SheetDescription>
           </SheetHeader>
         </div>
         
-        <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
-          <div className="space-y-10">
-            <div className="p-5 rounded-2xl bg-muted/30 border border-border/50 relative overflow-hidden group">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 custom-scrollbar">
+          <div className="space-y-8 sm:space-y-10">
+            <div className="p-4 sm:p-5 rounded-2xl bg-muted/30 border border-border/50 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Brain className="w-12 h-12" />
+                <Brain className="w-10 h-10 sm:w-12 sm:h-12" />
               </div>
-              <p className="text-sm text-foreground/70 leading-relaxed font-medium relative z-10">
+              <p className="text-xs sm:text-sm text-foreground/70 leading-relaxed font-medium relative z-10">
                 VocabVault moves words from <span className="text-primary font-bold italic">passive recognition</span> to <span className="text-primary font-bold italic">active spoken command</span>. Each stage is mathematically weighted to build progressive neural pathways.
               </p>
             </div>
 
             <div className="space-y-6 relative">
               {/* Timeline Connector Line */}
-              <div className="absolute left-[19px] top-4 bottom-4 w-[2px] bg-linear-to-b from-primary/30 via-primary/5 to-transparent" />
+              <div className="absolute left-[17px] sm:left-[19px] top-4 bottom-4 w-[2px] bg-linear-to-b from-primary/30 via-primary/5 to-transparent" />
 
               <div className="space-y-6">
                 {stages.map((stage, idx) => (
                   <motion.div 
                     key={stage.num}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="relative pl-12 group"
+                    className="relative pl-10 sm:pl-12 group"
                   >
                     {/* Stage Indicator Dot */}
                     <div className={cn(
-                      "absolute left-0 top-0 w-10 h-10 rounded-xl flex items-center justify-center z-10 shadow-lg shadow-primary/5 transition-transform group-hover:scale-110",
+                      "absolute left-0 top-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center z-10 shadow-lg shadow-primary/5 transition-transform group-hover:scale-110",
                       stage.bg
                     )}>
-                      <stage.icon className={cn("w-5 h-5", stage.color)} />
+                      <stage.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", stage.color)} />
                     </div>
 
-                    <div className="p-4 rounded-2xl border border-border/50 bg-background/50 hover:bg-muted/30 transition-colors cursor-default">
+                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-border/50 bg-background/50 hover:bg-muted/30 transition-colors cursor-default">
                       <div className="flex items-center justify-between mb-1">
-                        <span className={cn("text-[10px] font-black uppercase tracking-widest", stage.color)}>
+                        <span className={cn("text-[9px] sm:text-[10px] font-black uppercase tracking-widest", stage.color)}>
                           Stage {stage.num}
                         </span>
                         <ChevronRight className="w-3 h-3 text-muted-foreground/30 group-hover:translate-x-1 transition-transform" />
                       </div>
-                      <h4 className="text-base font-black tracking-tight mb-1">{stage.name}</h4>
-                      <p className="text-xs text-muted-foreground font-medium leading-relaxed">{stage.desc}</p>
+                      <h4 className="text-sm sm:text-base font-black tracking-tight mb-1">{stage.name}</h4>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground font-medium leading-relaxed">{stage.desc}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -136,14 +136,14 @@ export default function HowItWorksSheet({ open, onOpenChange }: HowItWorksSheetP
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 + (idx * 0.1) }}
-                      className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 group hover:bg-primary/10 transition-all"
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/10 group hover:bg-primary/10 transition-all"
                     >
-                       <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center shadow-sm group-hover:rotate-12 transition-transform">
-                          <p.icon className="w-5 h-5 text-primary" />
+                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-background flex items-center justify-center shadow-sm group-hover:rotate-12 transition-transform shrink-0">
+                          <p.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                        </div>
-                       <div>
-                          <h5 className="text-xs font-black uppercase tracking-widest text-foreground">{p.title}</h5>
-                          <p className="text-[11px] text-muted-foreground font-medium">{p.desc}</p>
+                       <div className="min-w-0">
+                          <h5 className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground truncate">{p.title}</h5>
+                          <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium leading-tight">{p.desc}</p>
                        </div>
                     </motion.div>
                   ))}

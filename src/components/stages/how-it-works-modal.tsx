@@ -8,192 +8,228 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, ScrollText, CheckCircle2, AlertTriangle, Lightbulb } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  HelpCircle, 
+  ScrollText, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Lightbulb, 
+  Sparkles,
+  Target,
+  Zap,
+  Info,
+  ChevronRight,
+  ShieldCheck,
+  Brain,
+  BookOpen,
+  Mic,
+  Eye,
+  PenTool,
+  Headphones,
+  BarChart3,
+  Volume2,
+  AlertCircle
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const stageTips = [
-  "Stage 1: Press the pronunciation audio three times before you try to leave.",
-  "Stage 2: Read naturally and avoid rushing the microphone; the AI rewards fluent delivery.",
-  "Stage 5: Read actively instead of skimming so the word stays anchored in context.",
-  "Stage 9: Vary sentence structure and placement; robotic repetition is penalized.",
-  "Stage 10: Speak naturally about a real topic, then weave the target word in three times.",
+  { stage: 1, tip: "Press the pronunciation audio three times before you try to leave." },
+  { stage: 2, tip: "Read naturally and avoid rushing; the AI rewards fluent delivery." },
+  { stage: 5, tip: "Read actively instead of skimming so the word stays anchored in context." },
+  { stage: 9, tip: "Vary sentence structure; robotic repetition is penalized by the evaluator." },
+  { stage: 10, tip: "Speak naturally about a topic, weaving the target word in three times." },
 ];
 
 const commonMistakes = [
-  "Stage 1: Leaving before the 45-second timer completes or skipping the pronunciation loop.",
-  "Stage 4: Answering the quiz from memory of only one earlier stage instead of the full word flow.",
-  "Stage 6: Repeating the same spelling pattern without completing the matching phase.",
-  "Stage 7: Entering guesses before listening to each clip fully.",
-  "Stage 8: Counting only the exact word and forgetting synonyms or antonyms in different forms.",
+  { stage: 1, mistake: "Leaving before the 45-second timer or skipping the pronunciation loop." },
+  { stage: 4, mistake: "Answering quiz from memory of only one stage instead of the full flow." },
+  { stage: 6, mistake: "Repeating the same spelling pattern without completing the matching phase." },
+  { stage: 7, mistake: "Entering guesses before listening to each clip fully." },
+  { stage: 8, mistake: "Counting only the exact word and forgetting synonyms or antonyms." },
+];
+
+const stages = [
+  { num: 1, name: "Word Briefing", icon: BookOpen, color: "text-blue-500", bg: "bg-blue-500/10", rules: ["Press audio 3+ times", "Stay for full 45s"] },
+  { num: 2, name: "Sentence Immersion", icon: Mic, color: "text-indigo-500", bg: "bg-indigo-500/10", rules: ["Hold mic, read naturally", "AI evaluates fluency"] },
+  { num: 3, name: "Synonym Map", icon: Brain, color: "text-violet-500", bg: "bg-violet-500/10", rules: ["Absorb for 60s", "Tested in Stage 6"] },
+  { num: 4, name: "Active Recall I", icon: Target, color: "text-fuchsia-500", bg: "bg-fuchsia-500/10", rules: ["10 Mixed questions", "Definition focused"] },
+  { num: 5, name: "Article Deep Read", icon: Eye, color: "text-rose-500", bg: "bg-rose-500/10", rules: ["3 Short articles", "Stay for full 300s"] },
+  { num: 6, name: "Active Recall II", icon: PenTool, color: "text-orange-500", bg: "bg-orange-500/10", rules: ["Spelling (3x accuracy)", "Synonym matching"] },
+  { num: 7, name: "Active Listening", icon: Headphones, color: "text-amber-500", bg: "bg-amber-500/10", rules: ["3 English accents", "Count word occurrences"] },
+  { num: 8, name: "Paragraph Analysis", icon: BarChart3, color: "text-emerald-500", bg: "bg-emerald-500/10", rules: ["200+ word text", "Count all forms"] },
+  { num: 9, name: "Creative Writing", icon: Zap, color: "text-teal-500", bg: "bg-teal-500/10", rules: ["Use word 3+ times", "AI grammar check"] },
+  { num: 10, name: "Spoken Mastery", icon: Volume2, color: "text-primary", bg: "bg-primary/10", rules: ["1 Minute speech", "Use word 3+ times"] },
 ];
 
 export default function HowItWorksModal() {
   return (
     <Dialog>
       <DialogTrigger
-        className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5 text-muted-foreground"
-      >
-        <HelpCircle className="w-5 h-5 mr-1" />
-        <span className="hidden sm:inline">How it works</span>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b border-border/50 shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <ScrollText className="w-5 h-5 text-primary" />
-            Stage Instructions & Marking Guide
+        render={
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 gap-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span className="hidden sm:inline font-bold text-[10px] uppercase tracking-widest">Marking Guide</span>
+          </Button>
+        }
+      />
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-primary/10 bg-background/95 backdrop-blur-xl">
+        <DialogHeader className="px-8 py-6 border-b border-primary/10 relative overflow-hidden shrink-0">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16" />
+          <div className="flex items-center gap-3 mb-2 relative z-10">
+             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <ScrollText className="w-4 h-4 text-primary" />
+             </div>
+             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Mastery Blueprint</span>
+          </div>
+          <DialogTitle className="text-3xl font-black tracking-tight leading-none bg-linear-to-br from-foreground to-foreground/60 bg-clip-text text-transparent relative z-10">
+            Instructions & Marking
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-6 py-4">
-          <div className="space-y-8 pb-6">
+        <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
+          <div className="space-y-12">
             
             {/* Rules */}
-            <section>
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-5 h-5 text-success" />
-                Pass/Fail Rules
+            <motion.section 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/20 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <ShieldCheck className="w-16 h-16 text-emerald-500" />
+              </div>
+              <h3 className="text-lg font-black tracking-tight flex items-center gap-3 mb-4 text-emerald-700">
+                <CheckCircle2 className="w-5 h-5" />
+                Pass/Fail Protocol
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-                Every stage is worth 10 points (total 100 per word). You need <strong>80 points or above</strong> to pass the word.
-              </p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                If you score below 80, you will only be sent back to retake the specific stages where you scored below 8/10. You do not have to repeat the entire word cycle.
-              </p>
-            </section>
+              <div className="space-y-4 relative z-10">
+                <p className="text-sm font-bold text-emerald-900/70 leading-relaxed">
+                  Every stage is worth <span className="text-emerald-700 underline decoration-2 underline-offset-4">10 points</span>. A total of <span className="text-emerald-700 underline decoration-2 underline-offset-4">80/100 points</span> is required to achieve Word Certification.
+                </p>
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-emerald-500/10">
+                  <Info className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <p className="text-xs font-bold text-emerald-800/80">
+                    If you fail, you only retake the specific stages where you scored below 8/10. Your progress is saved.
+                  </p>
+                </div>
+              </div>
+            </motion.section>
 
             {/* Stages Guide */}
-            <section>
-              <h3 className="text-lg font-semibold mb-4">Stage-by-Stage Guide</h3>
-              <div className="space-y-4">
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 1: Word Briefing</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Read the definition and phonetic spelling.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Must press audio at least 3 times.</li>
-                    <li>Must stay for the full 45 seconds.</li>
-                  </ul>
-                </div>
-                
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 2: Sentence Immersion</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Speak 6 sentences in different tenses.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Hold the mic button and read the sentence naturally.</li>
-                    <li>AI evaluates pronunciation, fluency, and delivery.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 3: Synonym & Antonym Map</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Absorb related words and opposites.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>No quiz yet. Just read carefully for 60 seconds.</li>
-                    <li>You will be tested on these in Stage 6.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 4: Active Recall Test I</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Mixed quiz (Fill-in-blank, MCQ, True/False).</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Answer 10 questions to test what you&rsquo;ve learned so far.</li>
-                    <li>Points scale with correct answers.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 5: Article Deep Read</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Read the word in authentic context.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Read all three short articles carefully.</li>
-                    <li>Must stay for the full 5 minutes (300s). No skipping.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 6: Active Recall Test II</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Spelling and Matching.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Type the word 3 times accurately from memory.</li>
-                    <li>Match synonyms and antonyms from Stage 3.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 7: Active Listening</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Listen to 3 English accents.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Count exactly how many times the target word is spoken in each clip.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 8: Paragraph Analysis</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Read a 200+ word text.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Count the exact occurrences of the target word, its synonyms, and antonyms.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 9: Free Writing</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Write an original paragraph.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Use the target word at least 3 times.</li>
-                    <li>AI checks for grammar, context, and variety. Robotic repetition is penalized.</li>
-                  </ul>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h4 className="font-semibold text-sm mb-1">Stage 10: Spoken Performance</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Speak freely for 1 minute.</p>
-                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>Use the word at least 3 times in natural speech.</li>
-                    <li>AI evaluates your overall fluency and correct contextual usage.</li>
-                  </ul>
-                </div>
+            <section className="space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/70 flex items-center gap-3">
+                 Sequential Stage Map
+                 <div className="h-px flex-1 bg-border/30" />
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {stages.map((stage, idx) => (
+                  <motion.div 
+                    key={stage.num}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="p-5 rounded-2xl border border-border/50 bg-background/50 hover:bg-muted/30 transition-all group relative overflow-hidden"
+                  >
+                    <div className={cn("absolute top-0 right-0 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity rounded-full -mr-12 -mt-12", stage.bg)} />
+                    
+                    <div className="flex items-center gap-3 mb-3">
+                       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", stage.bg)}>
+                          <stage.icon className={cn("w-5 h-5", stage.color)} />
+                       </div>
+                       <div>
+                          <span className={cn("text-[9px] font-black uppercase tracking-widest", stage.color)}>Stage {stage.num}</span>
+                          <h4 className="text-sm font-black tracking-tight">{stage.name}</h4>
+                       </div>
+                    </div>
+                    <ul className="space-y-2">
+                      {stage.rules.map((rule, i) => (
+                        <li key={i} className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80">
+                          <ChevronRight className="w-3 h-3 text-primary/40" />
+                          {rule}
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                ))}
               </div>
             </section>
 
-            {/* AI Evaluation Guide */}
-            <section>
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                <Lightbulb className="w-5 h-5 text-amber-500" />
-                AI Evaluation Guide
+            {/* AI Evaluation */}
+            <section className="p-8 rounded-3xl bg-linear-to-br from-primary/10 to-violet-500/5 border border-primary/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                 <Sparkles className="w-20 h-20 text-primary" />
+              </div>
+              <h3 className="text-xl font-black tracking-tight flex items-center gap-3 mb-4">
+                <Zap className="w-6 h-6 text-primary" />
+                Advanced AI Evaluation
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                In Stages 2, 9, and 10, our AI evaluates your submissions based on genuine command of the word.
-                It looks for accurate pronunciation, proper grammatical context, and natural fluency.
-                Do not try to trick the system with robotic, identical sentences—use the word organically to earn top marks.
+              <p className="text-sm font-bold text-foreground/70 leading-relaxed mb-6">
+                In Stages 2, 9, and 10, our neural engine evaluates your submissions based on <span className="text-primary">genuine linguistic command</span>.
               </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 {[
+                   { label: "Phonetic Precision", desc: "Accurate accent and rhythm" },
+                   { label: "Grammar Flow", desc: "Contextual word placement" },
+                   { label: "Lexical Variety", desc: "No robotic repetitions" }
+                 ].map((item, i) => (
+                   <div key={i} className="p-3 rounded-xl bg-white/40 border border-primary/10">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{item.label}</p>
+                      <p className="text-[11px] font-medium text-muted-foreground">{item.desc}</p>
+                   </div>
+                 ))}
+              </div>
             </section>
 
-            <section>
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                <Lightbulb className="w-5 h-5 text-amber-500" />
-                Tips Per Stage
-              </h3>
-              <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-5">
-                {stageTips.map((tip) => (
-                  <li key={tip}>{tip}</li>
-                ))}
-              </ul>
-            </section>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
+              {/* Tips */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground/70 flex items-center gap-3">
+                  Pro Tips
+                  <div className="h-px flex-1 bg-border/30" />
+                </h3>
+                <div className="space-y-3">
+                  {stageTips.map((t, i) => (
+                    <div key={i} className="flex gap-3 p-3 rounded-2xl hover:bg-muted/50 transition-colors">
+                       <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                          <Lightbulb className="w-4 h-4 text-amber-500" />
+                       </div>
+                       <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                          <span className="text-amber-600 font-black">S{t.stage}:</span> {t.tip}
+                       </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
-            <section>
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-                Common Mistakes
-              </h3>
-              <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-5">
-                {commonMistakes.map((mistake) => (
-                  <li key={mistake}>{mistake}</li>
-                ))}
-              </ul>
-            </section>
+              {/* Mistakes */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-destructive/70 flex items-center gap-3">
+                  Common Pitfalls
+                  <div className="h-px flex-1 bg-destructive/10" />
+                </h3>
+                <div className="space-y-3">
+                  {commonMistakes.map((m, i) => (
+                    <div key={i} className="flex gap-3 p-3 rounded-2xl hover:bg-destructive/5 transition-colors">
+                       <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                          <AlertCircle className="w-4 h-4 text-destructive" />
+                       </div>
+                       <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                          <span className="text-destructive font-black">S{m.stage}:</span> {m.mistake}
+                       </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
 
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
