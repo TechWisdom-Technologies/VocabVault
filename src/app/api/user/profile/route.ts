@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Single query — get user profile data only
-    const fullUser = await prisma.user.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
         id: true,
@@ -63,12 +63,15 @@ export async function GET(req: NextRequest) {
         reason: true,
         achievements: true,
         streakRewards: true,
-      },
+        timezone: true,
+      } as any,
     });
 
-    if (!fullUser) {
+    if (!dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    const fullUser = dbUser as any;
 
     // --- SELF-HEALING: Sync maxUnlockedIndex with actual progress ---
     const lastCompleted = await prisma.wordProgress.findFirst({
@@ -199,7 +202,7 @@ export async function PATCH(req: NextRequest) {
     const { user } = authResult;
     const contentType = req.headers.get("content-type") || "";
     
-    let name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences;
+    let name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences, timezone;
     let avatarFile: File | null = null;
 
     if (contentType.includes("multipart/form-data")) {
@@ -219,7 +222,7 @@ export async function PATCH(req: NextRequest) {
       }
     } else {
       const body = await req.json();
-      ({ name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences } = body);
+      ({ name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences, timezone } = body);
     }
 
     if (typeof name !== "string" || name.trim() === "") {
@@ -259,8 +262,9 @@ export async function PATCH(req: NextRequest) {
         profession: profession?.trim(),
         reason: reason?.trim(),
         dob: dob ? new Date(dob) : null,
+        timezone: timezone || undefined,
         ...(avatarUrl !== undefined && { avatarUrl })
-      },
+      } as any,
     });
 
     if (notificationPreferences) {

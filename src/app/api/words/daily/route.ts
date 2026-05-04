@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
   const tzOffset = Number(searchParams.get("tz")) || 0; // minutes
 
   const { user } = authResult;
-  const todayKey = getToday(tzOffset);
+  
+  // Prioritize user's saved timezone string, fall back to query param offset
+  const todayKey = getToday(user.timezone || tzOffset);
   const cacheKey = `${user.id}:${todayKey}`;
 
   const cached = DAILY_WORDS_RESPONSE_CACHE.get(cacheKey);

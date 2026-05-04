@@ -317,6 +317,53 @@ export default function SettingsPage() {
                           </div>
                         </div>
                       </div>
+
+                      <div className="pt-8 border-t border-border/50">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Globe className="w-4 h-4 text-primary" />
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Linguistic Environment</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-5 rounded-2xl bg-muted/10 border border-border/50 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-xs font-bold uppercase tracking-tight">Timezone</span>
+                              </div>
+                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 text-primary">
+                                {user?.timezone || "UTC"}
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground font-medium">Your daily words will update based on this timezone.</p>
+                            <select 
+                              className="w-full h-10 px-3 rounded-xl bg-background border border-border/50 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-hidden transition-all"
+                              value={user?.timezone || "UTC"}
+                              onChange={async (e) => {
+                                const newTz = e.target.value;
+                                try {
+                                  const headers = await getAuthHeaders();
+                                  const res = await fetch("/api/user/profile", {
+                                    method: "PATCH",
+                                    headers: { ...headers, "Content-Type": "application/json" },
+                                    body: JSON.stringify({ timezone: newTz })
+                                  });
+                                  if (res.ok) {
+                                    // Use useAuthStore's syncUser to refresh local user data
+                                    const { syncUser } = useAuthStore.getState();
+                                    await syncUser();
+                                  }
+                                } catch (e) {
+                                  console.error("Failed to update timezone", e);
+                                }
+                              }}
+                            >
+                              {Intl.supportedValuesOf("timeZone").map(tz => (
+                                <option key={tz} value={tz}>{tz}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 )}

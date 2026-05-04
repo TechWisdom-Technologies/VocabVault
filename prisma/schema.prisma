@@ -36,6 +36,7 @@ model User {
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
   maxUnlockedIndex   Int               @default(0) @map("max_unlocked_index")
+  timezone           String            @default("Asia/Dhaka")
   achievements       Achievement[]
   activityLogs       ActivityLog[]
   adminLogs          AdminLog[]        @relation("AdminActions")

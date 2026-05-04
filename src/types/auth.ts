@@ -8,6 +8,7 @@ export interface AuthUser {
   onboardingComplete: boolean;
   rulesAcknowledged: boolean;
   maxUnlockedIndex: number;
+  timezone: string;
 }
 
 export interface DeviceInfo {

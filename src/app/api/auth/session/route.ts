@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     // Find or create user in database
     let user = await prisma.user.findUnique({
       where: { firebaseUid },
-    });
+    }) as any;
 
     if (!user) {
       // First-time login — create user record
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           email,
           role: isAutoAdmin ? "ADMIN" : "USER",
         },
-      });
+      }) as any;
     } else {
       // Also check on existing logins in case they were added to the ENV later
       const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         user = await prisma.user.update({
           where: { id: user.id },
           data: { role: "ADMIN" },
-        });
+        }) as any;
       }
     }
 
@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
         onboardingComplete: user.onboardingComplete,
         rulesAcknowledged: user.rulesAcknowledged,
         maxUnlockedIndex: user.maxUnlockedIndex,
+        timezone: user.timezone,
       },
       invalidatedAll,
     });

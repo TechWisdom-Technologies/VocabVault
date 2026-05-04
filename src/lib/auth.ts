@@ -15,6 +15,7 @@ export interface AuthenticatedUser {
   lockReason: string | null;
   stripeCustomerId: string | null;
   maxUnlockedIndex: number;
+  timezone: string;
 }
 
 // ─── In-Memory User Cache ────────────────────────────────
@@ -159,7 +160,7 @@ export async function validateRequest(
     if (refreshHeader === "true") {
       invalidateUserCache(firebaseUid);
     }
-    
+
     let user = getCachedUser(firebaseUid);
 
     if (!user) {
@@ -177,7 +178,8 @@ export async function validateRequest(
           lockReason: true,
           stripeCustomerId: true,
           maxUnlockedIndex: true,
-        },
+          timezone: true,
+        } as any,
       });
 
       if (!dbUser) {
@@ -189,7 +191,7 @@ export async function validateRequest(
         };
       }
 
-      user = dbUser as AuthenticatedUser;
+      user = dbUser as unknown as AuthenticatedUser;
       setCachedUser(firebaseUid, user);
     }
 
@@ -284,7 +286,7 @@ export async function createSession(
     // Track repeated third-device logouts to lock account if abused
     const lockoutKey = `lockout:third_device:${userId}`;
     const currentCount = await redis.incr(lockoutKey);
-    
+
     // Set expiry for 1 hour on the first offense
     if (currentCount === 1) {
       await redis.expire(lockoutKey, 3600);
