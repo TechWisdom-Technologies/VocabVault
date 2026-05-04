@@ -14,6 +14,7 @@ export interface AuthenticatedUser {
   isLocked: boolean;
   lockReason: string | null;
   stripeCustomerId: string | null;
+  maxUnlockedIndex: number;
 }
 
 // ─── In-Memory User Cache ────────────────────────────────
@@ -175,6 +176,7 @@ export async function validateRequest(
           isLocked: true,
           lockReason: true,
           stripeCustomerId: true,
+          maxUnlockedIndex: true,
         },
       });
 

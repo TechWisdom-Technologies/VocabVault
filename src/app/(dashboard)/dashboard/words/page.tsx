@@ -188,7 +188,7 @@ export default function WordsPage() {
                   {day.words.map((word: any) => {
                     const isCompleted = word.status === "COMPLETED";
                     const isFirstGroup = day.dayIndex === 1;
-                    
+
                     // Force LOCKED status if orderIndex is beyond maxUnlockedIndex
                     const effectiveMaxIndex = Math.max(1, user?.maxUnlockedIndex ?? 0);
                     const isSequentiallyLocked = word.orderIndex > effectiveMaxIndex && !isCompleted;
@@ -198,25 +198,31 @@ export default function WordsPage() {
                       return (
                         <div 
                           key={word.id} 
-                          onClick={() => isFirstGroup && setIsLockModalOpen(true)}
-                          className={cn(
-                            "p-6 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col justify-between h-40 relative overflow-hidden group",
-                            isFirstGroup && "cursor-pointer hover:border-primary/30 transition-all"
-                          )}
+                          onClick={() => setIsLockModalOpen(true)}
+                          className="p-6 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col justify-between h-40 relative overflow-hidden group transition-all cursor-pointer hover:border-primary/30"
                         >
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Locked Entry</span>
-                            <Lock className={cn("w-4 h-4 text-primary/30", isFirstGroup && "group-hover:text-primary/50 transition-colors")} />
+                            <div className="flex items-center gap-2">
+                              <Lock className="w-3.5 h-3.5 text-primary/40 group-hover:text-primary transition-colors" />
+                              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                {isFirstGroup ? "Locked" : "Restricted"}
+                              </span>
+                            </div>
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground/20 group-hover:bg-primary/20 transition-colors" />
                           </div>
                           <div className={cn(
-                            "text-xl font-bold text-muted-foreground capitalize tracking-tight",
-                            isFirstGroup ? "group-hover:text-primary/70 transition-colors" : "blur-[3px] select-none opacity-30"
+                            "text-xl font-bold capitalize tracking-tight select-none transition-all duration-300",
+                            isFirstGroup 
+                              ? "text-muted-foreground/40 group-hover:text-muted-foreground" 
+                              : "text-muted-foreground/20 blur-[2px] opacity-40 group-hover:blur-0 transition-all duration-500"
                           )}>
                             {word.word}
                           </div>
-                          <div className="mt-auto flex items-center gap-2 opacity-30">
-                            <Clock className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[9px] font-bold uppercase tracking-wider">Sequential Lock</span>
+                          <div className="mt-auto flex items-center gap-2 opacity-30 group-hover:opacity-60 transition-opacity text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span className="text-[9px] font-black uppercase tracking-widest italic">
+                              {isFirstGroup ? "Protocol Lock" : "Curriculum Sequence"}
+                            </span>
                           </div>
                         </div>
                       );
@@ -292,7 +298,7 @@ export default function WordsPage() {
             </p>
           </div>
           <DialogFooter className="sm:justify-center pb-6">
-            <Button 
+            <Button
               onClick={() => setIsLockModalOpen(false)}
               className="bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] h-12 px-8 rounded-xl shadow-xl shadow-primary/20"
             >

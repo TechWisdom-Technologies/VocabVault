@@ -61,11 +61,14 @@ export async function GET(req: NextRequest) {
         const isActive = activeWordIds.has(w.id);
         const isCompleted = progress?.status === "COMPLETED";
         
+        // Sequential Enforcement: Even if in the daily set, it's LOCKED if it's beyond the maxUnlockedIndex
+        const isSequentiallyUnlocked = w.orderIndex <= Math.max(1, user.maxUnlockedIndex);
+
         let status: "IN_PROGRESS" | "RETRY" | "COMPLETED" | "LOCKED" = "LOCKED";
         
         if (isCompleted) status = "COMPLETED";
-        else if (progress?.status === "RETRY") status = "RETRY";
-        else if (isActive) status = "IN_PROGRESS";
+        else if (progress?.status === "RETRY" && isSequentiallyUnlocked) status = "RETRY";
+        else if (isActive && isSequentiallyUnlocked) status = "IN_PROGRESS";
         else status = "LOCKED";
 
         return {
