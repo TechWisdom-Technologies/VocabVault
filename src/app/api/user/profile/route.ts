@@ -197,11 +197,57 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const { user } = authResult;
-    const body = await req.json();
-    const { name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences } = body;
+    const contentType = req.headers.get("content-type") || "";
+    
+    let name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences;
+    let avatarFile: File | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      name = formData.get("name") as string;
+      phone = formData.get("phone") as string;
+      nationality = formData.get("nationality") as string;
+      profession = formData.get("profession") as string;
+      reason = formData.get("reason") as string;
+      dob = formData.get("dob") as string;
+      avatarUrl = formData.get("avatarUrl") as string; // existing URL
+      avatarFile = formData.get("avatar") as File | null;
+      
+      const prefsJson = formData.get("notificationPreferences") as string;
+      if (prefsJson) {
+        try { notificationPreferences = JSON.parse(prefsJson); } catch {}
+      }
+    } else {
+      const body = await req.json();
+      ({ name, phone, nationality, profession, reason, avatarUrl, dob, notificationPreferences } = body);
+    }
 
     if (typeof name !== "string" || name.trim() === "") {
       return NextResponse.json({ error: "Invalid name" }, { status: 400 });
+    }
+
+    // Handle new avatar upload
+    if (avatarFile && avatarFile.size > 0) {
+      const { supabaseAdmin } = await import("@/lib/supabase/client");
+      if (supabaseAdmin) {
+        const fileExt = avatarFile.name.split(".").pop() || "jpg";
+        const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+        const buffer = Buffer.from(await avatarFile.arrayBuffer());
+
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("avatars")
+          .upload(fileName, buffer, {
+            contentType: avatarFile.type,
+            upsert: true,
+          });
+
+        if (!uploadError) {
+          const { data: urlData } = supabaseAdmin.storage
+            .from("avatars")
+            .getPublicUrl(fileName);
+          avatarUrl = urlData.publicUrl;
+        }
+      }
     }
 
     const updatedUser = await prisma.user.update({

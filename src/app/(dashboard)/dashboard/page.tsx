@@ -66,6 +66,7 @@ export default function DashboardPage() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const plan = searchParams.get("plan");
@@ -132,15 +133,18 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const headers = await getAuthHeaders();
+        const tz = new Date().getTimezoneOffset();
         const [profileRes, wordsRes, activityRes, wotdRes] = await Promise.all([
           fetch("/api/user/profile", { headers }),
-          fetch("/api/words/daily", { headers }),
+          fetch(`/api/words/daily?tz=${tz}`, { headers }),
           fetch("/api/user/activity", { headers }),
           fetch("/api/words/word-of-the-day", { headers }),
         ]);
 
         if (profileRes.ok) {
           setUserStats(await profileRes.json());
+        } else {
+          setHasError(true);
         }
 
         if (activityRes.ok) {
@@ -165,11 +169,14 @@ export default function DashboardPage() {
           }
           setProgressMap(pMap);
           setIsPaywalled(wordsData.isPaywalled || false);
+          setHasError(false);
         } else {
           console.warn(`Unexpected response from /api/words/daily: ${wordsRes.status}`);
+          setHasError(true);
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
+        setHasError(true);
       } finally {
         setIsLoading(false);
       }
@@ -464,6 +471,22 @@ export default function DashboardPage() {
                   className="bg-linear-to-r from-primary to-primary-600 hover:from-primary/90 hover:to-primary-700 text-white px-10 h-14 font-bold uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                   Upgrade to Pro <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          ) : hasError ? (
+            <Card className="border-rose-500/20 bg-rose-500/5 rounded-2xl">
+              <CardContent className="p-12 text-center">
+                <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+                <h3 className="font-bold text-xl tracking-tight mb-2 text-rose-700">Protocol Sync Failed</h3>
+                <p className="text-xs text-rose-600/70 font-bold tracking-wider uppercase mb-6">
+                  We encountered a disturbance in the database link.
+                </p>
+                <Button 
+                  onClick={() => window.location.reload()}
+                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold uppercase tracking-widest px-8 rounded-xl h-12"
+                >
+                  Reconnect
                 </Button>
               </CardContent>
             </Card>

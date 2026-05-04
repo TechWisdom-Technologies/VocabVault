@@ -19,14 +19,21 @@ export function formatTime(seconds: number): string {
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function getToday(): string {
-  return new Date().toISOString().split("T")[0];
+export function getToday(offsetMinutes: number = 0): string {
+  const now = new Date();
+  // Adjust UTC time by the user's local offset
+  const localTime = new Date(now.getTime() - (offsetMinutes * 60 * 1000));
+  return localTime.toISOString().split("T")[0];
 }
 
 export function generateSessionToken(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return Array.from(crypto.getRandomValues(new Uint8Array(20)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function sanitizeString(str: string): string {
+  return str.replace(/<[^>]*>?/gm, "").trim();
 }
 
 export function sleep(ms: number): Promise<void> {

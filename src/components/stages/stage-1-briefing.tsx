@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Volume2, ArrowRight, RotateCcw, Brain } from "lucide-react";
+import { Volume2, ArrowRight, RotateCcw } from "lucide-react";
 import { loadStageSessionState, saveStageSessionState } from "./stage-session";
 import { useAuthStore } from "@/stores/auth-store";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface Stage1Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,160 +135,150 @@ export default function Stage1Briefing({ word, onComplete }: Stage1Props) {
   }, []);
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-background relative pt-16 sm:pt-20 overflow-y-auto sm:overflow-hidden h-full">
-      <div className="flex-1 flex flex-col sm:flex-row w-full bg-background min-h-0">
+    <div className="flex-1 w-full flex flex-col bg-background relative pt-16 sm:pt-20 overflow-hidden h-full">
+      <div className="flex-1 flex flex-col sm:flex-row w-full bg-background overflow-hidden relative">
         {/* Word Presentation */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="shrink-0 sm:flex-1 flex flex-col items-center justify-center p-4 sm:p-6 border-b sm:border-b-0 sm:border-r border-border/30 bg-muted/5 relative min-h-[35%] sm:min-h-0"
-      >
-        <div className="absolute top-4 sm:top-6 w-full flex justify-between px-4 sm:px-6 items-center">
-          <div className="flex flex-col items-start leading-none">
-            <h2 className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-widest mb-0.5">Briefing Alpha</h2>
-            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter opacity-50">Secure Channel</span>
-          </div>
-          
-          <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[8px] font-black text-white/40 uppercase tracking-widest italic">Intelligence Loaded</span>
-          </div>
-        </div>
-
-        <div className="absolute top-12 sm:top-16 text-center w-full px-4 opacity-20">
-          <h2 className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-0.5">Stage 1: Word Briefing</h2>
-          <p className="hidden sm:block text-muted-foreground text-[10px]">Study the word and listen to its pronunciation.</p>
-        </div>
-
-        <div className="flex flex-col items-center gap-4 sm:gap-6 mt-4 sm:mt-0">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
-            <h1 className="text-4xl sm:text-7xl font-black capitalize text-gradient tracking-tighter leading-tight mb-2 sm:mb-4">
-              {word.word}
-            </h1>
-            <div className="inline-flex items-center gap-2 sm:gap-3 bg-background/50 backdrop-blur-md border border-border/50 px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl shadow-md">
-              <span className="text-lg sm:text-xl font-mono text-muted-foreground/80">{word.phonetic}</span>
-              <div className="w-px h-4 sm:h-5 bg-border/50" />
-              <span className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-widest">{word.partOfSpeech}</span>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="shrink-0 sm:flex-1 flex flex-col items-center justify-center p-4 sm:p-6 border-b sm:border-b-0 sm:border-r border-border/30 bg-muted/5 relative min-h-[30%] sm:min-h-0"
+        >
+          <div className="absolute top-4 sm:top-6 w-full flex justify-between px-4 sm:px-6 items-center">
+            <div className="flex flex-col items-start leading-none">
+              <h2 className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-widest mb-0.5">Briefing Alpha</h2>
+              <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter opacity-50">Secure Channel</span>
             </div>
-          </motion.div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className={`rounded-full w-16 h-16 sm:w-20 sm:h-20 transition-all duration-700 border-4 ${isPlayingPronunciation
-                ? "border-primary bg-primary/10 scale-110 shadow-[0_0_20px_rgba(124,58,237,0.3)] ring-4 ring-primary/5"
-                : audioMet ? "border-success/40 bg-success/5" : "border-primary/20"
-              }`}
-            onClick={() => playAudio(word.pronunciationAudioUrl, "pronunciation")}
-            disabled={isPlayingPronunciation}
-          >
-            <Volume2 className={`w-6 h-6 sm:w-8 sm:h-8 ${isPlayingPronunciation ? "animate-pulse text-primary" : audioMet ? "text-success" : "text-primary/60"}`} />
-          </Button>
-        </div>
-      </motion.div>
-
-      {/* Information & Action */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex-1 flex flex-col p-4 sm:p-10 bg-background/40 backdrop-blur-3xl"
-      >
-        <div className="flex-1 flex flex-col min-h-0 justify-center gap-4 sm:gap-8 overflow-y-auto custom-scrollbar">
-          {/* Definition */}
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex items-center justify-center sm:justify-start gap-2">
-              <div className="h-px w-4 sm:w-6 bg-primary/40" />
-              <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Definition</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3">
-              <p className="text-base sm:text-2xl font-medium leading-normal text-foreground/90 italic text-center sm:text-left">
-                &quot;{word.definition}&quot;
-              </p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full shrink-0 text-muted-foreground/30 hover:text-primary h-7 w-7 sm:h-8 sm:w-8 border border-border/30"
-                onClick={() => playAudio(word.definitionAudioUrl, "definition")}
-                disabled={isPlayingDefinition}
-              >
-                <Volume2 className={`w-3.5 h-3.5 sm:w-4 h-4 ${isPlayingDefinition ? "animate-pulse text-primary" : ""}`} />
-              </Button>
+            
+            <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[8px] font-black text-white/40 uppercase tracking-widest italic">Intelligence Loaded</span>
             </div>
           </div>
 
-          {/* Tense Forms */}
-          {word.tenseForms && typeof word.tenseForms === "object" && (
+          <div className="flex flex-col items-center gap-4 sm:gap-6 mt-4 sm:mt-0">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
+              <h1 className="text-4xl sm:text-7xl font-black capitalize text-gradient tracking-tighter leading-tight mb-2 sm:mb-4">
+                {word.word}
+              </h1>
+              <div className="inline-flex items-center gap-2 sm:gap-3 bg-background/50 backdrop-blur-md border border-border/50 px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl shadow-md">
+                <span className="text-lg sm:text-xl font-mono text-muted-foreground/80">{word.phonetic}</span>
+                <div className="w-px h-4 sm:h-5 bg-border/50" />
+                <span className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-widest">{word.partOfSpeech}</span>
+              </div>
+            </motion.div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className={cn(
+                "rounded-full w-16 h-16 sm:w-20 sm:h-20 transition-all duration-700 border-4",
+                isPlayingPronunciation 
+                  ? "border-primary bg-primary/10 scale-110 shadow-[0_0_20px_rgba(124,58,237,0.3)] ring-4 ring-primary/5"
+                  : audioMet ? "border-success/40 bg-success/5" : "border-primary/20"
+              )}
+              onClick={() => playAudio(word.pronunciationAudioUrl, "pronunciation")}
+              disabled={isPlayingPronunciation}
+            >
+              <Volume2 className={cn(
+                "w-6 h-6 sm:w-8 sm:h-8",
+                isPlayingPronunciation ? "animate-pulse text-primary" : audioMet ? "text-success" : "text-primary/60"
+              )} />
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Information Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex-1 flex flex-col p-4 sm:p-10 bg-background/40 backdrop-blur-3xl overflow-y-auto custom-scrollbar pb-32 sm:pb-10"
+        >
+          <div className="flex flex-col min-h-0 justify-center gap-4 sm:gap-8">
+            {/* Definition */}
             <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center justify-center sm:justify-start gap-2">
                 <div className="h-px w-4 sm:w-6 bg-primary/40" />
-                <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tense Forms</p>
+                <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Definition</p>
               </div>
-              <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                {Object.entries(word.tenseForms).map(([tense, form]) => (
-                  <div key={tense} className="flex flex-col p-2 sm:p-3 bg-muted/20 rounded-lg sm:rounded-xl border border-border/40 transition-all text-center sm:text-left">
-                    <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-primary/60 mb-0.5">
-                      {TENSE_NAME_MAP[tense] || tense}
-                    </span>
-                    <span className="text-[10px] sm:text-xs font-bold text-foreground/80">{String(form)}</span>
-                  </div>
-                ))}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3">
+                <p className="text-base sm:text-2xl font-medium leading-normal text-foreground/90 italic text-center sm:text-left">
+                  &quot;{word.definition}&quot;
+                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full shrink-0 text-muted-foreground/30 hover:text-primary h-7 w-7 sm:h-8 sm:w-8 border border-border/30"
+                  onClick={() => playAudio(word.definitionAudioUrl, "definition")}
+                  disabled={isPlayingDefinition}
+                >
+                  <Volume2 className={cn("w-3.5 h-3.5 sm:w-4 h-4", isPlayingDefinition && "animate-pulse text-primary")} />
+                </Button>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Action Controls */}
-        <div className="mt-4 sm:mt-auto pt-4 sm:pt-6 border-t border-border/30 flex flex-col gap-2 sm:gap-3 shrink-0">
-          <div className="flex gap-2 sm:gap-3">
-            <Button
-          variant="outline"
-          size="lg"
-          onClick={async () => {
-            try {
-              setHasLoadedState(false);
-              const headers = await getAuthHeaders();
-              await fetch("/api/progress/state", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ wordId: word.id, sessionState: null }),
-              });
-              window.location.href = window.location.pathname;
-            } catch (e) {
-              console.error(e);
-              window.location.reload();
-            }
-          }}
-          className="tap-target px-8 rounded-full h-14 text-lg border-primary/20 hover:bg-primary/5 text-primary w-full sm:w-auto"
-        >
-          <RotateCcw className="w-5 h-5 mr-2" />
-          Repeat Stage
-        </Button>
-            <div className="flex-[2] relative">
-              <Button
-                onClick={handleComplete} size="lg" disabled={!canProceed}
-                className={`w-full rounded-lg sm:rounded-xl h-10 sm:h-12 text-sm sm:text-base font-bold transition-all shadow-xl relative z-10 ${canProceed
-                    ? "bg-linear-to-r from-violet-600 to-purple-600 text-white"
-                    : "bg-muted/50 text-muted-foreground border border-border/60 cursor-not-allowed"
-                  }`}
-              >
-                {canProceed ? (
-                  <span className="flex items-center gap-1.5 sm:gap-2">Continue <ArrowRight className="w-4 h-4 sm:w-5 h-5" /></span>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <span className="text-[8px] sm:text-[10px]">
-                      {!timerMet && !audioMet ? `${remainingSeconds}s & Listen ${REQUIRED_PLAYS - pronunciationPlays}x` : !audioMet ? `Listen ${REQUIRED_PLAYS - pronunciationPlays}x more` : `Wait ${remainingSeconds}s`}
-                    </span>
-                    <div className="w-16 sm:w-20 h-1 bg-border/40 rounded-full mt-0.5 sm:mt-1 overflow-hidden">
-                      <motion.div className="h-full bg-primary" animate={{ width: `${totalProgress}%` }} />
+            {/* Tense Forms */}
+            {word.tenseForms && typeof word.tenseForms === "object" && (
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <div className="h-px w-4 sm:w-6 bg-primary/40" />
+                  <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tense Forms</p>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                  {Object.entries(word.tenseForms).map(([tense, form]) => (
+                    <div key={tense} className="flex flex-col p-2 sm:p-3 bg-muted/20 rounded-lg sm:rounded-xl border border-border/40 transition-all text-center sm:text-left">
+                      <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-primary/60 mb-0.5">
+                        {TENSE_NAME_MAP[tense] || tense}
+                      </span>
+                      <span className="text-[10px] sm:text-xs font-bold text-foreground/80">{String(form)}</span>
                     </div>
-                  </div>
-                )}
-              </Button>
-            </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+        </motion.div>
+      </div>
+
+      {/* FIXED BOTTOM ACTION BAR FOR MOBILE, INSET FOR DESKTOP */}
+      <div className="fixed sm:relative bottom-0 left-0 w-full p-4 sm:p-6 bg-background/80 backdrop-blur-xl border-t border-border/30 z-50">
+        <div className="max-w-4xl mx-auto flex flex-row gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleRepeat}
+            className="px-4 sm:px-8 rounded-full h-12 sm:h-14 text-sm sm:text-base font-bold border-primary/20 hover:bg-primary/5 text-primary flex-1 sm:flex-none"
+          >
+            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            <span className="hidden sm:inline">Repeat Stage</span>
+            <span className="sm:hidden">Repeat</span>
+          </Button>
+          
+          <Button
+            onClick={handleComplete}
+            size="lg"
+            disabled={!canProceed}
+            className={cn(
+              "flex-[2] rounded-full h-12 sm:h-14 text-sm sm:text-base font-bold transition-all shadow-xl relative overflow-hidden",
+              canProceed
+                ? "bg-linear-to-r from-violet-600 to-purple-600 text-white shadow-primary/25"
+                : "bg-muted/50 text-muted-foreground border border-border/60 cursor-not-allowed"
+            )}
+          >
+            {canProceed ? (
+              <span className="flex items-center gap-2">Continue <ArrowRight className="w-5 h-5" /></span>
+            ) : (
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-tighter mb-1">
+                  {!timerMet && !audioMet ? `${remainingSeconds}s & Listen ${REQUIRED_PLAYS - pronunciationPlays}x` : !audioMet ? `Listen ${REQUIRED_PLAYS - pronunciationPlays}x more` : `Wait ${remainingSeconds}s`}
+                </span>
+                <div className="w-24 sm:w-32 h-1 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div className="h-full bg-white" animate={{ width: `${totalProgress}%` }} />
+                </div>
+              </div>
+            )}
+          </Button>
         </div>
-      </motion.div>
+      </div>
     </div>
-  </div>
   );
 }

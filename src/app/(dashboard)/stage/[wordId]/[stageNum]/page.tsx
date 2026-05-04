@@ -19,6 +19,7 @@ import Stage10Speaking from "@/components/stages/stage-10-speaking";
 import { FeedbackModal } from "@/components/dashboard/feedback-modal";
 import HowItWorksModal from "@/components/stages/how-it-works-modal";
 import LoadingScreen from "@/components/ui/loading-screen";
+import { cn } from "@/lib/utils";
 
 const STAGE_NAMES: Record<number, string> = {
   1: "Word Briefing",
@@ -105,14 +106,11 @@ export default function StagePage() {
 
         const data = await res.json();
 
-        // 1. Curriculum Sequence Check (Word-level)
         if (res.status === 403) {
           router.replace("/dashboard");
           return;
         }
 
-        // 2. Intra-Word Sequence Check (Stage-level)
-        // A user cannot skip ahead to a stage they haven't reached yet
         if (data.progress.currentStage < stageNum && data.progress.status !== "COMPLETED") {
           router.replace(`/stage/${wordId}/${data.progress.currentStage}`);
           return;
@@ -132,18 +130,6 @@ export default function StagePage() {
       fetchWord();
     }
   }, [wordId, stageNum, getAuthHeaders, router]);
-
-  useEffect(() => {
-    if (!wordData) return;
-    const challengeQuery = challengeId ? `?challengeId=${challengeId}` : "";
-
-    if (stageNum < 10) {
-      router.prefetch(`/stage/${wordId}/${stageNum + 1}${challengeQuery}`);
-    }
-
-    router.prefetch(`/stage/${wordId}/summary${challengeQuery}`);
-    router.prefetch("/dashboard");
-  }, [wordData, stageNum, router, wordId, challengeId]);
 
   const handleStageComplete = async (score: number, mistakes: unknown[] = [], timeSpent: number = 0) => {
     try {
@@ -165,40 +151,26 @@ export default function StagePage() {
       const data = await res.json();
 
       if (data.success) {
-        const challengeQuery = challengeId ? `?challengeId=${challengeId}` : "";
+        const challengeQuery = challengeId ? `&challengeId=${challengeId}` : "";
+        
+        // Cache progress update locally
+        if (wordData && progress) {
+          setCachedWordStage(wordId, wordData, {
+            ...progress,
+            status: data.status,
+            currentStage: data.nextStage === "summary" ? stageNum : data.nextStage,
+          });
+        }
 
-        if (data.status === "COMPLETED") {
-          if (wordData && progress) {
-            setCachedWordStage(wordId, wordData, {
-              ...progress,
-              status: "COMPLETED",
-              currentStage: 10,
-            });
-          }
-          if (challengeId) {
-            const resultPath = `/dashboard/challenges/results/${challengeId}`;
-            router.prefetch(resultPath);
-            router.push(resultPath);
-          } else {
-            router.prefetch("/dashboard");
-            router.push("/dashboard");
-          }
-        } else if (data.nextStage === "summary") {
-          const nextPath = `/stage/${wordId}/summary${challengeQuery}`;
-          router.prefetch(nextPath);
-          router.push(nextPath);
+        if (data.nextStage === "summary") {
+          router.push(`/stage/${wordId}/summary?lastStage=${stageNum}${challengeQuery}`);
+        } else if (data.nextStage === stageNum) {
+          // If we are staying on the same stage (retry), we must clear the loading state
+          setIsAdvancing(false);
+          // Optional: trigger a small toast or reload if state doesn't reset cleanly
+          window.location.reload(); 
         } else {
-          // IN_PROGRESS -> just advance
-          if (wordData && progress) {
-            setCachedWordStage(wordId, wordData, {
-              ...progress,
-              status: "IN_PROGRESS",
-              currentStage: data.nextStage,
-            });
-          }
-          const nextPath = `/stage/${wordId}/${data.nextStage}${challengeQuery}`;
-          router.prefetch(nextPath);
-          router.push(nextPath);
+          router.push(`/stage/${wordId}/${data.nextStage}?lastStage=${stageNum}${challengeQuery}`);
         }
       } else {
         setIsAdvancing(false);
@@ -239,7 +211,6 @@ export default function StagePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative z-50">
-      {/* Global Fixed Pro Header */}
       <header className="fixed top-0 left-0 w-full h-16 border-b border-white/5 bg-[#0a0a0b] flex items-center justify-between px-6 z-[100] shadow-2xl">
         <div className="flex items-center gap-6 flex-1">
           <motion.div whileTap={{ scale: 0.9 }}>
@@ -269,7 +240,6 @@ export default function StagePage() {
           </div>
         </div>
 
-        {/* Global Progress Track */}
         <div className="hidden lg:flex flex-col items-center gap-1.5 flex-1 max-w-sm">
           <div className="flex justify-between w-full px-1">
             <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Mastery Progress</span>
@@ -290,7 +260,7 @@ export default function StagePage() {
           </div>
 
           <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[10px] font-black text-white/80 uppercase tracking-tighter capitalize">{wordData.word}</span>
+            <span className="text-[10px] font-black text-white/80 uppercase tracking-tighter capitalize">{(wordData as any).word}</span>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em]">Session Active</span>
@@ -299,7 +269,6 @@ export default function StagePage() {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {renderStage()}
       </main>

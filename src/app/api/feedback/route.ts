@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeString } from "@/lib/utils";
 
 /**
  * POST /api/feedback
@@ -25,9 +26,9 @@ export async function POST(req: NextRequest) {
     const feedback = await prisma.feedback.create({
       data: {
         userId: user.id,
-        category,
-        subject,
-        message,
+        category: sanitizeString(category) as any,
+        subject: sanitizeString(subject),
+        message: sanitizeString(message),
         wordId: wordId || null,
         stageNumber: stageNumber ? parseInt(stageNumber, 10) : null,
       },
@@ -40,12 +41,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (admins.length > 0) {
+      const safeName = sanitizeString(user.name || user.email || "A user");
+      const safeSubject = sanitizeString(subject);
+      const safeCategory = sanitizeString(category).replace('_', ' ');
+
       await prisma.notification.createMany({
         data: admins.map(admin => ({
           userId: admin.id,
           type: "FEEDBACK_RECEIVED",
           title: "New User Feedback",
-          message: `${user.name || user.email} submitted a ${category.replace('_', ' ')} report: "${subject}"`,
+          message: `${safeName} submitted a ${safeCategory} report: "${safeSubject}"`,
           metadata: { feedbackId: feedback.id }
         }))
       });

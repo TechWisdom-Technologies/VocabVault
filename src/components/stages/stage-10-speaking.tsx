@@ -60,6 +60,12 @@ export default function Stage10Speaking({ word, onComplete }: Stage10Props) {
     void initialize();
     return () => {
       cancelled = true;
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        try { mediaRecorderRef.current.stop(); } catch (e) {}
+      }
+      if (mediaRecorderRef.current?.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, [getAuthHeaders, word.id]);
 

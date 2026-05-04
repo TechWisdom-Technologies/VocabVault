@@ -7,7 +7,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
+  limiter: Ratelimit.slidingWindow(30, "1 m"),
   analytics: true,
 });
 
@@ -26,8 +26,11 @@ export async function GET(req: NextRequest) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
 
+  const { searchParams } = new URL(req.url);
+  const tzOffset = Number(searchParams.get("tz")) || 0; // minutes
+
   const { user } = authResult;
-  const todayKey = getToday();
+  const todayKey = getToday(tzOffset);
   const cacheKey = `${user.id}:${todayKey}`;
 
   const cached = DAILY_WORDS_RESPONSE_CACHE.get(cacheKey);
@@ -35,7 +38,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(cached.data);
   }
 
-  const startOfDay = new Date(`${todayKey}T00:00:00Z`);
+  // startOfDay in "Local Date" but stored as midnight in that date's string
+  const startOfDay = new Date(`${todayKey}T00:00:00.000Z`);
   const startOfNextDay = new Date(startOfDay);
   startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1);
 
@@ -88,17 +92,25 @@ export async function GET(req: NextRequest) {
       });
 
       const currentWordIds = dailySet.wordIds as string[];
-      const responsePayload = {
-        dailySet,
-        words: currentWordIds.map(id => wordMap.get(id)).filter(Boolean).sort((a: any, b: any) => a.orderIndex - b.orderIndex),
-        progress: currentWordIds.map(id => progressMap.get(id)),
-        days,
-        dayCount: currentDayCount,
-        isPaywalled: false,
-      };
+      const currentWords = currentWordIds.map(id => wordMap.get(id)).filter(Boolean) as any[];
+      
+      // If current set is empty (e.g. words were deleted from DB), trigger a re-assignment
+      if (currentWords.length === 0 && currentWordIds.length > 0) {
+        console.warn(`Daily set for user ${user.id} contains only missing words. Re-assigning...`);
+        // We'll fall through to the assignment logic below by not returning here
+      } else {
+        const responsePayload = {
+          dailySet,
+          words: currentWords.sort((a, b) => a.orderIndex - b.orderIndex),
+          progress: currentWordIds.map(id => progressMap.get(id)),
+          days,
+          dayCount: currentDayCount,
+          isPaywalled: false,
+        };
 
-      DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
-      return NextResponse.json(responsePayload);
+        DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
+        return NextResponse.json(responsePayload);
+      }
     }
 
     const totalWordsStarted = await prisma.wordProgress.count({

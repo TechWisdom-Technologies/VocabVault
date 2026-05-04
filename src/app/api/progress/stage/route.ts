@@ -16,8 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
-    // Validate score is on 0-10 scale
-    const clampedScore = Math.max(0, Math.min(10, Math.round(score)));
+    // Validate inputs with fallbacks
+    const clampedScore = Math.max(0, Math.min(10, Math.round(Number(score) || 0)));
+    const sanitizedTime = Math.max(0, Math.round(Number(timeSpentSeconds) || 0));
+    const sanitizedResponse = Array.isArray(responseData) ? responseData : [];
 
     // Get current progress
     const progress = await prisma.wordProgress.findFirst({
@@ -39,31 +41,61 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Save the stage score
-    await prisma.stageScore.create({
-      data: {
-        wordProgressId: progress.id,
-        stageNumber,
-        score: clampedScore,
-        maxScore: 10,
-        timeSpentSeconds: timeSpentSeconds || 0,
-        passed: clampedScore >= 8,
-        responseData: responseData || null,
-      },
-    });
-
-    await prisma.activityLog.create({
-      data: {
-        userId: user.id,
-        actionType: clampedScore >= 8 ? "STAGE_COMPLETED" : "STAGE_RETRY",
-        wordId,
-        stageNumber: stageNumber,
-        score: clampedScore,
-        metadata: {
-          passed: clampedScore >= 8,
-          timeSpentSeconds: timeSpentSeconds || 0,
+    // Execute updates in a transaction
+    await prisma.$transaction(async (tx) => {
+      // 4. Update or Create Stage Score (Best Score Logic)
+      const existingScore = await tx.stageScore.findFirst({
+        where: {
+          wordProgressId: progress.id,
+          stageNumber,
         },
-      },
+      });
+
+      let scoreDiff = 0;
+      if (existingScore) {
+        if (clampedScore > existingScore.score) {
+          scoreDiff = clampedScore - existingScore.score;
+          await tx.stageScore.update({
+            where: { id: existingScore.id },
+            data: { score: clampedScore, timeSpentSeconds: sanitizedTime, responseData: sanitizedResponse },
+          });
+        }
+      } else {
+        scoreDiff = clampedScore;
+        await tx.stageScore.create({
+          data: {
+            wordProgressId: progress.id,
+            stageNumber,
+            score: clampedScore,
+            maxScore: 10,
+            timeSpentSeconds: sanitizedTime,
+            passed: clampedScore >= 8,
+            responseData: sanitizedResponse,
+          },
+        });
+      }
+
+      // 5. Update user's total score (XP) incrementally
+      if (scoreDiff > 0) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { totalScore: { increment: scoreDiff } },
+        });
+      }
+
+      await tx.activityLog.create({
+        data: {
+          userId: user.id,
+          actionType: clampedScore >= 8 ? "STAGE_COMPLETED" : "STAGE_RETRY",
+          wordId,
+          stageNumber: stageNumber,
+          score: clampedScore,
+          metadata: {
+            passed: clampedScore >= 8,
+            timeSpentSeconds: sanitizedTime,
+          },
+        },
+      });
     });
 
     // Fetch ALL stage scores for this word progress to compute totals
@@ -106,21 +138,18 @@ export async function POST(req: NextRequest) {
       if (totalScore >= 80 && flaggedForRetry.length === 0) {
         newStatus = "COMPLETED";
         newStage = 10;
-        nextStageResponse = 10;
+        nextStageResponse = "summary";
       } else {
-        // If not completed yet, keep current status (which might be COMPLETED if they are just re-practicing)
-        newStage = Math.max(progress.currentStage, 10);
+        newStage = 10;
         nextStageResponse = "summary";
       }
     } else {
-      if (hasPassedCurrent) {
-        if (stageNumber === progress.currentStage) {
-          newStage = stageNumber + 1;
-        }
-        nextStageResponse = stageNumber < progress.currentStage ? "summary" : stageNumber + 1;
-      } else {
-        nextStageResponse = "summary";
+      // ALWAYS advance to the next stage as per user request
+      // "i can give wrong answer .. it should bother after completing all the stage"
+      if (stageNumber >= progress.currentStage) {
+        newStage = stageNumber + 1;
       }
+      nextStageResponse = stageNumber + 1;
     }
 
     // Only update totalScore if the NEW total is better than the OLD one
@@ -190,7 +219,6 @@ export async function POST(req: NextRequest) {
           where: { id: user.id },
           data: {
             ...(isFirstTime ? { wordsLearned: { increment: 1 } } : {}),
-            ...(scoreDelta > 0 ? { totalScore: { increment: scoreDelta } } : {}),
             maxUnlockedIndex: Math.max(currentUser?.maxUnlockedIndex || 0, (word?.orderIndex || 0) + 1),
           },
         });

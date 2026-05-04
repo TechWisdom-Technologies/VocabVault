@@ -31,12 +31,24 @@ export default function Stage2Immersion({ word, onComplete }: Stage2Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [results, setResults] = useState<{ passed: boolean; accuracy: number; feedback: string }[]>([]);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const DEFAULT_TIME = 300;
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_TIME);
   const [hasLoadedState, setHasLoadedState] = useState(false);
   const startTime = useRef<number>(0);
   
   const sentences = word.sentences || [];
   const currentSentence = sentences[currentSentenceIndex];
+
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        try { mediaRecorderRef.current.stop(); } catch (e) {}
+      }
+      if (mediaRecorderRef.current?.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
   useEffect(() => {
     startTime.current = Date.now();
@@ -60,8 +72,10 @@ export default function Stage2Immersion({ word, onComplete }: Stage2Props) {
         setIsRecording(saved.isRecording || false);
         setIsEvaluating(saved.isEvaluating || false);
         setResults(saved.results || []);
-        setTimeLeft(saved.timeLeft ?? 120);
-        startTime.current = Date.now() - (120 - (saved.timeLeft ?? 120)) * 1000;
+        const remainingTime = saved.timeLeft ?? DEFAULT_TIME;
+        setTimeLeft(remainingTime);
+        // Sync startTime to allow the elapsed calculation in handleComplete to be somewhat accurate
+        startTime.current = Date.now() - (DEFAULT_TIME - remainingTime) * 1000;
       }
       setHasLoadedState(true);
     };

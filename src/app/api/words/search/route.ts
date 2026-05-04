@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const words = await prisma.word.findMany({
       where: {
         word: {
-          contains: query,
+          startsWith: query,
           mode: "insensitive",
         },
       },

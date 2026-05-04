@@ -135,320 +135,338 @@ export default function LeaderboardPage() {
   const remainingUsers = users.slice(3);
 
   return (
-    <div className="min-h-screen bg-muted/20 pb-20 overflow-hidden">
-      {/* Dynamic Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-primary/5 to-transparent -z-10" />
-      <div className="absolute top-20 right-[10%] w-64 h-64 bg-amber-500/10 blur-3xl rounded-full -z-10" />
-      <div className="absolute top-40 left-[10%] w-64 h-64 bg-violet-500/10 blur-3xl rounded-full -z-10" />
+    <>
+    <div className="min-h-screen bg-background relative overflow-hidden pb-10">
+      {/* Dynamic Background Aesthetic */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[40%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[20%] left-[-10%] w-[40%] h-[30%] bg-violet-500/10 blur-[100px] rounded-full" />
+        <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-amber-500/5 blur-[80px] rounded-full" />
+      </div>
 
-      <div className="px-4 sm:px-6 lg:px-8 py-10 max-w-6xl mx-auto space-y-12">
-        {/* Navigation & Title */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="flex items-center gap-4">
+      {/* Sticky Premium Header */}
+      <div className="sticky top-0 z-50 w-full bg-background/60 backdrop-blur-xl border-b border-white/10 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="rounded-2xl hover:bg-primary/5 group">
-                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 transition-colors">
+                <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight text-gradient">The Hall of Fame</h1>
-              <p className="text-muted-foreground font-medium text-sm flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                {filter === "global" ? "Competing with the world" : "Rivalry among followers"}
-              </p>
+            <h1 className="text-xl font-black tracking-tight bg-linear-to-r from-primary to-violet-500 bg-clip-text text-transparent">
+              LEADERBOARD
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black text-[10px] tracking-widest px-2 py-0.5 rounded-lg hidden sm:flex">
+              LIVE RANKINGS
+            </Badge>
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-primary" />
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="flex bg-muted/30 p-1 rounded-2xl border border-border/50">
-            {[
-              { id: "global", label: "Global", icon: Globe },
-              { id: "friends", label: "Following", icon: Users }
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setFilter(opt.id as any)}
-                className={cn(
-                  "flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
-                  filter === opt.id 
-                    ? "bg-background text-primary shadow-sm ring-1 ring-border/50" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <opt.icon className="w-3.5 h-3.5" />
-                {opt.label}
-              </button>
-            ))}
+      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-6xl mx-auto space-y-8">
+        {/* Main Filters & Stats */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-6"
+        >
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="flex bg-muted/40 p-1.5 rounded-[1.25rem] border border-white/5 backdrop-blur-md shadow-inner">
+              {[
+                { id: "global", label: "Global", icon: Globe },
+                { id: "friends", label: "Following", icon: Users }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setFilter(opt.id as any)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-300",
+                    filter === opt.id 
+                      ? "bg-primary text-white shadow-lg shadow-primary/25" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                  )}
+                >
+                  <opt.icon className="w-3.5 h-3.5" />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar sm:pb-0">
+              {[
+                { id: "totalScore", label: "XP", icon: Zap },
+                { id: "wordsLearned", label: "Mastery", icon: Target },
+                { id: "currentStreak", label: "Streak", icon: TrendingUp }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSortBy(opt.id as any)}
+                  className={cn(
+                    "whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all",
+                    sortBy === opt.id 
+                      ? "bg-violet-500/10 border-violet-500/50 text-violet-500 shadow-xs" 
+                      : "bg-background/50 border-white/5 text-muted-foreground hover:border-primary/30"
+                  )}
+                >
+                  <opt.icon className="w-3 h-3" />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Sorting Section */}
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {[
-            { id: "totalScore", label: "Total XP", icon: Zap },
-            { id: "wordsLearned", label: "Mastery", icon: Target },
-            { id: "currentStreak", label: "Momentum", icon: TrendingUp }
-          ].map((opt) => (
-            <Button
-              key={opt.id}
-              variant={sortBy === opt.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSortBy(opt.id as any)}
-              className="rounded-full px-5 h-9 font-bold text-xs gap-2"
-            >
-              <opt.icon className="w-3.5 h-3.5" />
-              {opt.label}
-            </Button>
-          ))}
-        </div>
-
-        {/* Podium Section */}
+        {/* Re-designed Podium Section */}
         <AnimatePresence mode="wait">
           {!isLoading && users.length >= 3 && (
             <motion.div 
               key={`${filter}-${sortBy}`}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-12 pb-6 max-w-4xl mx-auto"
+              className="relative flex flex-col md:flex-row items-end justify-center gap-4 md:gap-0 pt-16 pb-8"
             >
               {/* 2nd Place */}
-              <div className="order-2 md:order-1 flex flex-col items-center">
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gray-400/20 blur-2xl rounded-full" />
-                  <Avatar className="w-24 h-24 border-4 border-slate-300 relative z-10 shadow-2xl">
+              <div className="order-2 md:order-1 flex flex-col items-center w-full md:w-64">
+                <div className="relative mb-6">
+                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-300 shadow-xl relative z-10">
                     <AvatarImage src={podiumUsers[1].avatarUrl || undefined} />
-                    <AvatarFallback className="text-2xl font-bold bg-slate-100">{podiumUsers[1].name[0]}</AvatarFallback>
+                    <AvatarFallback className="text-2xl font-black bg-slate-100">{podiumUsers[1].name[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute -top-3 -right-3 w-10 h-10 bg-slate-400 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg z-20 border-2 border-background">2</div>
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-400 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-background">
+                    RANK 2
+                  </div>
                 </div>
-                <p className="font-bold text-lg text-center line-clamp-1">{podiumUsers[1].name}</p>
-                <div className="flex items-center gap-1.5 text-slate-500 font-bold text-sm mb-4">
-                  <Zap className="w-3.5 h-3.5" />
-                  {podiumUsers[1].totalScore.toLocaleString()}
+                <div className="text-center mb-4">
+                  <p className="font-black text-sm tracking-tight capitalize">{podiumUsers[1].name}</p>
+                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground font-black text-[10px]">
+                    <Zap className="w-3 h-3 text-slate-400" />
+                    {podiumUsers[1].totalScore.toLocaleString()} XP
+                  </div>
                 </div>
-                <div className="w-full h-24 bg-slate-200/50 rounded-t-3xl border-x border-t border-slate-300/50 backdrop-blur-sm" />
+                <div className="hidden md:block w-full h-24 bg-slate-300/10 rounded-t-3xl border-x border-t border-slate-300/20" />
               </div>
 
               {/* 1st Place */}
-              <div className="order-1 md:order-2 flex flex-col items-center scale-110 md:scale-125 z-20">
-                <div className="relative mb-6">
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                    className="absolute -inset-4 bg-linear-to-r from-amber-400 via-yellow-200 to-amber-600 rounded-full blur-xl opacity-30" 
-                  />
-                  <Avatar className="w-32 h-32 border-4 border-amber-400 relative z-10 shadow-[0_0_50px_rgba(251,191,36,0.3)]">
-                    <AvatarImage src={podiumUsers[0].avatarUrl || undefined} />
-                    <AvatarFallback className="text-3xl font-bold bg-amber-50">{podiumUsers[0].name[0]}</AvatarFallback>
-                  </Avatar>
-                  <motion.div 
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute -top-6 left-1/2 -translate-x-1/2 z-20"
+              <div className="order-1 md:order-2 flex flex-col items-center w-full md:w-72 z-20">
+                <div className="relative mb-8">
+                  <div className="absolute -inset-6 bg-amber-500/20 blur-[40px] rounded-full animate-pulse" />
+                  <motion.div
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                    className="absolute -top-10 left-1/2 -translate-x-1/2 z-30"
                   >
-                    <Trophy className="w-10 h-10 text-amber-500 fill-amber-500/20 drop-shadow-lg" />
+                    <Trophy className="w-12 h-12 text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
                   </motion.div>
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg z-20 border-2 border-background">1</div>
+                  <Avatar className="w-28 h-28 sm:w-36 sm:h-36 border-4 border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.3)] relative z-10">
+                    <AvatarImage src={podiumUsers[0].avatarUrl || undefined} />
+                    <AvatarFallback className="text-4xl font-black bg-amber-50">{podiumUsers[0].name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-xl z-20 border-2 border-background animate-bounce">
+                    CHAMPION
+                  </div>
                 </div>
-                <p className="font-bold text-xl text-center line-clamp-1">{podiumUsers[0].name}</p>
-                <div className="flex items-center gap-1.5 text-amber-600 font-bold text-base mb-6">
-                  <Zap className="w-4 h-4" />
-                  {podiumUsers[0].totalScore.toLocaleString()}
+                <div className="text-center mb-6">
+                  <p className="font-black text-lg tracking-tighter capitalize">{podiumUsers[0].name}</p>
+                  <div className="flex items-center justify-center gap-1.5 text-amber-600 font-black text-xs">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {podiumUsers[0].totalScore.toLocaleString()} XP
+                  </div>
                 </div>
-                <div className="w-full h-32 bg-amber-400/20 rounded-t-3xl border-x border-t border-amber-400/50 backdrop-blur-md relative overflow-hidden">
-                  <div className="absolute inset-0 bg-linear-to-b from-amber-400/10 to-transparent" />
-                </div>
+                <div className="hidden md:block w-full h-36 bg-amber-500/10 rounded-t-[3rem] border-x border-t border-amber-500/20 shadow-[0_-10px_40px_rgba(245,158,11,0.05)]" />
               </div>
 
               {/* 3rd Place */}
-              <div className="order-3 flex flex-col items-center">
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-amber-700/20 blur-2xl rounded-full" />
-                  <Avatar className="w-24 h-24 border-4 border-amber-700/50 relative z-10 shadow-2xl">
+              <div className="order-3 flex flex-col items-center w-full md:w-64">
+                <div className="relative mb-6">
+                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-amber-700/40 shadow-xl relative z-10">
                     <AvatarImage src={podiumUsers[2].avatarUrl || undefined} />
-                    <AvatarFallback className="text-2xl font-bold bg-amber-50">{podiumUsers[2].name[0]}</AvatarFallback>
+                    <AvatarFallback className="text-2xl font-black bg-amber-50">{podiumUsers[2].name[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="absolute -top-3 -right-3 w-10 h-10 bg-amber-700 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg z-20 border-2 border-background">3</div>
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-700 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-background">
+                    RANK 3
+                  </div>
                 </div>
-                <p className="font-bold text-lg text-center line-clamp-1">{podiumUsers[2].name}</p>
-                <div className="flex items-center gap-1.5 text-amber-700 font-bold text-sm mb-4">
-                  <Zap className="w-3.5 h-3.5" />
-                  {podiumUsers[2].totalScore.toLocaleString()}
+                <div className="text-center mb-4">
+                  <p className="font-black text-sm tracking-tight capitalize">{podiumUsers[2].name}</p>
+                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground font-black text-[10px]">
+                    <Zap className="w-3 h-3 text-amber-700" />
+                    {podiumUsers[2].totalScore.toLocaleString()} XP
+                  </div>
                 </div>
-                <div className="w-full h-20 bg-amber-700/20 rounded-t-3xl border-x border-t border-amber-700/30 backdrop-blur-sm" />
+                <div className="hidden md:block w-full h-20 bg-amber-700/5 rounded-t-3xl border-x border-t border-amber-700/10" />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Table Section */}
-        <Card className="border-border/50 shadow-2xl bg-card/50 backdrop-blur-xl rounded-3xl overflow-hidden relative border-t-primary/20">
-          <div className="p-6 border-b border-border/50 bg-muted/20 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Rising Stars
+        {/* Premium Table Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              RISING COMPETITORS
             </h2>
-            <div className="text-xs font-bold text-muted-foreground bg-background/50 px-3 py-1 rounded-full border border-border/50">
-              {users.length} Learners Found
-            </div>
+            <Badge variant="ghost" className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2.5 py-1 rounded-lg">
+              {users.length} LEARNERS
+            </Badge>
           </div>
-          
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="py-32 flex flex-col items-center justify-center text-muted-foreground">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full" />
-                  <Loader2 className="w-12 h-12 animate-spin text-primary relative z-10" />
-                </div>
-                <p className="text-sm font-bold uppercase tracking-wider opacity-50">Syncing rankings...</p>
+
+          {isLoading ? (
+            <div className="py-32 flex flex-col items-center justify-center text-muted-foreground">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full" />
+                <Loader2 className="w-12 h-12 animate-spin text-primary relative z-10" />
               </div>
-            ) : users.length === 0 ? (
-              <div className="py-32 flex flex-col items-center justify-center text-muted-foreground gap-4">
-                <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center">
-                  <Users className="w-10 h-10 opacity-20" />
-                </div>
-                <p className="font-bold uppercase tracking-tight text-lg">No rivals found</p>
-                <p className="text-sm max-w-xs text-center opacity-70">Start following other learners or earn points to appear on the global list!</p>
+              <p className="text-sm font-bold uppercase tracking-wider opacity-50">Syncing rankings...</p>
+            </div>
+          ) : users.length === 0 ? (
+            <div className="py-32 flex flex-col items-center justify-center text-muted-foreground gap-4">
+              <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center">
+                <Users className="w-10 h-10 opacity-20" />
               </div>
-            ) : (
-              <div className="divide-y divide-border/30">
-                {users.map((leader, index) => {
-                  const isCurrentUser = user?.id === leader.id;
-                  const isFollowing = leader.isFollowing;
-                  const rank = index + 1;
-                  
-                  return (
-                    <motion.div 
-                      key={leader.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={cn(
-                        "group grid grid-cols-[50px_1fr_auto] sm:grid-cols-[60px_1fr_120px_120px_auto] gap-4 items-center p-4 sm:p-5 transition-all hover:bg-muted/30",
-                        isCurrentUser && "bg-primary/5 border-l-4 border-l-primary",
-                        isFollowing && !isCurrentUser && "bg-emerald-500/5 border-l-4 border-l-emerald-500/30"
-                      )}
-                    >
+              <p className="font-bold uppercase tracking-tight text-lg">No rivals found</p>
+              <p className="text-sm max-w-xs text-center opacity-70">Start following other learners or earn points to appear on the global list!</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {users.map((leader, index) => {
+                const isCurrentUser = user?.id === leader.id;
+                const isFollowing = leader.isFollowing;
+                const rank = index + 1;
+                
+                return (
+                  <motion.div 
+                    key={leader.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    className={cn(
+                      "group relative p-4 sm:p-6 rounded-[1.5rem] bg-background/40 backdrop-blur-sm border border-white/5 shadow-sm transition-all hover:bg-white/10 hover:shadow-lg active:scale-[0.98] cursor-pointer",
+                      isCurrentUser && "ring-2 ring-primary bg-primary/5",
+                      isFollowing && !isCurrentUser && "border-emerald-500/20"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
                       {/* Rank */}
-                      <div className="flex justify-center">
+                      <div className="flex flex-col items-center justify-center w-8">
                         <span className={cn(
-                          "text-lg font-bold italic tabular-nums",
-                          rank === 1 ? "text-amber-500" :
+                          "text-sm font-black tabular-nums",
+                          rank === 1 ? "text-amber-500 scale-125" :
                           rank === 2 ? "text-slate-400" :
                           rank === 3 ? "text-amber-700" :
-                          "text-muted-foreground opacity-30"
+                          "text-muted-foreground/30"
                         )}>
-                          #{rank}
+                          {rank}
                         </span>
                       </div>
-                      
-                      {/* User Info */}
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="relative">
-                          <Avatar className={cn(
-                            "w-10 h-10 sm:w-12 sm:h-12 border-2 transition-transform group-hover:scale-105",
-                            isCurrentUser ? "border-primary" : "border-border/50"
-                          )}>
-                            <AvatarImage src={leader.avatarUrl || undefined} />
-                            <AvatarFallback className={cn(
-                              "font-bold",
-                              isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                            )}>
-                              {leader.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {leader.currentStreak >= 5 && (
-                            <div className="absolute -top-1 -right-1 bg-orange-500 rounded-full p-0.5 border-2 border-background">
-                              <Zap className="w-2.5 h-2.5 text-white fill-white" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
+
+                      {/* Avatar */}
+                      <div className="relative">
+                        <Avatar className={cn(
+                          "w-12 h-12 sm:w-14 sm:h-14 border-2 shadow-inner",
+                          isCurrentUser ? "border-primary" : "border-white/10"
+                        )}>
+                          <AvatarImage src={leader.avatarUrl || undefined} />
+                          <AvatarFallback className="font-black text-lg bg-muted">
+                            {leader.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {leader.currentStreak >= 5 && (
+                          <div className="absolute -top-1 -right-1 bg-orange-500 rounded-full p-1 border-2 border-background shadow-lg">
+                            <Zap className="w-2.5 h-2.5 text-white fill-white" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
                           <p className={cn(
-                            "font-bold tracking-tight truncate flex items-center gap-2",
+                            "font-black text-sm sm:text-base tracking-tight truncate",
                             isCurrentUser ? "text-primary" : "text-foreground"
                           )}>
                             {leader.name}
-                            {isCurrentUser && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">You</span>}
-                            {isFollowing && !isCurrentUser && <span className="bg-emerald-500/10 text-emerald-600 text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Following</span>}
                           </p>
-                          <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                          {isCurrentUser && <Badge className="bg-primary text-white text-[8px] font-black px-1.5 py-0 rounded-md uppercase tracking-tighter shadow-sm">YOU</Badge>}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <p className="text-[10px] text-muted-foreground font-black flex items-center gap-1 uppercase tracking-widest opacity-70">
                             <Target className="w-3 h-3" />
-                            {leader.wordsLearned} Mastered
+                            {leader.wordsLearned} MASTERED
+                          </p>
+                          <p className="text-[10px] text-orange-500 font-black flex items-center gap-1 uppercase tracking-widest">
+                            <Zap className="w-3 h-3 fill-orange-500" />
+                            {leader.currentStreak}D STREAK
                           </p>
                         </div>
                       </div>
 
-                      {/* Streak */}
-                      <div className="hidden sm:flex justify-center">
-                        <div className="flex flex-col items-center">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Streak</span>
-                          <div className={cn(
-                            "px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5",
-                            leader.currentStreak > 0 ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
-                          )}>
-                            <Zap className={cn("w-3 h-3", leader.currentStreak > 0 && "fill-amber-500")} />
-                            {leader.currentStreak}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Score */}
-                      <div className="hidden sm:flex justify-end">
-                        <div className="flex flex-col items-end">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Experience</span>
-                          <span className="text-lg font-bold tracking-tighter tabular-nums">
-                            {leader.totalScore.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Score Mobile */}
-                      <div className="sm:hidden text-right pr-2">
-                        <span className="text-base font-black tabular-nums">
+                      {/* Score Section */}
+                      <div className="text-right">
+                        <p className="text-lg sm:text-xl font-black tabular-nums tracking-tighter">
                           {leader.totalScore.toLocaleString()}
-                        </span>
+                        </p>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                          TOTAL XP
+                        </p>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex justify-end gap-2 pl-2">
-                        {!isCurrentUser && (
-                          <>
-                            <Button 
-                              variant="ghost"
-                              size="icon"
-                              className="rounded-xl h-10 w-10 text-primary hover:bg-primary/5 transition-all active:scale-95"
-                              onClick={() => {
-                                setTargetUser(leader);
-                                setChallengeModalOpen(true);
-                              }}
-                              title="Challenge"
-                            >
-                              <Swords className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost"
-                              size="icon"
-                              className={cn(
-                                "rounded-xl h-10 w-10 transition-all active:scale-95",
-                                leader.isFollowing ? "text-emerald-500 hover:bg-emerald-50" : "text-muted-foreground hover:bg-muted"
-                              )}
-                              onClick={() => toggleFollow(leader.id)}
-                              title={leader.isFollowing ? "Unfollow" : "Follow"}
-                            >
-                              {leader.isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-                            </Button>
-                          </>
-                        )}
+                      {/* Quick Actions (Desktop Hover) */}
+                      {!isCurrentUser && (
+                        <div className="hidden sm:flex items-center gap-1 ml-4 border-l border-white/5 pl-4">
+                          <Button 
+                            variant="ghost" size="icon" 
+                            className="h-10 w-10 rounded-xl text-primary hover:bg-primary/10"
+                            onClick={() => { setTargetUser(leader); setChallengeModalOpen(true); }}
+                          >
+                            <Swords className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" size="icon" 
+                            className={cn("h-10 w-10 rounded-xl", leader.isFollowing ? "text-emerald-500" : "text-muted-foreground")}
+                            onClick={() => toggleFollow(leader.id)}
+                          >
+                            {leader.isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Mobile Actions Drawer (Simulated) */}
+                    {!isCurrentUser && (
+                      <div className="mt-4 pt-4 border-t border-white/5 flex sm:hidden items-center justify-between">
+                        <Button 
+                          variant="ghost" 
+                          className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary"
+                          onClick={() => { setTargetUser(leader); setChallengeModalOpen(true); }}
+                        >
+                          <Swords className="w-3.5 h-3.5 mr-2" /> Challenge
+                        </Button>
+                        <div className="w-px h-4 bg-white/5" />
+                        <Button 
+                          variant="ghost"
+                          className={cn("flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest", leader.isFollowing ? "text-emerald-500" : "text-muted-foreground")}
+                          onClick={() => toggleFollow(leader.id)}
+                        >
+                          {leader.isFollowing ? <><UserCheck className="w-3.5 h-3.5 mr-2" /> Following</> : <><UserPlus className="w-3.5 h-3.5 mr-2" /> Follow</>}
+                        </Button>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+    </div>
 
       <Dialog open={challengeModalOpen} onOpenChange={setChallengeModalOpen}>
         <DialogContent className="sm:max-w-[480px] rounded-[2rem] border-border/50 shadow-2xl">
@@ -523,6 +541,6 @@ export default function LeaderboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

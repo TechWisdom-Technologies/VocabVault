@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeString } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   const authResult = await validateRequest(req);
@@ -42,17 +43,18 @@ export async function POST(req: NextRequest) {
     });
 
     // Create a notification for the challenged user
+    const safeChallengerName = sanitizeString(user.name || "A user");
     await prisma.notification.create({
       data: {
         userId: challengedId,
         type: "CHALLENGE_RECEIVED",
         title: "New Challenge!",
-        message: `${user.name || "Someone"} challenged you to master the word '${challenge.word.word}'!`,
+        message: `${safeChallengerName} challenged you to master the word '${challenge.word.word}'!`,
         metadata: {
           challengeId: challenge.id,
           wordId: challenge.word.id,
           word: challenge.word.word,
-          challengerName: user.name || "A user",
+          challengerName: safeChallengerName,
         }
       }
     });

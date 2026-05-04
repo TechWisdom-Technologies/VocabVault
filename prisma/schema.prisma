@@ -145,6 +145,7 @@ model StageScore {
   createdAt        DateTime     @default(now()) @map("created_at")
   wordProgress     WordProgress @relation(fields: [wordProgressId], references: [id], onDelete: Cascade)
 
+  @@unique([wordProgressId, stageNumber])
   @@index([wordProgressId])
   @@index([createdAt])
   @@map("stage_scores")

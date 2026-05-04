@@ -68,7 +68,6 @@ export async function POST(req: NextRequest) {
       where: { id: user.id },
       data: {
         wordsLearned: { increment: 1 },
-        totalScore: { increment: totalScore },
       },
     });
 

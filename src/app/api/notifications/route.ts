@@ -9,6 +9,17 @@ export async function GET(req: NextRequest) {
   try {
     const { user } = authResult;
 
+    // Auto-cleanup: Delete notifications older than 30 days for this user
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    await prisma.notification.deleteMany({
+      where: {
+        userId: user.id,
+        createdAt: { lt: thirtyDaysAgo },
+      },
+    });
+
     const notifications = await prisma.notification.findMany({
       where: {
         userId: user.id,

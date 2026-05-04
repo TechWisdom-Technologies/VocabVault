@@ -43,7 +43,20 @@ export async function GET(req: NextRequest) {
       const slice = allWords.slice(i * DAILY_LIMIT, (i + 1) * DAILY_LIMIT);
       if (slice.length === 0) break;
 
+      // Plan Enforcement: If FREE, only return words up to index 25
+      const isPastFreeLimit = (i * DAILY_LIMIT) >= FREE_PLAN_LIMIT;
+      
       const groupWords = slice.map(w => {
+        if (user.plan === "FREE" && isPastFreeLimit) {
+          return {
+            id: w.id,
+            word: "PRO Content",
+            status: "LOCKED",
+            currentStage: 1,
+            isLockedByPlan: true
+          };
+        }
+
         const progress = progressMap.get(w.id);
         const isActive = activeWordIds.has(w.id);
         const isCompleted = progress?.status === "COMPLETED";

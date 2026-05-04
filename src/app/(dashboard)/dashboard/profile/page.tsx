@@ -46,7 +46,8 @@ export default function ProfilePage() {
   const [newProfession, setNewProfession] = useState("");
   const [newReason, setNewReason] = useState("");
   const [newDob, setNewDob] = useState("");
-  const [newAvatar, setNewAvatar] = useState<string | null>(null);
+  const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
+  const [newAvatarPreview, setNewAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -72,31 +73,12 @@ export default function ProfilePage() {
     if (user) fetchProfile();
   }, [user, getAuthHeaders]);
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    setNewAvatarFile(file);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_SIZE = 256;
-        let width = img.width;
-        let height = img.height;
-        if (width > height) {
-          if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-        } else {
-          if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-        }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-        setNewAvatar(compressedBase64);
-      };
-      img.src = event.target?.result as string;
-    };
+    reader.onloadend = () => setNewAvatarPreview(reader.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -105,23 +87,31 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       const headers = await getAuthHeaders();
+      const { "Content-Type": _, ...restHeaders } = headers;
+      
+      const formData = new FormData();
+      formData.append("name", newName);
+      formData.append("phone", newPhone);
+      formData.append("nationality", newNationality);
+      formData.append("profession", newProfession);
+      formData.append("reason", newReason);
+      formData.append("dob", newDob);
+      
+      if (newAvatarFile) {
+        formData.append("avatar", newAvatarFile);
+      }
+
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
-        headers,
-        body: JSON.stringify({ 
-          name: newName,
-          phone: newPhone,
-          nationality: newNationality,
-          profession: newProfession,
-          reason: newReason,
-          dob: newDob ? new Date(newDob).toISOString() : null,
-          avatarUrl: newAvatar || fullProfile?.avatarUrl,
-        }),
+        headers: restHeaders,
+        body: formData,
       });
+
       if (res.ok) {
         const data = await res.json();
         if (user) setUser({ ...user, name: data.name, avatarUrl: data.avatarUrl });
         setFullProfile({ ...fullProfile, ...data });
+        setNewAvatarFile(null);
         setIsEditing(false);
       }
     } catch (error) {
@@ -177,7 +167,7 @@ export default function ProfilePage() {
           <CardContent className="pt-0 -mt-12 flex flex-col items-center text-center pb-8">
             <div className="relative group">
               <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
-                <AvatarImage src={newAvatar || fullProfile?.avatarUrl || undefined} className="object-cover" />
+                <AvatarImage src={newAvatarPreview || fullProfile?.avatarUrl || undefined} className="object-cover" />
                 <AvatarFallback className="text-2xl bg-muted text-muted-foreground font-black">
                   {user?.name?.[0].toUpperCase()}
                 </AvatarFallback>
@@ -185,7 +175,7 @@ export default function ProfilePage() {
               {isEditing && (
                 <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera className="w-6 h-6 text-white" />
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 </label>
               )}
             </div>

@@ -72,9 +72,9 @@ export default function Stage8Paragraph({ word, onComplete }: Stage8Props) {
   const { actualTargetCount, actualSynonymCount, actualAntonymCount } = useMemo(() => {
     if (!paragraph) return { actualTargetCount: 0, actualSynonymCount: 0, actualAntonymCount: 0 };
     const tWord = word.word.toLowerCase();
-    const syns = (word.synonyms || []).map((s: any) => s.word.toLowerCase());
-    const ants = (word.antonyms || []).map((a: any) => a.word.toLowerCase());
-    const wordsInParagraph = paragraph.toLowerCase().split(/\b/);
+    const syns = (word.synonyms || []).map((s: any) => (s.word || s).toLowerCase());
+    const ants = (word.antonyms || []).map((a: any) => (a.word || a).toLowerCase());
+    const wordsInParagraph = paragraph.toLowerCase().match(/\b[\w']+\b/g) || [];
     let tCount = 0, sCount = 0, aCount = 0;
     wordsInParagraph.forEach((w: string) => {
       if (w === tWord) tCount++;
@@ -82,9 +82,9 @@ export default function Stage8Paragraph({ word, onComplete }: Stage8Props) {
       else if (ants.includes(w)) aCount++;
     });
     return {
-      actualTargetCount: word.paragraphTargetCount || tCount,
-      actualSynonymCount: word.paragraphSynonymCount || sCount,
-      actualAntonymCount: word.paragraphAntonymCount || aCount,
+      actualTargetCount: tCount || word.paragraphTargetCount || 0,
+      actualSynonymCount: sCount || word.paragraphSynonymCount || 0,
+      actualAntonymCount: aCount || word.paragraphAntonymCount || 0,
     };
   }, [paragraph, word]);
 
