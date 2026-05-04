@@ -7,7 +7,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 requests per minute
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
   analytics: true,
 });
 
@@ -22,37 +22,6 @@ interface CachedDailyResponse {
 const DAILY_WORDS_RESPONSE_CACHE = new Map<string, CachedDailyResponse>();
 const DAILY_WORDS_RESPONSE_CACHE_TTL = 15_000;
 
-/**
- * GET /api/words/daily
- * Fetch or generate the daily word set for the user.
-import { NextRequest, NextResponse } from "next/server";
-import { validateRequest } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { getToday } from "@/lib/utils";
-import { redis } from "@/lib/redis";
-import { Ratelimit } from "@upstash/ratelimit";
-
-const ratelimit = new Ratelimit({
-  redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 requests per minute
-  analytics: true,
-});
-
-const DAILY_LIMIT = 5;
-const FREE_PLAN_LIMIT = 25;
-
-interface CachedDailyResponse {
-  data: unknown;
-  timestamp: number;
-}
-
-const DAILY_WORDS_RESPONSE_CACHE = new Map<string, CachedDailyResponse>();
-const DAILY_WORDS_RESPONSE_CACHE_TTL = 15_000;
-
-/**
- * GET /api/words/daily
- * Fetch or generate the daily word set for the user.
- */
 export async function GET(req: NextRequest) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -66,281 +35,187 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(cached.data);
   }
 
-  if (cached) {
-    DAILY_WORDS_RESPONSE_CACHE.delete(cacheKey);
-  }
-
-  if (process.env.NODE_ENV !== "development") {
-    const { success } = await ratelimit.limit(`ratelimit:daily_words:${user.id}`);
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { status: 429 }
-      );
-    }
-  }
-
-  // Use explicit UTC day boundaries to avoid timezone mismatches when comparing
-  // dates stored as SQL DATE. `todayKey` is 'YYYY-MM-DD' (UTC) from `getToday()`.
   const startOfDay = new Date(`${todayKey}T00:00:00Z`);
   const startOfNextDay = new Date(startOfDay);
   startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1);
 
   try {
-    // 1. Check if a DailyWordSet already exists for today (UTC range)
     const dailySet = await prisma.dailyWordSet.findFirst({
       where: {
         userId: user.id,
-        date: {
-          gte: startOfDay,
-          lt: startOfNextDay,
-        },
+        date: { gte: startOfDay, lt: startOfNextDay },
       },
     });
 
     if (dailySet) {
-      // Fetch the actual words
-      const wordIds = dailySet.wordIds as string[];
-      const words = await prisma.word.findMany({
-        where: { id: { in: wordIds } },
-        orderBy: { orderIndex: "asc" },
+      const sevenDaysAgo = new Date(startOfDay);
+      sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6);
+
+      const historySets = await prisma.dailyWordSet.findMany({
+        where: { userId: user.id, date: { gte: sevenDaysAgo, lte: startOfDay } },
+        orderBy: { date: "desc" },
       });
 
-      // Fetch progress for these words for today's UTC range
-      const progress = await prisma.wordProgress.findMany({
-        where: {
-          userId: user.id,
-          wordId: { in: wordIds },
-          date: {
-            gte: startOfDay,
-            lt: startOfNextDay,
-          },
-        },
+      const allWordIds = Array.from(new Set(historySets.flatMap(s => s.wordIds as string[])));
+      const [historyWords, historyProgress] = await Promise.all([
+        prisma.word.findMany({ where: { id: { in: allWordIds } } }),
+        prisma.wordProgress.findMany({ where: { userId: user.id, wordId: { in: allWordIds } } })
+      ]);
+
+      const wordMap = new Map(historyWords.map(w => [w.id, w]));
+      const progressMap = new Map(historyProgress.map(p => [p.wordId, p]));
+
+      const currentUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { dayCount: true }
+      });
+      const currentDayCount = currentUser?.dayCount || 0;
+
+      const days = historySets.map((s, idx) => {
+        const dayNumber = currentDayCount - idx;
+        const wordsForThisDay = (s.wordIds as string[])
+          .map(id => wordMap.get(id))
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+
+        return {
+          date: s.date,
+          isToday: s.date.getTime() === startOfDay.getTime(),
+          label: `Day ${dayNumber}`,
+          words: wordsForThisDay,
+          progress: (s.wordIds as string[]).map(id => progressMap.get(id)),
+        };
       });
 
-      // Check if the word BEFORE the first word of this daily set is completed
-      let isPrecedingWordCompleted = true;
-      if (words.length > 0) {
-        const minOrderIndex = Math.min(...words.map(w => w.orderIndex));
-        if (minOrderIndex > 0) {
-          const prevWord = await prisma.word.findFirst({
-            where: { orderIndex: minOrderIndex - 1 },
-            select: { id: true }
-          });
-          if (prevWord) {
-            const prevProgress = await prisma.wordProgress.findUnique({
-              where: { userId_wordId: { userId: user.id, wordId: prevWord.id } },
-              select: { status: true }
-            });
-            isPrecedingWordCompleted = prevProgress?.status === "COMPLETED";
-          }
-        }
-      }
-
+      const currentWordIds = dailySet.wordIds as string[];
       const responsePayload = {
         dailySet,
-        words,
-        progress,
-        isPrecedingWordCompleted,
+        words: currentWordIds.map(id => wordMap.get(id)).filter(Boolean).sort((a: any, b: any) => a.orderIndex - b.orderIndex),
+        progress: currentWordIds.map(id => progressMap.get(id)),
+        days,
+        dayCount: currentDayCount,
         isPaywalled: false,
       };
 
-      DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, {
-        data: responsePayload,
-        timestamp: Date.now(),
-      });
-
+      DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
       return NextResponse.json(responsePayload);
     }
 
-    // 2. If no daily set exists, we need to generate one.
-    // First, check the Free Plan cap
     const totalWordsStarted = await prisma.wordProgress.count({
       where: { userId: user.id },
     });
 
-    if (user.plan === "FREE" && totalWordsStarted >= FREE_PLAN_LIMIT) {
-      const responsePayload = {
-        error: "You have reached the 25-word limit for the Free Plan.",
-        isPaywalled: true,
-      };
+    const wordsToAssignCount = user.plan === "FREE" 
+      ? Math.min(DAILY_LIMIT, FREE_PLAN_LIMIT - totalWordsStarted)
+      : DAILY_LIMIT;
 
-      DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, {
-        data: responsePayload,
-        timestamp: Date.now(),
-      });
-
-      return NextResponse.json(
-        {
-          ...responsePayload,
-        },
-        { status: 403 }
-      );
+    if (wordsToAssignCount <= 0 && user.plan === "FREE") {
+      return NextResponse.json({ error: "Limit reached", isPaywalled: true }, { status: 403 });
     }
 
-    // Determine how many words we can give them
-    let wordsToAssignCount = DAILY_LIMIT;
-    if (user.plan === "FREE") {
-      const remainingFreeWords = FREE_PLAN_LIMIT - totalWordsStarted;
-      wordsToAssignCount = Math.min(DAILY_LIMIT, remainingFreeWords);
-    }
-
-    // Find words the user hasn't started yet (any past progress counts as started)
-    const startedRows = await prisma.wordProgress.findMany({
-      where: { userId: user.id },
-      select: { wordId: true },
+    const completedProgress = await prisma.wordProgress.findMany({
+      where: { userId: user.id, status: "COMPLETED" },
+      select: { wordId: true }
     });
-    const startedWordIds = startedRows.map((r) => r.wordId);
+    const completedWordIds = completedProgress.map(p => p.wordId);
 
-    const totalWordsInDb = await prisma.word.count();
-
-    const newWords = await prisma.word.findMany({
-      where: {
-        id: { notIn: startedWordIds },
-      },
+    let chosenWords = await prisma.word.findMany({
+      where: { id: { notIn: completedWordIds } },
       orderBy: { orderIndex: "asc" },
-      take: wordsToAssignCount,
+      take: wordsToAssignCount
     });
 
     let usedFallback = false;
-    let chosenWords = newWords;
+    if (chosenWords.length === 0 && wordsToAssignCount > 0) {
+      usedFallback = true;
+      chosenWords = await prisma.word.findMany({
+        orderBy: { orderIndex: "asc" },
+        take: wordsToAssignCount
+      });
+    }
 
-    if (newWords.length === 0) {
-      // If the user has historically started every word, allow a fallback
-      // to reassign the first N words so they still get a daily set.
-      if (startedWordIds.length >= totalWordsInDb) {
-        usedFallback = true;
-        chosenWords = await prisma.word.findMany({
-          orderBy: { orderIndex: "asc" },
-          take: wordsToAssignCount,
-        });
-      } else {
-        const responsePayload = {
-          message: "You have completed all available words!",
-          dailySet: null,
-          words: [],
-          progress: [],
-          debug: {
-            totalWordsStarted,
-            startedWordIdsCount: startedWordIds.length,
-          },
-        };
-
-        DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, {
-          data: responsePayload,
-          timestamp: Date.now(),
-        });
-
-        return NextResponse.json(responsePayload);
-      }
+    if (chosenWords.length === 0) {
+      return NextResponse.json({ message: "Completed!", dailySet: null, words: [], progress: [] });
     }
 
     const newWordIds = chosenWords.map((w) => w.id);
 
-    // Create the DailyWordSet and WordProgress entries in a transaction
     const transactionResult = await prisma.$transaction(async (tx) => {
       const set = await tx.dailyWordSet.create({
-        data: {
-          userId: user.id,
-          // store the UTC start-of-day to make subsequent queries consistent
-          date: startOfDay,
-          wordIds: newWordIds,
-        },
+        data: { userId: user.id, date: startOfDay, wordIds: newWordIds },
       });
 
       const progressEntries = await Promise.all(
         newWordIds.map((wordId) =>
           tx.wordProgress.upsert({
             where: { userId_wordId: { userId: user.id, wordId } },
-            create: {
-              userId: user.id,
-              wordId,
-              date: startOfDay,
-              status: "IN_PROGRESS",
-              currentStage: 1,
-            },
-            update: {
-              // If an entry already exists, update it to reflect today's session
-              date: startOfDay,
-              status: "IN_PROGRESS",
-              currentStage: 1,
-            },
+            create: { userId: user.id, wordId, date: startOfDay, status: "IN_PROGRESS", currentStage: 1 },
+            update: { date: startOfDay },
           })
         )
       );
-
-      await Promise.all(
-        newWordIds.map((wordId) =>
-          tx.activityLog.create({
-            data: {
-              userId: user.id,
-              actionType: "WORD_STARTED",
-              wordId,
-              metadata: { date: startOfDay.toISOString(), fallback: usedFallback },
-            },
-          })
-        )
-      );
-
-      // Determine yesterday's UTC day range and check if a set existed
-      const yesterdayStart = new Date(startOfDay);
-      yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
 
       const yesterdaySet = await tx.dailyWordSet.findFirst({
-        where: {
-          userId: user.id,
-          date: {
-            gte: yesterdayStart,
-            lt: startOfDay,
-          },
-        },
+        where: { userId: user.id, date: { gte: new Date(startOfDay.getTime() - 86400000), lt: startOfDay } },
       });
 
-      // Get current user stats
       const currentUser = await tx.user.findUnique({
         where: { id: user.id },
         select: { dayCount: true, currentStreak: true, longestStreak: true },
       });
 
-      let newStreak = 1;
-      if (yesterdaySet) {
-        newStreak = (currentUser?.currentStreak || 0) + 1;
-      }
-
       const newDayCount = (currentUser?.dayCount || 0) + 1;
-      const newLongestStreak = Math.max(currentUser?.longestStreak || 0, newStreak);
+      const newStreak = yesterdaySet ? (currentUser?.currentStreak || 0) + 1 : 1;
 
       await tx.user.update({
         where: { id: user.id },
         data: {
           dayCount: newDayCount,
           currentStreak: newStreak,
-          longestStreak: newLongestStreak,
+          longestStreak: Math.max(currentUser?.longestStreak || 0, newStreak),
         },
       });
 
-      return { set, progressEntries };
+      return { set, progressEntries, dayCount: newDayCount };
     });
+
+    const finalSets = await prisma.dailyWordSet.findMany({
+      where: { userId: user.id, date: { gte: new Date(startOfDay.getTime() - 6 * 86400000), lte: startOfDay } },
+      orderBy: { date: "desc" },
+    });
+
+    const finalWordIds = Array.from(new Set(finalSets.flatMap(s => s.wordIds as string[])));
+    const [finalWords, finalProgress] = await Promise.all([
+      prisma.word.findMany({ where: { id: { in: finalWordIds } } }),
+      prisma.wordProgress.findMany({ where: { userId: user.id, wordId: { in: finalWordIds } } })
+    ]);
+
+    const finalWordMap = new Map(finalWords.map(w => [w.id, w]));
+    const finalProgMap = new Map(finalProgress.map(p => [p.wordId, p]));
+
+    const historyDays = finalSets.map((s, idx) => ({
+      date: s.date,
+      isToday: s.date.getTime() === startOfDay.getTime(),
+      label: `Day ${transactionResult.dayCount - idx}`,
+      words: (s.wordIds as string[]).map(id => finalWordMap.get(id)).filter(Boolean).sort((a: any, b: any) => a.orderIndex - b.orderIndex),
+      progress: (s.wordIds as string[]).map(id => finalProgMap.get(id)),
+    }));
 
     const responsePayload = {
       dailySet: transactionResult.set,
-      words: chosenWords,
+      words: chosenWords.sort((a, b) => a.orderIndex - b.orderIndex),
       progress: transactionResult.progressEntries,
+      days: historyDays,
+      dayCount: transactionResult.dayCount,
       isPaywalled: false,
       debug: { usedFallback },
     };
 
-    DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, {
-      data: responsePayload,
-      timestamp: Date.now(),
-    });
-
+    DAILY_WORDS_RESPONSE_CACHE.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
     return NextResponse.json(responsePayload);
+
   } catch (error: any) {
-    console.error("Error fetching daily words:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch daily words" },
-      { status: 500 }
-    );
+    console.error("Error:", error);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

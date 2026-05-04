@@ -319,8 +319,14 @@ export const useAuthStore = create<AuthState>()(
           });
           if (res.ok) {
             const data = await res.json();
-            // Only update if something important changed to avoid loops
-            if (data.plan !== user.plan || data.name !== user.name || data.avatarUrl !== user.avatarUrl) {
+            // Update if important fields changed, including rules acknowledgment
+            if (
+              data.plan !== user.plan || 
+              data.name !== user.name || 
+              data.avatarUrl !== user.avatarUrl ||
+              data.rulesAcknowledged !== user.rulesAcknowledged ||
+              data.onboardingComplete !== user.onboardingComplete
+            ) {
               set({ user: { ...user, ...data } });
             }
           }

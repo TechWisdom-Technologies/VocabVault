@@ -1,10 +1,11 @@
 "use client";
 
 import AuthGuard from "@/components/auth/auth-guard";
-import RulesPopup from "@/components/dashboard/rules-popup";
+import RulesModal from "@/components/dashboard/rules-modal";
 import Sidebar from "@/components/dashboard/sidebar";
 import TopBar from "@/components/dashboard/top-bar";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function DashboardLayout({
   children,
@@ -12,13 +13,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
   const isStagePage = pathname.includes("/stage/");
+
+  const showRules = user !== null && !user.rulesAcknowledged;
 
   if (isStagePage) {
     return (
       <AuthGuard>
         {children}
-        <RulesPopup />
+        {showRules && <RulesModal />}
       </AuthGuard>
     );
   }
@@ -34,7 +38,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
-      <RulesPopup />
+      {showRules && <RulesModal />}
     </AuthGuard>
   );
 }

@@ -14,13 +14,13 @@ import {
   Sparkles
 } from "lucide-react";
 
-interface RulesModalProps {
-  onAcknowledge: () => void;
-}
+import { useAuthStore } from "@/stores/auth-store";
 
-export default function RulesModal({ onAcknowledge }: RulesModalProps) {
+export default function RulesModal() {
+  const { getAuthHeaders, acknowledgeRules } = useAuthStore();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
@@ -29,8 +29,26 @@ export default function RulesModal({ onAcknowledge }: RulesModalProps) {
 
   const handleComplete = async () => {
     setIsLoading(true);
-    await onAcknowledge();
-    setIsLoading(false);
+    setError(null);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/user/acknowledge-rules", { 
+        method: "POST", 
+        headers 
+      });
+      
+      if (res.ok) {
+        acknowledgeRules();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to save acknowledgment");
+      }
+    } catch (err) {
+      console.error("Rules Acknowledgment Error:", err);
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const rules = [
@@ -107,13 +125,20 @@ export default function RulesModal({ onAcknowledge }: RulesModalProps) {
           </AnimatePresence>
 
           {/* Progress Indicators */}
-          <div className="flex gap-2 mt-12 mb-8">
-            {[1, 2, 3].map((i) => (
-              <div 
-                key={i} 
-                className={`h-1.5 rounded-full transition-all duration-500 ${i === step ? "w-8 bg-primary" : "w-1.5 bg-muted"}`} 
-              />
-            ))}
+          <div className="flex flex-col items-center gap-4 mt-12 mb-8">
+            {error && (
+              <p className="text-xs text-rose-500 font-bold bg-rose-500/10 px-4 py-2 rounded-lg border border-rose-500/20">
+                {error}
+              </p>
+            )}
+            <div className="flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <div 
+                  key={i} 
+                  className={`h-1.5 rounded-full transition-all duration-500 ${i === step ? "w-8 bg-primary" : "w-1.5 bg-muted"}`} 
+                />
+              ))}
+            </div>
           </div>
 
           <Button 

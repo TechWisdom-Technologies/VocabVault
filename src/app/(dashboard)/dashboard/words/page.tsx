@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Calendar, 
@@ -12,7 +13,8 @@ import {
   Sparkles, 
   BookOpen,
   ChevronRight,
-  Clock
+  Clock,
+  ArrowRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,18 +35,20 @@ interface DayData {
 }
 
 export default function WordsPage() {
-  const { getAuthHeaders } = useAuthStore();
-  const [days, setDays] = useState<DayData[]>([]);
+  const { getAuthHeaders, user } = useAuthStore();
+  const [days, setDays] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPaywalled, setIsPaywalled] = useState(false);
 
   useEffect(() => {
-    const fetchFutureWords = async () => {
+    const fetchWords = async () => {
       try {
         const headers = await getAuthHeaders();
         const res = await fetch("/api/words/future", { headers });
         if (res.ok) {
           const data = await res.json();
           setDays(data.days || []);
+          setIsPaywalled(data.isPaywalled || false);
         }
       } catch (error) {
         console.error("Failed to fetch words:", error);
@@ -52,8 +56,24 @@ export default function WordsPage() {
         setIsLoading(false);
       }
     };
-    fetchFutureWords();
+    fetchWords();
   }, [getAuthHeaders]);
+
+  const handleUpgrade = async () => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers,
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Upgrade failed:", error);
+    }
+  };
 
   const containerVariants: any = {
     hidden: { opacity: 0 },
@@ -80,10 +100,10 @@ export default function WordsPage() {
         <motion.div variants={itemVariants} className="mb-12">
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-center gap-3">
             <BookOpen className="w-8 h-8 text-primary" />
-            Your Learning <span className="text-primary">Curriculum</span>
+            Your Vocabulary <span className="text-primary">Journey</span>
           </h1>
           <p className="text-muted-foreground mt-2 font-bold tracking-[0.2em] text-xs uppercase opacity-70">
-            Preview the next 7 days of vocabulary mastery
+            {isPaywalled ? "Upgrade to unlock full curriculum" : "Explore the complete vocabulary mastery path"}
           </p>
         </motion.div>
 
@@ -100,6 +120,39 @@ export default function WordsPage() {
               </div>
             ))}
           </div>
+        ) : isPaywalled ? (
+          <motion.div variants={itemVariants}>
+            <Card className="border-primary/20 bg-background/50 backdrop-blur-md shadow-2xl overflow-hidden rounded-[2.5rem] border-t-white/20">
+              <CardContent className="p-12 text-center flex flex-col items-center">
+                <div className="w-20 h-20 bg-linear-to-br from-primary to-primary-600 rounded-3xl flex items-center justify-center mb-8 shadow-xl shadow-primary/20">
+                  <Lock className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-3xl font-black mb-4 tracking-tighter">Mastery Threshold Reached!</h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-10 font-bold tracking-tight text-lg leading-relaxed">
+                  You&apos;ve completed your first 25 words! To continue mastering the remaining 5,000+ words and unlock all 10 cognitive stages, upgrade to VocabVault PRO.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg mb-10">
+                  {[
+                    "Unlimited Vocabulary Access",
+                    "Advanced Mastery Analytics",
+                    "Personalized Learning Paths",
+                    "Lifetime Pro Features"
+                  ].map((feat) => (
+                    <div key={feat} className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-left">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  onClick={handleUpgrade}
+                  className="bg-primary hover:bg-primary/90 text-white px-12 h-16 text-sm font-black uppercase tracking-[0.2em] rounded-2xl shadow-2xl shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] border-t border-white/20"
+                >
+                  Upgrade to PRO <ArrowRight className="w-5 h-5 ml-3" />
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         ) : (
           <div className="space-y-16">
             {days.map((day) => (
@@ -111,22 +164,24 @@ export default function WordsPage() {
                     </div>
                     <div>
                       <h2 className="text-xl font-black tracking-tight">{day.label}</h2>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{day.date}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        Word Group {((day.dayIndex - 1) * 5) + 1} - {day.dayIndex * 5}
+                      </p>
                     </div>
                   </div>
                   <Badge variant="outline" className="w-fit h-7 px-4 rounded-full border-primary/20 bg-primary/5 font-bold text-[10px] uppercase tracking-wider text-primary">
-                    {day.words.length} Words Assigned
+                    {day.words.length} Words
                   </Badge>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {day.words.map((word) => {
+                  {day.words.map((word: any) => {
                     const isLocked = word.status === "LOCKED";
                     const isCompleted = word.status === "COMPLETED";
                     
                     if (isLocked) {
                       return (
-                        <div key={word.id} className="p-6 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col justify-between h-36 relative overflow-hidden group">
+                        <div key={word.id} className="p-6 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col justify-between h-40 relative overflow-hidden group">
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Locked Entry</span>
                             <Lock className="w-4 h-4 text-primary/30" />
@@ -136,7 +191,7 @@ export default function WordsPage() {
                           </div>
                           <div className="mt-auto flex items-center gap-2 opacity-30">
                             <Clock className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[9px] font-bold uppercase tracking-wider">Awaiting Sequence</span>
+                            <span className="text-[9px] font-bold uppercase tracking-wider">Sequential Lock</span>
                           </div>
                         </div>
                       );
@@ -149,7 +204,7 @@ export default function WordsPage() {
                       >
                         <motion.div 
                           className={cn(
-                            "p-6 rounded-2xl border flex flex-col justify-between h-36 relative overflow-hidden group transition-all",
+                            "p-6 rounded-2xl border flex flex-col justify-between h-40 relative overflow-hidden group transition-all shadow-sm",
                             isCompleted 
                               ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10" 
                               : "border-primary/20 bg-background/50 backdrop-blur-md hover:shadow-xl hover:shadow-primary/5"
@@ -179,7 +234,7 @@ export default function WordsPage() {
                           </div>
                           <div className="mt-auto flex items-center justify-between">
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                              {isCompleted ? "Summary Available" : `Stage ${word.currentStage || 1} / 10`}
+                              {isCompleted ? "Accuracy High" : `Stage ${word.currentStage || 1} / 10`}
                             </span>
                             <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                           </div>

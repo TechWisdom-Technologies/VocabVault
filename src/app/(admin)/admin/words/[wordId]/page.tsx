@@ -219,8 +219,8 @@ export default function WordEditorPage() {
                 <label className="text-[10px] font-black text-white/20 uppercase tracking-widest px-1">Curriculum Order</label>
                 <Input
                   type="number"
-                  value={wordData.orderIndex}
-                  onChange={(e) => updateField("orderIndex", parseInt(e.target.value, 10))}
+                  value={wordData.orderIndex ?? ""}
+                  onChange={(e) => updateField("orderIndex", e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
                   className="h-14 bg-white/5 border-white/5 rounded-2xl font-bold text-white focus:border-primary/50"
                 />
               </div>
@@ -284,8 +284,8 @@ export default function WordEditorPage() {
                 <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Target Words</p>
                 <Input
                   type="number"
-                  value={wordData.paragraphTargetCount}
-                  onChange={(e) => updateField("paragraphTargetCount", parseInt(e.target.value, 10))}
+                  value={wordData.paragraphTargetCount ?? ""}
+                  onChange={(e) => updateField("paragraphTargetCount", e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
                   className="h-10 bg-transparent border-0 p-0 text-white font-black"
                 />
               </div>
@@ -293,8 +293,8 @@ export default function WordEditorPage() {
                 <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Synonyms</p>
                 <Input
                   type="number"
-                  value={wordData.paragraphSynonymCount}
-                  onChange={(e) => updateField("paragraphSynonymCount", parseInt(e.target.value, 10))}
+                  value={wordData.paragraphSynonymCount ?? ""}
+                  onChange={(e) => updateField("paragraphSynonymCount", e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
                   className="h-10 bg-transparent border-0 p-0 text-white font-black"
                 />
               </div>
@@ -302,8 +302,8 @@ export default function WordEditorPage() {
                 <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Antonyms</p>
                 <Input
                   type="number"
-                  value={wordData.paragraphAntonymCount}
-                  onChange={(e) => updateField("paragraphAntonymCount", parseInt(e.target.value, 10))}
+                  value={wordData.paragraphAntonymCount ?? ""}
+                  onChange={(e) => updateField("paragraphAntonymCount", e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
                   className="h-10 bg-transparent border-0 p-0 text-white font-black"
                 />
               </div>
@@ -615,10 +615,9 @@ export default function WordEditorPage() {
                     />
                     <Input
                       placeholder="Count"
-                      type="number"
-                      value={wordData.correctAudioCounts?.find((c: any) => c.accent === clip.accent)?.count || 0}
+                      value={wordData.correctAudioCounts?.find((c: any) => c.accent === clip.accent)?.count ?? 0}
                       onChange={(e) => {
-                        const count = parseInt(e.target.value, 10);
+                        const count = e.target.value === "" ? 0 : parseInt(e.target.value, 10);
                         const newCounts = [...(wordData.correctAudioCounts || [])];
                         const existingIdx = newCounts.findIndex((c: any) => c.accent === clip.accent);
                         if (existingIdx >= 0) newCounts[existingIdx].count = count;

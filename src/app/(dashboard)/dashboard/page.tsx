@@ -5,19 +5,19 @@ import { useAuthStore } from "@/stores/auth-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Lock, 
-  Play, 
-  CheckCircle2, 
-  AlertTriangle, 
-  ArrowRight, 
-  Crown, 
-  Eye, 
-  RotateCcw, 
-  Heart, 
-  Sparkles, 
-  BookOpen, 
-  Medal, 
+import {
+  Lock,
+  Play,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  Crown,
+  Eye,
+  RotateCcw,
+  Heart,
+  Sparkles,
+  BookOpen,
+  Medal,
   Flame,
   ChevronRight,
   Clock
@@ -27,7 +27,6 @@ import LearningCalendar from "@/components/dashboard/learning-calendar";
 import { useBookmarkStore } from "@/stores/bookmark-store";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import RulesModal from "@/components/dashboard/rules-modal";
 import PerformanceAnalytics from "@/components/dashboard/performance-analytics";
 
 interface Word {
@@ -60,20 +59,7 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const handleAcknowledgeRules = async () => {
-    try {
-      const headers = await getAuthHeaders();
-      const res = await fetch("/api/user/acknowledge-rules", { 
-        method: "POST", 
-        headers 
-      });
-      if (res.ok) {
-        await syncUser();
-      }
-    } catch (e) {
-      console.error("Failed to acknowledge rules", e);
-    }
-  };
+
   const [words, setWords] = useState<Word[]>([]);
   const [progressMap, setProgressMap] = useState<Record<string, WordProgress>>({});
   const [userStats, setUserStats] = useState<any>(null);
@@ -117,12 +103,12 @@ export default function DashboardPage() {
         const verifySession = async () => {
           try {
             const headers = await getAuthHeaders();
-            const res = await fetch("/api/stripe/verify-session", { 
+            const res = await fetch("/api/stripe/verify-session", {
               method: "POST",
               headers,
               body: JSON.stringify({ sessionId })
             });
-            
+
             if (res.ok) {
               await syncUser();
               alert("🎉 Welcome to VocabVault PRO! Your payment has been verified.");
@@ -209,14 +195,14 @@ export default function DashboardPage() {
   const getWordStatus = (word: Word) => {
     const progress = progressMap[word.id];
     if (progress?.status === "COMPLETED") return "COMPLETED";
-    
+
     // Use the most up-to-date maxUnlockedIndex (prioritize userStats over auth store)
     const effectiveMaxIndex = userStats?.maxUnlockedIndex ?? user?.maxUnlockedIndex ?? 0;
-    
+
     // Check if the word is unlocked based on curriculum index
     // Note: orderIndex starts at 1, so we unlock 1 by default
     const isUnlocked = word.orderIndex <= Math.max(1, effectiveMaxIndex);
-    
+
     if (isUnlocked) return "ACTIVE";
     return "LOCKED";
   };
@@ -275,7 +261,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <AnimatePresence>
         {isCheckoutLoading && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -287,12 +273,12 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Background Aesthetic */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/5 blur-[100px] rounded-full pointer-events-none" />
 
-      <motion.div 
+      <motion.div
         className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto relative z-10"
         initial="hidden"
         animate="visible"
@@ -314,7 +300,7 @@ export default function DashboardPage() {
           </div>
 
           {user?.plan === "FREE" && (
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="relative group cursor-pointer"
@@ -339,8 +325,8 @@ export default function DashboardPage() {
 
         {/* --- Mastery Hero (Active Word) --- */}
         {words.length > 0 && !isLoading && (
-          <motion.div 
-            variants={itemVariants} 
+          <motion.div
+            variants={itemVariants}
             className="mb-14 flex justify-center"
           >
             {(() => {
@@ -349,10 +335,10 @@ export default function DashboardPage() {
                 const p = progressMap[w.id];
                 return p && p.status !== "COMPLETED";
               });
-              
+
               // If no pending, find latest unlocked (highest orderIndex)
               const activeWord = pendingWord || [...words].sort((a, b) => b.orderIndex - a.orderIndex)[0];
-              
+
               const progress = progressMap[activeWord.id];
               const stage = progress?.currentStage || 1;
               const isRetry = progress?.status === "RETRY";
@@ -363,40 +349,40 @@ export default function DashboardPage() {
                 <div className="relative w-full max-w-2xl group">
                   {/* Hyper-Glow Background */}
                   <div className="absolute -inset-4 bg-linear-to-r from-primary/20 via-primary/20 to-primary/20 rounded-[3rem] blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-                  
+
                   <Card className="relative min-h-[280px] bg-background/40 backdrop-blur-3xl border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center text-center p-10 shadow-2xl border-t-white/20">
                     {/* Animated Decorative Orbs */}
-                    <motion.div 
-                      animate={{ 
+                    <motion.div
+                      animate={{
                         scale: [1, 1.2, 1],
                         rotate: [0, 90, 0],
                         x: [0, 20, 0],
                         y: [0, -20, 0]
                       }}
                       transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                      className="absolute top-10 left-10 w-32 h-32 bg-primary/10 blur-[60px] rounded-full pointer-events-none" 
+                      className="absolute top-10 left-10 w-32 h-32 bg-primary/10 blur-[60px] rounded-full pointer-events-none"
                     />
-                      <motion.div 
-                        animate={{ 
-                          scale: [1, 1.5, 1],
-                          rotate: [0, -90, 0],
-                          x: [0, -30, 0],
-                          y: [0, 30, 0]
-                        }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="absolute bottom-10 right-10 w-40 h-40 bg-primary/10 blur-[80px] rounded-full pointer-events-none" 
-                      />
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        rotate: [0, -90, 0],
+                        x: [0, -30, 0],
+                        y: [0, 30, 0]
+                      }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="absolute bottom-10 right-10 w-40 h-40 bg-primary/10 blur-[80px] rounded-full pointer-events-none"
+                    />
 
                     <div className="relative z-10 space-y-4 mb-8">
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] drop-shadow-sm">Mastery Objective</span>
                         <div className="h-0.5 w-12 bg-primary/30 rounded-full" />
                       </div>
-                      
+
                       <h2 className="text-6xl sm:text-7xl font-black tracking-tighter text-foreground capitalize drop-shadow-2xl">
                         {activeWord.word}
                       </h2>
-                      
+
                       <div className="flex items-center justify-center gap-3">
                         <div className="px-3 py-1 rounded-full bg-background/50 border border-white/10 backdrop-blur-md flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -415,7 +401,7 @@ export default function DashboardPage() {
                     <div className="relative z-10 w-full max-w-xs space-y-4">
                       {/* Progress Bar Mini */}
                       <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-6">
-                        <motion.div 
+                        <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${completionPercent}%` }}
                           className="h-full bg-linear-to-r from-primary to-violet-500 shadow-[0_0_10px_rgba(var(--primary),0.5)]"
@@ -451,8 +437,8 @@ export default function DashboardPage() {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div 
-                  key={n} 
+                <div
+                  key={n}
                   className="h-32 rounded-2xl bg-background/50 backdrop-blur-md border border-border/50 relative overflow-hidden group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
@@ -512,8 +498,8 @@ export default function DashboardPage() {
 
                 if (status === "COMPLETED") {
                   return (
-                    <motion.div 
-                      key={word.id} 
+                    <motion.div
+                      key={word.id}
                       className="p-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 flex flex-col justify-between h-auto group relative overflow-hidden shadow-sm"
                       whileHover={{ y: -4 }}
                     >
@@ -568,7 +554,7 @@ export default function DashboardPage() {
 
                 return (
                   <Link href={targetLink} key={word.id}>
-                    <motion.div 
+                    <motion.div
                       className="group p-6 rounded-2xl border border-primary/20 bg-background/50 backdrop-blur-md shadow-sm cursor-pointer hover:shadow-lg transition-all flex flex-col justify-between h-40 relative overflow-hidden"
                       whileHover={{ scale: 1.02, y: -4 }}
                       whileTap={{ scale: 0.98 }}
@@ -674,8 +660,8 @@ export default function DashboardPage() {
                 .map((word) => {
                   const progress = progressMap[word.id];
                   return (
-                    <motion.div 
-                      key={word.id} 
+                    <motion.div
+                      key={word.id}
                       className="p-4 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-md flex flex-col items-center text-center gap-2 group hover:border-red-500 transition-all shadow-xs"
                       whileHover={{ y: -3 }}
                     >
@@ -728,13 +714,6 @@ export default function DashboardPage() {
           </div>
         </motion.section>
       </motion.div>
-
-      {/* Mandatory Rules Orientation */}
-      <AnimatePresence>
-        {user && !user.rulesAcknowledged && (
-          <RulesModal onAcknowledge={handleAcknowledgeRules} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

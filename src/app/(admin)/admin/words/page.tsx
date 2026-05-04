@@ -95,25 +95,12 @@ export default function AdminWordsPage() {
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
 
-        // Basic formatting/validation before sending
-        const formattedData = data.map((item: any) => ({
-          ...item,
-          tenseForms: item.tenseForms ? (typeof item.tenseForms === 'string' ? item.tenseForms.split(',').map((s: string) => s.trim()) : item.tenseForms) : [],
-          synonyms: item.synonyms ? (typeof item.synonyms === 'string' ? JSON.parse(item.synonyms) : item.synonyms) : [],
-          antonyms: item.antonyms ? (typeof item.antonyms === 'string' ? JSON.parse(item.antonyms) : item.antonyms) : [],
-          sentences: item.sentences ? (typeof item.sentences === 'string' ? JSON.parse(item.sentences) : item.sentences) : [],
-          articles: item.articles ? (typeof item.articles === 'string' ? JSON.parse(item.articles) : item.articles) : [],
-          audioClipUrls: item.audioClipUrls ? (typeof item.audioClipUrls === 'string' ? JSON.parse(item.audioClipUrls) : item.audioClipUrls) : [],
-          correctAudioCounts: item.correctAudioCounts ? (typeof item.correctAudioCounts === 'string' ? JSON.parse(item.correctAudioCounts) : item.correctAudioCounts) : [],
-          recall1Questions: item.recall1Questions ? (typeof item.recall1Questions === 'string' ? JSON.parse(item.recall1Questions) : item.recall1Questions) : [],
-          recall2Pairs: item.recall2Pairs ? (typeof item.recall2Pairs === 'string' ? JSON.parse(item.recall2Pairs) : item.recall2Pairs) : [],
-        }));
-
+        // Send raw data to backend - backend now handles snake_case/camelCase and parsing
         const headers = await getAuthHeaders();
         const res = await fetch("/api/admin/words/bulk", {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ data: formattedData }),
+          body: JSON.stringify({ data }),
         });
 
         if (res.ok) {
@@ -236,14 +223,6 @@ Example: ["A", "B"] is valid. A, B is INVALID and will cause import failure.
     URL.revokeObjectURL(url);
   };
 
-  const handleBulkExport = () => {
-    if (words.length === 0) return;
-    
-    const ws = XLSX.utils.json_to_sheet(words);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "VocabVault_Words");
-    XLSX.writeFile(wb, `VocabVault_Words_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
@@ -266,14 +245,6 @@ Example: ["A", "B"] is valid. A, B is INVALID and will cause import failure.
             Import Guide
           </Button>
 
-          <Button 
-            variant="ghost"
-            onClick={handleBulkExport}
-            className="h-11 px-6 rounded-2xl bg-white/5 border border-white/5 text-white/40 hover:text-white hover:border-white/10 text-xs font-black uppercase tracking-widest flex items-center justify-center transition-colors"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Bulk Export
-          </Button>
 
           <input 
             type="file" 
