@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
+import { fetchWithAuth } from "@/lib/fetch-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,8 +57,7 @@ export default function WordsPage() {
         // Sync user to get latest maxUnlockedIndex
         await syncUser();
         
-        const headers = await getAuthHeaders();
-        const res = await fetch("/api/words/future", { headers });
+        const res = await fetchWithAuth("/api/words/future");
         if (res.ok) {
           const data = await res.json();
           setDays(data.days || []);

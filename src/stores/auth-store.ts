@@ -79,6 +79,8 @@ interface AuthState {
   setFirebaseUser: (user: FirebaseUser | null) => void;
   getAuthHeaders: () => Promise<Record<string, string>>;
   acknowledgeRules: () => void;
+  isSessionExpired: boolean;
+  setSessionExpired: (expired: boolean) => void;
   syncUser: () => Promise<void>;
 }
 
@@ -121,7 +123,10 @@ export const useAuthStore = create<AuthState>()(
       sessionToken: null,
       isLoading: false,
       isInitialized: false,
+      isSessionExpired: false,
       error: null,
+
+      setSessionExpired: (expired) => set({ isSessionExpired: expired }),
 
       loginWithGoogle: async () => {
         set({ isLoading: true, error: null });
@@ -331,6 +336,9 @@ export const useAuthStore = create<AuthState>()(
             ) {
               set({ user: { ...user, ...data } });
             }
+          } else if (res.status === 401) {
+            console.warn("User sync detected expired session (401)");
+            set({ isSessionExpired: true });
           }
         } catch (err) {
           console.error("User sync failed", err);

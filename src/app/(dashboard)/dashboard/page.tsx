@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
+import { fetchWithAuth } from "@/lib/fetch-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -196,8 +197,7 @@ export default function DashboardPage() {
       fetchData();
       (async () => {
         try {
-          const headers = await getAuthHeaders();
-          const res = await fetch("/api/words/word-of-the-day", { headers });
+          const res = await fetchWithAuth("/api/words/word-of-the-day");
           if (res.ok) {
             const data = await res.json();
             setWordOfTheDay(data.word);
@@ -205,7 +205,7 @@ export default function DashboardPage() {
         } catch (e) { console.error(e); }
       })();
     }
-  }, [user?.id, getAuthHeaders]);
+  }, [user?.id]);
 
   const [isPrecedingWordCompleted, setIsPrecedingWordCompleted] = useState(true);
 

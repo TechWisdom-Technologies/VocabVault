@@ -1,6 +1,7 @@
 "use client";
 
 import AuthGuard from "@/components/auth/auth-guard";
+import SessionExpiredModal from "@/components/auth/session-expired-modal";
 import RulesModal from "@/components/dashboard/rules-modal";
 import Sidebar from "@/components/dashboard/sidebar";
 import TopBar from "@/components/dashboard/top-bar";
@@ -23,6 +24,7 @@ export default function DashboardLayout({
       <AuthGuard>
         {children}
         {showRules && <RulesModal />}
+        <SessionExpiredModal />
       </AuthGuard>
     );
   }
@@ -39,6 +41,7 @@ export default function DashboardLayout({
         </div>
       </div>
       {showRules && <RulesModal />}
+      <SessionExpiredModal />
     </AuthGuard>
   );
 }
