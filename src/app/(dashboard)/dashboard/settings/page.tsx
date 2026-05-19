@@ -41,6 +41,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useAccessibilityStore } from "@/stores/accessibility-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
+import PaymentModal from "@/components/payment-modal";
 
 interface DeviceSession {
   id: string;
@@ -55,7 +56,7 @@ interface DeviceSession {
 }
 
 export default function SettingsPage() {
-  const { user, sessionToken, getAuthHeaders } = useAuthStore();
+  const { user, sessionToken, getAuthHeaders, syncUser } = useAuthStore();
   const [devices, setDevices] = useState<DeviceSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("account");
@@ -69,6 +70,7 @@ export default function SettingsPage() {
   });
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -152,19 +154,27 @@ export default function SettingsPage() {
     { id: "security", label: "Security", icon: Shield, desc: "Devices & auth" },
   ];
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = () => {
+    setIsPaymentModalOpen(true);
+  };
+
+  const handleConfirmPayment = async (transactionId: string, mobileNumber: string) => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch("/api/stripe/checkout", {
+      const res = await fetch("/api/stripe/dev-confirm", {
         method: "POST",
         headers,
+        body: JSON.stringify({ transactionId, mobileNumber }),
       });
       if (res.ok) {
-        const { url } = await res.json();
-        window.location.href = url;
+        await syncUser();
+        alert("Payment submitted successfully. Please wait for admin verification. You will get a notification once PRO is activated.");
+      } else {
+        alert("Payment confirmation failed. Please contact support.");
       }
     } catch (error) {
-      console.error("Failed to start checkout", error);
+      console.error("Payment confirmation failed:", error);
+      alert("An error occurred. Please try again.");
     }
   };
   const handleManageBilling = async () => {
@@ -669,6 +679,13 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirmPayment={handleConfirmPayment}
+      />
     </div>
   );
 }
@@ -713,7 +730,7 @@ function ThemeSwitcher() {
             {isActive && (
               <motion.div
                 layoutId="activeTheme"
-                className="absolute inset-0 ring-2 ring-primary rounded-2xl"
+                className="absolute inset-0 rounded-2xl bg-primary/5 -z-10"
               />
             )}
           </button>
@@ -753,8 +770,8 @@ function AccessibilityToggles() {
             className={cn(
               "flex items-center justify-between gap-4 rounded-2xl border px-5 py-4 cursor-pointer transition-all hover:shadow-md",
               t.checked
-                ? "border-primary/30 bg-primary/5 ring-1 ring-primary/20"
-                : "border-border/50 bg-muted/10 hover:bg-muted/30"
+                ? "border-primary/30 bg-primary/5 ring-1 ring-border/50 text-primary"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             )}
           >
             <div className="flex items-center gap-4 flex-1 min-w-0">

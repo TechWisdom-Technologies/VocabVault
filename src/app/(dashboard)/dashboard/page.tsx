@@ -62,6 +62,7 @@ interface ActivityItem {
 }
 
 import { useRouter, useSearchParams } from "next/navigation";
+import PaymentModal from "@/components/payment-modal";
 
 export default function DashboardPage() {
   const { user, getAuthHeaders, syncUser } = useAuthStore();
@@ -76,6 +77,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     const plan = searchParams.get("plan");
@@ -121,7 +123,7 @@ export default function DashboardPage() {
 
             if (res.ok) {
               await syncUser();
-              alert("🎉 Welcome to VocabVault PRO! Your payment has been verified.");
+              alert("Payment submitted successfully. Please wait for admin verification. You will get a notification once PRO is activated.");
               router.replace("/dashboard");
             }
           } catch (e) {
@@ -225,19 +227,27 @@ export default function DashboardPage() {
     return "LOCKED";
   };
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = () => {
+    setIsPaymentModalOpen(true);
+  };
+
+  const handleConfirmPayment = async (transactionId: string, mobileNumber: string) => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch("/api/stripe/checkout", {
+      const res = await fetch("/api/stripe/dev-confirm", {
         method: "POST",
         headers,
+        body: JSON.stringify({ transactionId, mobileNumber }),
       });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (res.ok) {
+        await syncUser();
+        alert("Payment submitted successfully. Please wait for admin verification. You will get a notification once PRO is activated.");
+      } else {
+        alert("Payment confirmation failed. Please contact support.");
       }
     } catch (error) {
-      console.error("Upgrade failed:", error);
+      console.error("Payment confirmation failed:", error);
+      alert("An error occurred. Please try again.");
     }
   };
 
@@ -783,6 +793,13 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirmPayment={handleConfirmPayment}
+      />
     </div>
   );
 }

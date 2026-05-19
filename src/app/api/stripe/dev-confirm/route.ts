@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   // ONLY allow this in development mode
@@ -13,38 +12,32 @@ export async function POST(req: NextRequest) {
   if ("error" in authResult) return authResult.error;
 
   const { user } = authResult;
+  const { transactionId, mobileNumber } = await req.json();
 
   try {
-    // Try to find the real customer ID from Stripe first
-    let stripeCustomerId = "cus_dev_" + user.id.slice(0, 8);
-    try {
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      if (customers.data.length > 0) {
-        stripeCustomerId = customers.data[0].id;
-      } else {
-        // If not found, CREATE one so the portal actually works
-        const customer = await stripe.customers.create({
-          email: user.email,
-          name: user.name || "Dev User",
-          metadata: { userId: user.id }
-        });
-        stripeCustomerId = customer.id;
-      }
-    } catch (e) {
-      console.warn("Could not fetch real Stripe customer in dev-confirm", e);
+    if (!transactionId || !mobileNumber) {
+      return NextResponse.json(
+        { error: "Transaction ID and mobile number are required" },
+        { status: 400 }
+      );
     }
 
-    // Force upgrade the user in dev mode with the best available ID
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { 
-        plan: "PRO",
-        stripeCustomerId: stripeCustomerId,
-        stripePaymentId: "pi_dev_" + Date.now()
-      }
+    // Create a pending payment transaction instead of upgrading immediately
+    await prisma.paymentTransaction.create({
+      data: {
+        userId: user.id,
+        paymentMethod: "bkash", // Could be bkash or nagad, defaulting to bkash for now
+        transactionId,
+        mobileNumber,
+        amount: 499,
+        status: "PENDING",
+      },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: "Payment submitted for verification. Admin will review it shortly."
+    });
   } catch (error: any) {
     console.error("Dev Confirm Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

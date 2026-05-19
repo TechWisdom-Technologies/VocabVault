@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
+  ReceiptText,
   Settings,
   AlertTriangle,
   ShieldAlert,
@@ -24,6 +25,7 @@ import { useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, color: "text-violet-500" },
+  { href: "/admin/transactions", label: "Payment Requests", icon: ReceiptText, color: "text-cyan-500" },
   { href: "/admin/users", label: "Users & Accounts", icon: Users, color: "text-emerald-500" },
   { href: "/admin/words", label: "Word Management", icon: BookOpen, color: "text-amber-500" },
   { href: "/admin/feedback", label: "Feedback & Reports", icon: AlertTriangle, color: "text-orange-500" },

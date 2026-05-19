@@ -112,6 +112,8 @@ export async function validateRequest(
 
     // 1. Verify Firebase JWT (with cache)
     let firebaseUid: string;
+    let firebaseEmail: string | null = null;
+    let firebaseName: string | null = null;
 
     const cachedToken = TOKEN_CACHE.get(firebaseToken);
     if (cachedToken && Date.now() - cachedToken.timestamp < TOKEN_CACHE_TTL) {
@@ -120,6 +122,8 @@ export async function validateRequest(
       try {
         const decodedToken = await getAdminAuth().verifyIdToken(firebaseToken);
         firebaseUid = decodedToken.uid;
+        firebaseEmail = decodedToken.email || null;
+        firebaseName = decodedToken.name || decodedToken.email || null;
         TOKEN_CACHE.set(firebaseToken, { uid: firebaseUid, timestamp: Date.now() });
       } catch (err: any) {
         AUTH_RESULT_CACHE.delete(authCacheKey);
@@ -183,16 +187,47 @@ export async function validateRequest(
       });
 
       if (!dbUser) {
-        return {
-          error: NextResponse.json(
-            { error: "User not found" },
-            { status: 404 }
-          ),
-        };
-      }
+        if (!firebaseEmail) {
+          return {
+            error: NextResponse.json(
+              { error: "User not found" },
+              { status: 404 }
+            ),
+          };
+        }
 
-      user = dbUser as unknown as AuthenticatedUser;
-      setCachedUser(firebaseUid, user);
+        const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+        const isAutoAdmin = adminEmails.includes(firebaseEmail.toLowerCase());
+
+        const createdUser = await prisma.user.create({
+          data: {
+            firebaseUid,
+            email: firebaseEmail,
+            name: firebaseName,
+            role: isAutoAdmin ? "ADMIN" : "USER",
+          },
+          select: {
+            id: true,
+            firebaseUid: true,
+            email: true,
+            name: true,
+            plan: true,
+            role: true,
+            onboardingComplete: true,
+            isLocked: true,
+            lockReason: true,
+            stripeCustomerId: true,
+            maxUnlockedIndex: true,
+            timezone: true,
+          } as any,
+        });
+
+        user = createdUser as unknown as AuthenticatedUser;
+        setCachedUser(firebaseUid, user);
+      } else {
+        user = dbUser as unknown as AuthenticatedUser;
+        setCachedUser(firebaseUid, user);
+      }
     }
 
     // 4. Check if account is locked

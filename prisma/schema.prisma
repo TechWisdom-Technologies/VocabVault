@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 model User {
@@ -51,6 +49,7 @@ model User {
   notifications      Notification[]
   streakRewards      StreakReward[]
   suspiciousEvents   SuspiciousEvent[]
+  paymentTransactions PaymentTransaction[]
   wordProgress       WordProgress[]
 
   @@map("users")
@@ -341,4 +340,30 @@ enum FeedbackStatus {
   IN_REVIEW
   RESOLVED
   DISMISSED
+}
+
+model PaymentTransaction {
+  id              String          @id @default(uuid())
+  userId          String          @map("user_id")
+  paymentMethod   String          @map("payment_method") // bkash, nagad
+  transactionId   String          @map("transaction_id") // Mobile money transaction ID
+  mobileNumber    String          @map("mobile_number") // Mobile money account number
+  amount          Float
+  status          PaymentStatus   @default(PENDING)
+  verifiedAt      DateTime?       @map("verified_at")
+  verifiedBy      String?         @map("verified_by") // Admin user ID
+  rejectionReason String?         @map("rejection_reason")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("payment_transactions")
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
