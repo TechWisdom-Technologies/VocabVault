@@ -28,6 +28,9 @@ export const metadata: Metadata = {
     "word mastery",
   ],
   authors: [{ name: "TechWisdom Technologies" }],
+  icons: {
+    icon: "/VocabVault.png",
+  },
   openGraph: {
     title: "VocabVault — Master English Vocabulary",
     description:
