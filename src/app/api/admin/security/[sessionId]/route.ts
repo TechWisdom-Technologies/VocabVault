@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateRequest, invalidateSession } from "@/lib/auth";
+import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
@@ -19,19 +19,16 @@ export async function DELETE(
     // Get full session record including sessionToken and user firebaseUid
     const session = await prisma.deviceSession.findUnique({
       where: { id: sessionId },
-      include: {
-        user: {
-          select: { firebaseUid: true, email: true }
-        }
-      }
+      select: { userId: true, deviceName: true }
     });
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    // First, invalidate the session in Redis to immediately disconnect the user
-    await invalidateSession(session.user.firebaseUid, session.sessionToken);
+    await prisma.deviceSession.delete({
+      where: { id: sessionId },
+    });
 
     // Log the administrative action
     await prisma.adminLog.create({
@@ -41,7 +38,7 @@ export async function DELETE(
         targetType: "USER",
         targetId: session.userId,
         reason: `Administrative termination of session: ${session.deviceName}`,
-        details: { sessionId, userEmail: session.user.email }
+        details: { sessionId }
       },
     });
 
