@@ -4,6 +4,7 @@ import { createSession, invalidateSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createSessionSchema } from "@/schemas/auth";
 import { generateSessionToken } from "@/lib/utils";
+import { getGeoLocation } from "@/lib/geolocation";
 
 /**
  * POST /api/auth/session
@@ -98,18 +99,19 @@ export async function POST(req: NextRequest) {
 
     // Capture real IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
-    const realIp = forwarded ? forwarded.split(",")[0] : (req.headers.get("x-real-ip") || "127.0.0.1");
+    const realIp = (forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip")) || "127.0.0.1";
 
-    // Capture location from deployment headers (e.g. Vercel)
-    const city = req.headers.get("x-vercel-ip-city") || deviceInfo.locationCity;
-    const country = req.headers.get("x-vercel-ip-country") || deviceInfo.locationCountry;
+    // Get geolocation from headers and request
+    const geo = getGeoLocation(req.headers);
+    const city = geo.city || "Unknown";
+    const country = geo.country || "Unknown";
 
     // Ensure deviceInfo has the real IP and location
     const enrichedDeviceInfo = {
       ...deviceInfo,
-      ipAddress: realIp,
-      locationCity: city || "Unknown",
-      locationCountry: country || "Unknown"
+      ipAddress: realIp.trim(),
+      locationCity: city,
+      locationCountry: country
     };
 
     // Generate session token and create session
