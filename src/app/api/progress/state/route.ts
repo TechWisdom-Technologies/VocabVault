@@ -16,17 +16,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
-    const progress = await prisma.wordProgress.findFirst({
-      where: { userId: user.id, wordId },
-    });
-
-    if (!progress) {
-      return NextResponse.json({ error: "Progress not found" }, { status: 404 });
-    }
-
-    await prisma.wordProgress.update({
-      where: { id: progress.id },
-      data: { sessionState: sessionState || Prisma.DbNull },
+    // Upsert progress so clients can save state even before a progress row exists
+    await prisma.wordProgress.upsert({
+      where: { userId_wordId: { userId: user.id, wordId } },
+      create: {
+        userId: user.id,
+        wordId,
+        status: "IN_PROGRESS",
+        currentStage: 1,
+        date: new Date(),
+        sessionState: sessionState || Prisma.DbNull,
+      },
+      update: {
+        sessionState: sessionState || Prisma.DbNull,
+      },
     });
 
     return NextResponse.json({ success: true });
