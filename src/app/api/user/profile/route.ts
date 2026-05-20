@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest, invalidateUserCache } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 
 const DEFAULT_PREFERENCES = {
   streakReminders: true,
@@ -29,14 +30,24 @@ export async function GET(req: NextRequest) {
   try {
     const { user } = authResult;
 
-    const cached = PROFILE_RESPONSE_CACHE.get(user.id);
-    if (cached && Date.now() - cached.timestamp < PROFILE_RESPONSE_CACHE_TTL) {
-      return NextResponse.json(cached.data);
-    }
+      const cacheKey = `profile:${user.id}`;
 
-    if (cached) {
-      PROFILE_RESPONSE_CACHE.delete(user.id);
-    }
+      // Try Redis cache first (shared across server instances)
+      try {
+        const cachedStr = await redis.get(cacheKey);
+        if (cachedStr) {
+          const parsed = JSON.parse(cachedStr as string);
+          return NextResponse.json(parsed);
+        }
+      } catch (e) {
+        // Redis unavailable — fall back to in-process cache below
+        // continue
+      }
+
+      const cached = PROFILE_RESPONSE_CACHE.get(user.id);
+      if (cached && Date.now() - cached.timestamp < PROFILE_RESPONSE_CACHE_TTL) {
+        return NextResponse.json(cached.data);
+      }
 
     // Single query — get user profile data only
     const dbUser = await prisma.user.findUnique({
@@ -179,10 +190,16 @@ export async function GET(req: NextRequest) {
       notificationPreferences,
     };
 
-    PROFILE_RESPONSE_CACHE.set(user.id, {
-      data: responsePayload,
-      timestamp: Date.now(),
-    });
+    // Populate caches (Redis preferred)
+    try {
+      await redis.set(cacheKey, JSON.stringify(responsePayload), { ex: 30 });
+    } catch (e) {
+      // If Redis fails, fall back to in-memory cache
+      PROFILE_RESPONSE_CACHE.set(user.id, {
+        data: responsePayload,
+        timestamp: Date.now(),
+      });
+    }
 
     return NextResponse.json(responsePayload);
   } catch (error) {
