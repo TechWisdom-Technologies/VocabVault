@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { validateAdminRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+type RecentActivityLog = Prisma.ActivityLogGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+        avatarUrl: true;
+      };
+    };
+  };
+}>;
 
 export async function GET(req: NextRequest) {
   const authResult = await validateAdminRequest(req);
@@ -55,7 +69,7 @@ export async function GET(req: NextRequest) {
       : 0;
 
     // --- Recent Activity Feed ---
-    const recentActivity = await prisma.activityLog.findMany({
+    const recentActivity: RecentActivityLog[] = await prisma.activityLog.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
       include: {
