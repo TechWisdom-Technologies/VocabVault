@@ -15,6 +15,13 @@ type SecuritySession = Prisma.DeviceSessionGetPayload<{
   };
 }>;
 
+type SessionCountRow = {
+  userId: string;
+  _count: {
+    _all: number;
+  };
+};
+
 export async function GET(req: NextRequest) {
   const authResult = await validateRequest(req);
   if ("error" in authResult) return authResult.error;
@@ -42,13 +49,15 @@ export async function GET(req: NextRequest) {
 
     // Get device counts for these users
     const userIds = Array.from(new Set(sessions.map((session) => session.userId)));
-    const counts = await prisma.deviceSession.groupBy({
+    const groupedCountsPromise = prisma.deviceSession.groupBy({
       by: ['userId'],
       _count: { _all: true },
       where: { userId: { in: userIds } }
     });
 
-    const countMap = Object.fromEntries(counts.map(c => [c.userId, c._count._all]));
+    const counts = (await groupedCountsPromise) as SessionCountRow[];
+
+    const countMap = Object.fromEntries(counts.map((count: SessionCountRow) => [count.userId, count._count._all]));
 
     const sessionsWithCounts = sessions.map((session) => ({
       ...session,
