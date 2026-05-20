@@ -12,30 +12,54 @@ const globalForPrisma = globalThis as unknown as {
   adapter: PrismaPg | undefined;
 };
 
-// Reuse adapter instance in development to avoid connection pool exhaustion
+// Production vs Development configuration
+const isProd = process.env.NODE_ENV === "production";
+
+// Reuse adapter instance to avoid connection pool exhaustion
 const adapter =
-  globalForPrisma.adapter ?? new PrismaPg({ connectionString });
+  globalForPrisma.adapter ??
+  new PrismaPg({
+    connectionString,
+    // Connection pooling settings
+    ...(isProd && {
+      // In production, be more conservative with connection usage
+      query: {
+        timeout: 10000, // 10s query timeout
+      },
+    }),
+  });
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    // Graceful shutdown of connections
+    log: isProd ? ["error"] : ["error", "warn"],
     errorFormat: "pretty",
   });
 
-if (process.env.NODE_ENV !== "production") {
+if (!isProd) {
   globalForPrisma.prisma = prisma;
   globalForPrisma.adapter = adapter;
+}
 
-  // Properly handle process termination in development
-  process.on("SIGTERM", async () => {
-    await prisma.$disconnect();
-  });
-  process.on("SIGINT", async () => {
-    await prisma.$disconnect();
-  });
+// Graceful shutdown for both dev and prod
+if (typeof global !== "undefined") {
+  // This runs once per process lifecycle
+  if (!(global as any).prismaShutdownHandled) {
+    process.on("SIGTERM", async () => {
+      console.log("SIGTERM received, closing database connection...");
+      await prisma.$disconnect();
+      process.exit(0);
+    });
+
+    process.on("SIGINT", async () => {
+      console.log("SIGINT received, closing database connection...");
+      await prisma.$disconnect();
+      process.exit(0);
+    });
+
+    (global as any).prismaShutdownHandled = true;
+  }
 }
 
 export default prisma;
