@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Mail, ArrowRight, ArrowLeft, Quote } from "lucide-react";
 import { motion } from "framer-motion";
+import BrandLogo from "@/components/brand-logo";
 
 export default function VerifyEmailPage() {
   return (
@@ -19,9 +20,7 @@ export default function VerifyEmailPage() {
         
         <div>
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-xl bg-[#fb731f] flex items-center justify-center shadow-lg shadow-[#fb731f]/20 group-hover:scale-105 transition-transform">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
+            <BrandLogo className="w-12 h-12 rounded-xl group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-white tracking-tight">VocabVault</span>
               <span className="text-[10px] font-medium text-white/40 uppercase tracking-widest mt-0.5">By TechWisdom Technologies</span>

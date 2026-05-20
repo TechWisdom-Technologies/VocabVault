@@ -32,7 +32,6 @@ import {
   Activity,
   GraduationCap,
   Library,
-  BookMarked,
   ScrollText,
   Quote,
   Briefcase,
@@ -46,6 +45,7 @@ import {
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import BrandLogo from "@/components/brand-logo";
 
 const stages = [
   { num: 1, name: "Word Introduction", desc: "Initial exposure with audio and phonetics", icon: BookOpen, color: "from-[#fb731f] to-[#ff853c]", glow: "rgba(251, 115, 31, 0.15)" },
@@ -306,9 +306,9 @@ export default function HomePage() {
             <Link href="/" className="flex items-center gap-3 group">
               <motion.div 
                 whileHover={{ rotate: 15, scale: 1.1 }}
-                className="w-10 h-10 rounded-xl bg-[#fb731f] flex items-center justify-center shadow-2xl shadow-[#fb731f]/20 transition-all duration-300"
+                className="transition-all duration-300"
               >
-                <BookMarked className="w-5 h-5 text-white" />
+                <BrandLogo className="w-10 h-10 rounded-xl" />
               </motion.div>
               <div className="flex flex-col">
                 <span className="text-lg sm:text-xl font-serif font-black tracking-tight text-white uppercase italic leading-none">VocabVault</span>
@@ -863,7 +863,7 @@ export default function HomePage() {
       <footer className="pt-32 pb-8 px-6 lg:px-12 border-t border-white/5 bg-[#020203] relative overflow-hidden">
         {/* Faint Background Brand Anchor */}
         <div className="absolute -bottom-20 -right-20 pointer-events-none opacity-[0.02]">
-            <BookMarked size={600} className="text-white" />
+            <BrandLogo className="w-150 h-150" />
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
@@ -871,9 +871,7 @@ export default function HomePage() {
                 {/* Column 1: The Institute */}
                 <div className="space-y-8">
                     <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-xl bg-[#fb731f] flex items-center justify-center">
-                            <BookMarked className="w-5 h-5 text-white" />
-                        </div>
+                    <BrandLogo className="w-10 h-10 rounded-xl" />
                         <div className="flex flex-col">
                             <span className="text-2xl font-serif font-black text-white tracking-tight uppercase italic leading-none">VocabVault</span>
                             <span className="text-[10px] font-bold text-white/20 uppercase leading-none mt-1 font-sans">by TechWisdom Technologies</span>

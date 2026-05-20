@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowLeft, Home, Search } from "lucide-react";
+import { ArrowLeft, Home, Search } from "lucide-react";
+import BrandLogo from "@/components/brand-logo";
 
 export default function NotFound() {
   return (
@@ -48,9 +49,7 @@ export default function NotFound() {
 
         <div className="pt-8 flex flex-col items-center gap-1">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center">
-              <BookOpen className="w-3 h-3 text-white/20" />
-            </div>
+            <BrandLogo className="w-6 h-6 rounded-lg" />
             <span className="text-[10px] font-black text-white/10 uppercase tracking-widest">VocabVault v1.0</span>
           </div>
           <span className="text-[9px] font-bold text-white/5 uppercase tracking-[0.2em]">By TechWisdom Technologies</span>

@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+type SecuritySession = Prisma.DeviceSessionGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+      };
+    };
+  };
+}>;
 
 export async function GET(req: NextRequest) {
   const authResult = await validateRequest(req);
@@ -11,7 +24,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const sessions = await prisma.deviceSession.findMany({
+    const sessions: SecuritySession[] = await prisma.deviceSession.findMany({
       include: {
         user: {
           select: {
@@ -28,7 +41,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Get device counts for these users
-    const userIds = Array.from(new Set(sessions.map(s => s.userId)));
+    const userIds = Array.from(new Set(sessions.map((session) => session.userId)));
     const counts = await prisma.deviceSession.groupBy({
       by: ['userId'],
       _count: { _all: true },
@@ -37,9 +50,9 @@ export async function GET(req: NextRequest) {
 
     const countMap = Object.fromEntries(counts.map(c => [c.userId, c._count._all]));
 
-    const sessionsWithCounts = sessions.map(s => ({
-      ...s,
-      userDeviceCount: countMap[s.userId] || 0
+    const sessionsWithCounts = sessions.map((session) => ({
+      ...session,
+      userDeviceCount: countMap[session.userId] || 0
     }));
 
     return NextResponse.json({ sessions: sessionsWithCounts });

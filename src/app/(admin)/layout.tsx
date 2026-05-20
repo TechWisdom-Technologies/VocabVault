@@ -22,6 +22,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import BrandLogo from "@/components/brand-logo";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, color: "text-violet-500" },
@@ -64,9 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         `}>
           <div className="p-8">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-transform group-hover:scale-105">
-                <span className="text-xl font-black text-white">V</span>
-              </div>
+              <BrandLogo className="w-10 h-10 rounded-xl transition-transform group-hover:scale-105" />
               <div>
                 <h2 className="text-lg font-black tracking-tight text-white leading-none">VocabVault</h2>
                 <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] leading-none mt-1 block">By TechWisdom Technologies</span>

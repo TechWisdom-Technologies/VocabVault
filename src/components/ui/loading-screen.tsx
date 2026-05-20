@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import BrandLogo from "@/components/brand-logo";
 
 interface LoadingScreenProps {
   message?: string;
@@ -36,12 +37,7 @@ export default function LoadingScreen({
             <div className="absolute inset-0 bg-primary/20 backdrop-blur-3xl rounded-[30%_70%_70%_30%/30%_30%_70%_70%] animate-[morph_6s_ease-in-out_infinite] border border-primary/30" />
             
             {/* Inner Floating Logo Symbol */}
-            <div className="relative z-20 flex flex-col items-center justify-center translate-y-[-2px]">
-              <div className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-pulse">
-                V
-              </div>
-              <div className="h-1 w-8 bg-primary rounded-full mt-1 shadow-[0_0_10px_rgba(var(--primary),0.8)]" />
-            </div>
+            <BrandLogo className="relative z-20 w-24 h-24 translate-y-[-2px]" priority />
 
             {/* Orbiting Elements */}
             <div className="absolute inset-[-15px] border border-primary/20 rounded-full animate-[spin_12s_linear_infinite]" />

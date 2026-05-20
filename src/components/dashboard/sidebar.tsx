@@ -25,6 +25,7 @@ import { cn, formatDate } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import BrandLogo from "@/components/brand-logo";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -61,9 +62,7 @@ export default function Sidebar() {
       )}>
         <div className="h-full flex flex-col p-6">
           <div className="mb-10 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/20">
-              <span className="text-white font-black text-xl">V</span>
-            </div>
+            <BrandLogo className="w-10 h-10 rounded-xl" />
             <div className="flex flex-col">
               <h1 className="text-xl font-black tracking-tight leading-none">VocabVault</h1>
               <span className="text-[10px] font-medium text-muted-foreground leading-none mt-1">By TechWisdom Technologies</span>
