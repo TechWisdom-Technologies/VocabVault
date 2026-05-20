@@ -234,7 +234,7 @@ export default function DashboardPage() {
   const handleConfirmPayment = async (transactionId: string, mobileNumber: string) => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch("/api/stripe/dev-confirm", {
+      const res = await fetch("/api/payments/manual", {
         method: "POST",
         headers,
         body: JSON.stringify({ transactionId, mobileNumber }),
