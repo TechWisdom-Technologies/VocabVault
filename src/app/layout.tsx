@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AccessibilityProvider } from "@/components/accessibility-provider";
+import PWARegister from "@/components/pwa-register";
 import "./globals.css";
 
 const inter = Inter({
@@ -51,6 +52,7 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="system">
           <AccessibilityProvider>
             <TooltipProvider>
+              <PWARegister />
               {children}
             </TooltipProvider>
           </AccessibilityProvider>
