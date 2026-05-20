@@ -364,8 +364,9 @@ export default function DashboardPage() {
                 return p && p.status !== "COMPLETED";
               });
 
-              // If no pending, find latest unlocked (highest orderIndex)
-              const activeWord = pendingWord || [...words].sort((a, b) => b.orderIndex - a.orderIndex)[0];
+              // If no pending, show the earliest unlocked word (first in the daily list)
+              // words from the API are ordered ascending by orderIndex, so pick the first
+              const activeWord = pendingWord || [...words].sort((a, b) => a.orderIndex - b.orderIndex)[0];
 
               const progress = progressMap[activeWord.id];
               const stage = progress?.currentStage || 1;
