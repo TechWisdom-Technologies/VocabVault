@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/VocabVault.png",
         sizes: "192x192 512x512",
         type: "image/png",
-        purpose: "any maskable",
+        purpose: "maskable",
       },
       {
         src: "/VocabVault.png",
