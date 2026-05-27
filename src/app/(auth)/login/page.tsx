@@ -44,7 +44,11 @@ export default function LoginPage() {
         router.push("/verify-email");
         return;
       }
-      setError("Invalid email or password. Please try again.");
+      if (message.startsWith("ACCOUNT_LOCKED:")) {
+        setError(message.replace("ACCOUNT_LOCKED:", "Account locked: "));
+        return;
+      }
+      setError(message || "Login failed. Please try again.");
     }
   };
 
@@ -65,7 +69,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen bg-[#0a0a0b] flex overflow-hidden">
+    <div className="min-h-screen bg-[#0a0a0b] flex overflow-y-auto overflow-x-hidden">
       {/* Left Side: Branding & Quote */}
       <motion.div 
         initial={{ x: -100, opacity: 0 }}
@@ -107,7 +111,7 @@ export default function LoginPage() {
       </motion.div>
 
       {/* Right Side: Form */}
-      <div className="w-full lg:w-1/2 flex flex-col relative">
+      <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen">
         <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10 lg:hidden">
           <Link href="/">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white transition-colors hover:bg-white/5">
@@ -130,7 +134,7 @@ export default function LoginPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1 flex items-center justify-center p-8 sm:p-12 pt-0 sm:pt-0"
+          className="flex-1 flex items-center justify-center p-8 sm:p-12 pt-0 sm:pt-0 overflow-y-auto"
         >
           <div className="w-full max-w-[400px] space-y-10">
             <div className="space-y-2">

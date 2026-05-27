@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import AdminGuard from "@/components/admin/admin-guard";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -21,7 +22,12 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import BrandLogo from "@/components/brand-logo";
 
 const NAV_ITEMS = [
@@ -35,8 +41,46 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const router = useRouter();
+  const { user, logout, getAuthHeaders } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [adminNotifOpen, setAdminNotifOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadNotifications = async () => {
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch("/api/notifications/unread", { headers });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+      } catch (error) {
+        console.error("Failed to load admin notifications", error);
+      }
+    };
+
+    loadNotifications();
+  }, [user, getAuthHeaders]);
+
+  const markNotificationsRead = async (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
+    try {
+      const headers = await getAuthHeaders();
+      await fetch("/api/notifications/read", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationIds: ids }),
+      });
+
+      setNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
+    } catch (error) {
+      console.error("Failed to mark admin notifications read", error);
+    }
+  };
 
   const getBreadcrumb = () => {
     const parts = pathname.split("/").filter(Boolean);
@@ -60,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-[100] w-72 border-r border-white/5 bg-background/50 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
+          fixed inset-y-0 left-0 z-100 w-72 border-r border-white/5 bg-background/50 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
           <div className="p-8">
@@ -162,14 +206,82 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="relative">
-                <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-white/40 hover:text-white hover:bg-white/5">
-                  <Bell className="w-5 h-5" />
+              <Link href="/dashboard" className="hidden md:inline-flex">
+                <Button
+                  variant="ghost"
+                  className="h-10 px-4 rounded-xl bg-white/5 border border-white/5 text-white/60 hover:text-white hover:bg-white/10 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Dashboard
                 </Button>
-                <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-[#0a0a0b]" />
-              </div>
+              </Link>
 
-              <div className="h-8 w-[1px] bg-white/5" />
+              <DropdownMenu open={adminNotifOpen} onOpenChange={async (open) => {
+                setAdminNotifOpen(open);
+                if (open && notifications.length > 0) {
+                  // mark visible notifications as read when admin opens the dropdown
+                  const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+                  if (unreadIds.length > 0) await markNotificationsRead(unreadIds);
+                }
+              }}>
+                <DropdownMenuTrigger className="relative w-10 h-10 rounded-xl text-white/40 hover:text-white hover:bg-white/5 inline-flex items-center justify-center outline-none">
+                  <Bell className="w-5 h-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute top-2 right-2 min-w-4 h-4 px-1 rounded-full bg-primary border-2 border-[#0a0a0b] text-[9px] leading-none font-black text-white flex items-center justify-center">
+                      {notifications.length > 9 ? "9+" : notifications.length}
+                    </span>
+                  )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 mt-2 p-0 rounded-2xl border border-white/5 bg-[#0f0f11] shadow-2xl overflow-hidden">
+                  <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white/70">Notifications</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-primary">{notifications.length} New</span>
+                      {notifications.length > 0 && (
+                        <Button variant="ghost" size="sm" onClick={() => markNotificationsRead(notifications.map(n => n.id))} className="text-[10px] font-bold">
+                          Mark all read
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.slice(0, 5).map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.id}
+                          onSelect={() => router.push("/dashboard/notifications")}
+                          className="p-4 flex flex-col items-start gap-1 border-b border-white/5 last:border-0 cursor-pointer focus:bg-white/5"
+                        >
+                          <span className="text-sm font-bold tracking-tight text-white">
+                            {notification.title}
+                          </span>
+                          <p className="text-xs text-white/40 line-clamp-2 leading-relaxed">
+                            {notification.message}
+                          </p>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <div className="p-10 text-center">
+                        <Bell className="w-10 h-10 text-white/10 mx-auto mb-2" />
+                        <p className="text-xs text-white/40 font-bold uppercase tracking-widest">
+                          No new notifications
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {notifications.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      className="w-full rounded-none h-11 text-xs font-bold text-primary hover:bg-primary/5"
+                      onClick={() => router.push("/dashboard/notifications")}
+                    >
+                      View All Notifications
+                    </Button>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="h-8 w-px bg-white/5" />
 
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Status</span>
@@ -193,7 +305,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Mobile Overlay */}
         {isSidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-90 lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}

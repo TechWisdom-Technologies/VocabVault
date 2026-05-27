@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-05-27T00:00:00Z",
+  "issues": [
+    {
+      "id": "ISSUE-001",
+      "severity": "high",
+      "title": "Raw SQL via prisma.$executeRawUnsafe",
+      "files": [
+        {
+          "path": "src/app/api/admin/words/route.ts",
+          "range": "L70-L90"
+        },
+        {
+          "path": "src/app/api/admin/words/bulk/route.ts",
+          "range": "L120-L132"
+        }
+      ],
+      "description": "Use of prisma.$executeRawUnsafe to write JSONB fields from uploaded/admin data; risk of SQL injection or malformed queries.",
+      "recommendation": "Replace with parameterized Prisma APIs (`prisma.$executeRaw` with template binding) or use Prisma's JSON field `update` methods. Validate and sanitize inputs.",
+      "confidence": "high"
+    },
+    {
+      "id": "ISSUE-002",
+      "severity": "high",
+      "title": "Firebase admin private key handling and logging",
+      "files": [
+        { "path": "src/lib/firebase/admin.ts", "range": "L12-L36" }
+      ],
+      "description": "Private key read from env and debug-logged (key length). Logging secret-derived metadata can leak sensitive information.",
+      "recommendation": "Remove logging, load service account JSON from a secret manager, and ensure key newline handling is robust. Restrict log access in production.",
+      "confidence": "high"
+    },
+    {
+      "id": "ISSUE-003",
+      "severity": "high",
+      "title": "Secrets in environment variables across multiple libs",
+      "files": [
+        { "path": "src/lib/stripe.ts", "range": "L1-L8" },
+        { "path": "src/lib/resend.ts", "range": "L1-L8" },
+        { "path": "src/lib/deepgram.ts", "range": "L1-L8" },
+        { "path": "src/lib/redis.ts", "range": "L1-L8" },
+        { "path": "src/lib/groq.ts", "range": "L1-L16" }
+      ],
+      "description": "Multiple server-side API keys and connection strings are read directly from process.env. Ensure they are provisioned securely and not leaked in code or CI logs.",
+      "recommendation": "Use a secrets manager, restrict access, rotate keys, and audit IAM/ACLs.",
+      "confidence": "high"
+    },
+    {
+      "id": "ISSUE-004",
+      "severity": "high",
+      "title": "Client-side session token exposure",
+      "files": [
+        { "path": "src/stores/auth-store.ts", "range": "L1-L200" },
+        { "path": "src/lib/auth.ts", "range": "L80-L160" }
+      ],
+      "description": "Session tokens stored in JavaScript state and sent via `x-session-token` header are accessible to XSS attacks.",
+      "recommendation": "Use HttpOnly, Secure cookies for sessions where possible; if not, harden XSS protections, shorten token lifetime, and implement refresh/rotation.",
+      "confidence": "high"
+    },
+    {
+      "id": "ISSUE-005",
+      "severity": "medium",
+      "title": "Upstash REST token scope",
+      "files": [ { "path": "src/lib/redis.ts", "range": "L1-L12" } ],
+      "description": "Upstash REST token in env can allow high-privilege access if leaked.",
+      "recommendation": "Use ACLs, limited tokens, private networking, and rotate tokens.",
+      "confidence": "medium"
+    }
+  ]
+}

@@ -17,13 +17,6 @@ function getServiceAccountFromEnv(): ServiceAccountInput {
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
-  console.log("Firebase Env Check:", {
-    hasProjectId: !!projectId,
-    hasClientEmail: !!clientEmail,
-    hasPrivateKey: !!privateKey,
-    keyLength: privateKey?.length || 0
-  });
-
   // Prefer split env vars to keep per-function environment payload small on Netlify/AWS Lambda.
   if (projectId && clientEmail && privateKey) {
     let cleanKey = privateKey.replace(/\\n/g, "\n").trim();

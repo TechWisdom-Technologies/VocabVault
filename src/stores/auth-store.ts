@@ -56,6 +56,36 @@ async function getCachedFirebaseToken(firebaseUser: FirebaseUser): Promise<strin
   return token;
 }
 
+async function createServerSession(firebaseUser: FirebaseUser): Promise<SessionData> {
+  if (!firebaseUser.emailVerified) {
+    await signOut(auth);
+    throw new Error("EMAIL_NOT_VERIFIED");
+  }
+
+  const firebaseToken = await firebaseUser.getIdToken();
+  const deviceInfo = getDeviceInfo();
+
+  const response = await fetch("/api/auth/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ firebaseToken, deviceInfo }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+    if (data.emailVerified === false) {
+      await signOut(auth);
+      throw new Error("EMAIL_NOT_VERIFIED");
+    }
+    if (data.locked) {
+      throw new Error(`ACCOUNT_LOCKED:${data.reason}`);
+    }
+    throw new Error(data.error || "Failed to create session");
+  }
+
+  return response.json();
+}
+
 interface AuthState {
   // State
   user: AuthUser | null;
@@ -133,37 +163,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: "select_account" });
-
           const credential = await signInWithPopup(auth, provider);
           const firebaseUser = credential.user;
-
-          if (!firebaseUser.emailVerified) {
-            await signOut(auth);
-            throw new Error("EMAIL_NOT_VERIFIED");
-          }
-
-          const firebaseToken = await firebaseUser.getIdToken();
-          const deviceInfo = getDeviceInfo();
-
-          const response = await fetch("/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ firebaseToken, deviceInfo }),
-          });
-
-          if (!response.ok) {
-            const data = await response.json();
-            if (data.emailVerified === false) {
-              await signOut(auth);
-              throw new Error("EMAIL_NOT_VERIFIED");
-            }
-            if (data.locked) {
-              throw new Error(`ACCOUNT_LOCKED:${data.reason}`);
-            }
-            throw new Error(data.error || "Failed to create session");
-          }
-
-          const sessionData: SessionData = await response.json();
+          const sessionData = await createServerSession(firebaseUser);
 
           set({
             user: sessionData.user,
@@ -188,36 +190,7 @@ export const useAuthStore = create<AuthState>()(
           // Firebase sign-in
           const credential = await signInWithEmailAndPassword(auth, email, password);
           const firebaseUser = credential.user;
-
-          if (!firebaseUser.emailVerified) {
-            await signOut(auth);
-            throw new Error("EMAIL_NOT_VERIFIED");
-          }
-
-          // Get Firebase ID token
-          const firebaseToken = await firebaseUser.getIdToken();
-          const deviceInfo = getDeviceInfo();
-
-          // Create server session
-          const response = await fetch("/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ firebaseToken, deviceInfo }),
-          });
-
-          if (!response.ok) {
-            const data = await response.json();
-            if (data.emailVerified === false) {
-              await signOut(auth); // Sign out from firebase immediately
-              throw new Error("EMAIL_NOT_VERIFIED");
-            }
-            if (data.locked) {
-              throw new Error(`ACCOUNT_LOCKED:${data.reason}`);
-            }
-            throw new Error(data.error || "Failed to create session");
-          }
-
-          const sessionData: SessionData = await response.json();
+          const sessionData = await createServerSession(firebaseUser);
 
           set({
             user: sessionData.user,
@@ -348,7 +321,6 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "vocabvault-auth",
       partialize: (state) => ({
-        sessionToken: state.sessionToken,
         user: state.user,
       }),
     }
@@ -366,6 +338,18 @@ export function initializeAuthListener() {
       store.setSessionToken(null);
     } else if (firebaseUser) {
       store.setFirebaseUser(firebaseUser);
+      if (!store.sessionToken) {
+        try {
+          const sessionData = await createServerSession(firebaseUser);
+          store.setUser(sessionData.user);
+          store.setSessionToken(sessionData.sessionToken);
+        } catch (error) {
+          console.error("Failed to restore session", error);
+          store.setUser(null);
+          store.setSessionToken(null);
+          await signOut(auth);
+        }
+      }
     } else {
       clientTokenCache = null;
       store.setFirebaseUser(null);

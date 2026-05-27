@@ -29,6 +29,22 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const markNotificationRead = async (id: string) => {
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/notifications/read", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationIds: [id] })
+      });
+      if (res.ok) {
+        setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+      }
+    } catch (err) {
+      console.error("Failed to mark notification read", err);
+    }
+  };
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -288,10 +304,20 @@ export default function NotificationsPage() {
                                 </div>
                                 
                                 {!notif.read && (
-                                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">New Priority</span>
-                                  </div>
+                                    <div className="flex items-center gap-3">
+                                      {!notif.read && (
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                          <span className="text-[9px] font-black uppercase tracking-widest">New Priority</span>
+                                        </div>
+                                      )}
+
+                                      {!notif.read && (
+                                        <Button size="sm" variant="ghost" onClick={() => markNotificationRead(notif.id)} className="text-[11px] font-bold">
+                                          Mark read
+                                        </Button>
+                                      )}
+                                    </div>
                                 )}
                               </div>
                             </div>

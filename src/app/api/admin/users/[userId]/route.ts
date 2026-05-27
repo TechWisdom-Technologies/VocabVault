@@ -2,6 +2,56 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ userId: string }> }
+) {
+  const authResult = await validateRequest(req);
+  if ("error" in authResult) return authResult.error;
+
+  if (authResult.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const { userId } = await context.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        plan: true,
+        role: true,
+        isLocked: true,
+        lockReason: true,
+        createdAt: true,
+        updatedAt: true,
+        currentStreak: true,
+        wordsLearned: true,
+        totalScore: true,
+        dayCount: true,
+        profession: true,
+        nationality: true,
+        dob: true,
+        reason: true,
+        avatarUrl: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return NextResponse.json({ error: "Failed to fetch user profile" }, { status: 500 });
+  }
+}
+
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ userId: string }> }

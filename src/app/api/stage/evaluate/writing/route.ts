@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
-import { groq } from "@/lib/groq";
+import { createGroqChatCompletion } from "@/lib/groq";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -68,15 +68,16 @@ Score 8+ means passed. Be fair but strict. A score of 10 should be rare and rese
 
     let evaluationText = "";
     try {
-      const chatCompletion = await groq.chat.completions.create({
+      const chatCompletion = await createGroqChatCompletion({
         messages: [{ role: "user", content: geminiPrompt }],
         model: "llama-3.3-70b-versatile",
         temperature: 0.1,
         response_format: { type: "json_object" },
       });
       evaluationText = chatCompletion.choices[0]?.message?.content || "";
-    } catch (err: any) {
-      console.warn("Groq writing evaluation error:", err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn("Groq writing evaluation error:", message);
       return NextResponse.json({
         wordCount,
         score: 8,

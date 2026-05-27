@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Loader2,
   Mail,
+  ArrowUpRight,
   Calendar,
   Lock,
   Unlock,
@@ -26,6 +27,7 @@ import {
   Shield,
   Download
 } from "lucide-react";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -155,200 +157,192 @@ export default function AdminUsersPage() {
     (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const summary = {
+    total: users.length,
+    locked: users.filter((user) => user.isLocked).length,
+    admins: users.filter((user) => user.role === "ADMIN").length,
+    pro: users.filter((user) => user.plan === "PRO").length,
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-white uppercase italic">User Accounts</h1>
-            <p className="text-white/40 font-bold uppercase tracking-widest text-[10px] mt-1 flex items-center gap-2">
-              <ShieldCheck className="w-3 h-3 text-emerald-500" />
-              Administrative control & account protocols
-            </p>
-          </div>
-          
-          <Button
-            variant="ghost"
-            onClick={handleExportUsers}
-            className="h-10 px-5 rounded-2xl bg-white/5 border border-white/5 text-white/40 hover:text-white hover:border-white/10 text-[10px] font-black uppercase tracking-widest transition-all w-fit"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export Data
-          </Button>
+    <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-black tracking-tight text-white uppercase italic">User Accounts</h1>
+          <p className="text-white/40 text-sm max-w-2xl leading-relaxed">
+            Review each user, check profile details, and manage locks or progress from one compact view.
+          </p>
         </div>
 
-        <div className="relative group min-w-[300px]">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="ghost" onClick={handleExportUsers} className="h-10 px-4 rounded-xl bg-white/5 border border-white/5 text-white/50 hover:text-white hover:border-white/10 text-[10px] font-black uppercase tracking-widest transition-all">
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Link href="/dashboard">
+            <Button variant="ghost" className="h-10 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">
+              <ArrowUpRight className="w-4 h-4 mr-2" />
+              Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Total Users", value: summary.total },
+          { label: "Locked", value: summary.locked },
+          { label: "Admins", value: summary.admins },
+          { label: "PRO", value: summary.pro },
+        ].map((item) => (
+          <Card key={item.label} className="rounded-2xl border-white/5 bg-white/5">
+            <CardContent className="p-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/25">{item.label}</p>
+              <p className="mt-2 text-3xl font-black text-white">{item.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-md group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
           <input
             type="text"
-            placeholder="Filter by email or name..."
+            placeholder="Search by name or email"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/5 rounded-2xl pl-11 pr-6 py-3 text-sm font-medium text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-all"
+            className="w-full h-12 bg-white/5 border border-white/5 rounded-xl pl-11 pr-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-all"
           />
+        </div>
+
+        <div className="text-[10px] font-black uppercase tracking-[0.25em] text-white/20">
+          {filteredUsers.length} records
         </div>
       </div>
 
       {isLoading ? (
-        <div className="py-48 flex flex-col items-center justify-center gap-4">
+        <div className="py-32 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-xs font-black text-white/20 uppercase tracking-widest">Accessing Vault Records...</p>
+          <p className="text-xs font-black text-white/20 uppercase tracking-widest">Loading users...</p>
         </div>
+      ) : filteredUsers.length === 0 ? (
+        <Card className="rounded-3xl border-white/5 bg-white/5">
+          <CardContent className="p-12 text-center">
+            <CheckCircle2 className="w-10 h-10 text-white/15 mx-auto" />
+            <p className="mt-4 text-sm font-bold text-white/50">No users matched your search.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6 px-4">
-          {filteredUsers.map((user) => (
-            <Card key={user.id} className="bg-white/5 border-white/5 rounded-[32px] overflow-hidden hover:bg-white/[0.07] transition-all duration-300">
-              <CardContent className="p-8">
-                <div className="flex flex-col lg:flex-row gap-8">
-                  {/* Left: Basic Info */}
-                  <div className="flex-1 space-y-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black ${user.plan === 'PRO' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-white/10 text-white/40'}`}>
-                        {user.name ? user.name[0].toUpperCase() : <Users className="w-6 h-6" />}
+        <div className="space-y-4">
+          {filteredUsers.map((user) => {
+            const isPro = user.plan === "PRO";
+            return (
+              <Card key={user.id} className="rounded-3xl border-white/5 bg-white/5 overflow-hidden">
+                <CardContent className="p-6 lg:p-7 space-y-6">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-4 min-w-0">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black ${isPro ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : "bg-white/10 text-white/40"}`}>
+                        {user.name ? user.name[0].toUpperCase() : <Users className="w-5 h-5" />}
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-black text-white">{user.name || "Anonymous"}</h3>
-                            <Badge className={`${user.plan === 'PRO' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-white/40'} border-0 text-[9px] font-black uppercase px-2`}>{user.plan}</Badge>
-                            {user.role === 'ADMIN' && (
-                              <Badge className="bg-primary/20 text-primary border-0 text-[9px] font-black uppercase px-2">Admin</Badge>
-                            )}
-                          </div>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white")}>
-                              <MoreVertical className="w-4 h-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 bg-[#0a0a0b] border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
-                              <DropdownMenuGroup>
-                                <DropdownMenuLabel className="text-[10px] font-black text-white/20 uppercase tracking-widest px-3 py-2">Account Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-white/5" />
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(user.id);
-                                  }}
-                                  className="rounded-xl hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-white/60 hover:text-white"
-                                >
-                                  <Copy className="w-3.5 h-3.5" />
-                                  Copy User ID
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleUpdateUser(user, { resetProgress: true })}
-                                  className="rounded-xl hover:bg-rose-500/10 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-rose-500/60 hover:text-rose-500"
-                                >
-                                  <RefreshCw className="w-3.5 h-3.5" />
-                                  Reset Progress
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg font-black text-white truncate">{user.name || "Anonymous"}</h3>
+                          <Badge className={`${isPro ? "bg-amber-500/20 text-amber-500" : "bg-white/10 text-white/40"} border-0 text-[9px] font-black uppercase px-2`}>{user.plan}</Badge>
+                          {user.role === "ADMIN" && <Badge className="bg-primary/20 text-primary border-0 text-[9px] font-black uppercase px-2">Admin</Badge>}
+                          {user.isLocked && <Badge className="bg-rose-500/15 text-rose-400 border-0 text-[9px] font-black uppercase px-2">Locked</Badge>}
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-white/40 font-medium">
-                          <Mail className="w-3 h-3" />
+                        <p className="mt-1 text-sm text-white/40 flex items-center gap-2 break-all">
+                          <Mail className="w-3.5 h-3.5" />
                           {user.email}
-                        </div>
+                        </p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4 border-t border-white/5">
-                      <div>
-                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Profession</p>
-                        <p className="text-sm font-bold text-white/80">{user.profession || "Not specified"}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Location</p>
-                        <p className="text-sm font-bold text-white/80">{user.nationality || "Unknown"}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Score / Words</p>
-                        <p className="text-sm font-black text-primary italic">{user.totalScore} / {user.wordsLearned}</p>
-                      </div>
-                    </div>
-                  </div>
+                    <div className="flex items-center gap-2 self-start">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white")}>
+                          <MoreVertical className="w-4 h-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-[#0a0a0b] border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
+                          <DropdownMenuGroup>
+                            <DropdownMenuLabel className="text-[10px] font-black text-white/20 uppercase tracking-widest px-3 py-2">Account Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-white/5" />
+                            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.id)} className="rounded-xl hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-white/60 hover:text-white">
+                              <Copy className="w-3.5 h-3.5" />
+                              Copy User ID
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateUser(user, { resetProgress: true })} className="rounded-xl hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-white/60 hover:text-white">
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              Reset Progress
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                  {/* Right: History/Timeline */}
-                  <div className="flex-1 lg:border-l lg:border-white/5 lg:pl-8 space-y-4">
-                    <div className="flex items-center gap-2 text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">
-                      <History className="w-3 h-3" />
-                      Account Timeline
-                    </div>
-
-                    <div className="space-y-4 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1px] before:bg-white/5">
-                      {/* Joined */}
-                      <div className="flex items-start gap-4 relative">
-                        <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center mt-1 z-10 border border-emerald-500/40">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-widest">Joined VocabVault</p>
-                          <p className="text-xs text-white/40 font-bold">{formatDate(user.createdAt)}</p>
-                        </div>
-                      </div>
-
-                      {/* Recent Logs (Bans/Unbans) */}
-                      {user.logs.slice(0, 3).map((log) => (
-                        <div key={log.id} className="flex items-start gap-4 relative">
-                          <div className={`w-4 h-4 rounded-full flex items-center justify-center mt-1 z-10 border ${log.action === 'LOCK_ACCOUNT' ? 'bg-rose-500/20 border-rose-500/40' : 'bg-sky-500/20 border-sky-500/40'}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${log.action === 'LOCK_ACCOUNT' ? 'bg-rose-500' : 'bg-sky-500'}`} />
-                          </div>
-                          <div className="flex-1">
-                            <p className={`text-[10px] font-black uppercase tracking-widest ${log.action === 'LOCK_ACCOUNT' ? 'text-rose-500' : 'text-sky-500'}`}>
-                              {log.action === 'LOCK_ACCOUNT' ? 'Account Banned' : 'Access Restored'}
-                            </p>
-                            <div className="flex items-center justify-between gap-4">
-                              <p className="text-xs text-white/40 font-bold">{formatDate(log.createdAt)}</p>
-                              <p className="text-[10px] text-white/20 font-medium italic truncate max-w-[200px]">"{log.reason}"</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Current Status if Banned but no logs show it (for transition) */}
-                      {user.isLocked && user.logs.filter(l => l.action === 'LOCK_ACCOUNT').length === 0 && (
-                        <div className="flex items-start gap-4 relative">
-                          <div className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center mt-1 z-10 border border-rose-500/40">
-                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Currently Banned</p>
-                            <p className="text-[10px] text-white/20 font-medium">Reason: {user.lockReason}</p>
-                          </div>
-                        </div>
-                      )}
+                      <Button
+                        onClick={() => {
+                          if (user.isLocked) {
+                            handleToggleLock(user);
+                          } else {
+                            setSelectedUser(user);
+                            setBanReason("");
+                          }
+                        }}
+                        className={`h-9 px-4 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${user.isLocked ? "bg-sky-500/10 text-sky-400 hover:bg-sky-500 hover:text-white border border-sky-500/20" : "bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/20"}`}
+                      >
+                        {user.isLocked ? <Unlock className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                        {user.isLocked ? "Unban" : "Ban"}
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col justify-center gap-3 lg:w-48">
-                    <Button
-                      onClick={() => {
-                        if (user.isLocked) {
-                          handleToggleLock(user);
-                        } else {
-                          setSelectedUser(user);
-                          setBanReason("");
-                        }
-                      }}
-                      className={`w-full h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${user.isLocked ? 'bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white border border-sky-500/20' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/20'}`}
-                    >
-                      {user.isLocked ? (
-                        <><Unlock className="w-4 h-4 mr-2" /> Unban Account</>
-                      ) : (
-                        <><Lock className="w-4 h-4 mr-2" /> Ban Account</>
-                      )}
-                    </Button>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 text-sm">
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Joined</p>
+                      <p className="text-white/80 font-medium">{formatDate(user.createdAt)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Updated</p>
+                      <p className="text-white/80 font-medium">{formatDate(user.updatedAt)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Progress</p>
+                      <p className="text-white/80 font-medium">Score {user.totalScore} / Words {user.wordsLearned}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Status</p>
+                      <p className={`font-medium ${user.isLocked ? "text-rose-400" : "text-emerald-400"}`}>
+                        {user.isLocked ? `Locked: ${user.lockReason || "No reason provided"}` : "Active"}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Profession</p>
+                      <p className="text-white/80 font-medium">{user.profession || "Not specified"}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Nationality</p>
+                      <p className="text-white/80 font-medium">{user.nationality || "Not specified"}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Date of Birth</p>
+                      <p className="text-white/80 font-medium">{user.dob || "Not provided"}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/20 mb-1">Registration Reason</p>
+                      <p className="text-white/80 font-medium">{user.reason || "Not provided"}</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {/* Ban Reason Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-100 bg-black/60 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
           <Card className="w-full max-w-lg bg-[#0a0a0b] border-white/10 rounded-[40px] shadow-2xl relative overflow-hidden">
             <CardContent className="p-10 space-y-8">
               <div className="flex items-center justify-between">
@@ -376,7 +370,7 @@ export default function AdminUsersPage() {
                   value={banReason}
                   onChange={(e) => setBanReason(e.target.value)}
                   placeholder="Policy violation, suspicious activity, etc..."
-                  className="bg-white/5 border-white/10 rounded-2xl p-6 text-sm text-white focus:border-rose-500/50 min-h-[120px]"
+                  className="bg-white/5 border-white/10 rounded-2xl p-6 text-sm text-white focus:border-rose-500/50 min-h-30"
                 />
               </div>
 

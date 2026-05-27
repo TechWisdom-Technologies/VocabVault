@@ -11,7 +11,7 @@ export default function BrandLogo({ className, priority = false }: BrandLogoProp
   return (
     <div className={cn("relative shrink-0 overflow-hidden", className)}>
       <Image
-        src="/VocabVault.png"
+        src="/VocabVault Logo.png"
         alt="VocabVault"
         fill
         priority={priority}

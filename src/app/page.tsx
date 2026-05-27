@@ -344,6 +344,12 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-6 font-sans">
+              <Link href="/support" className="hidden lg:block">
+                <Button variant="ghost" className="text-[15px] font-bold text-white/40 hover:text-white transition-colors">
+                  Support
+                </Button>
+              </Link>
+
               {!mounted ? (
                 <div className="h-10 w-32 rounded-xl bg-white/5 animate-pulse" />
               ) : user ? (

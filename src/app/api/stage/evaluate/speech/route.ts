@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { deepgram } from "@/lib/deepgram";
-import { groq } from "@/lib/groq";
+import { createGroqChatCompletion } from "@/lib/groq";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -67,8 +67,9 @@ export async function POST(req: NextRequest) {
         punctuate: true,
       });
       transcript = result?.results?.channels?.[0]?.alternatives?.[0]?.transcript || "";
-    } catch (err: any) {
-      console.warn("Deepgram error:", err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn("Deepgram error:", message);
       return NextResponse.json(
         { error: "Speech transcription failed. Please try again." },
         { status: 503 }
@@ -133,15 +134,16 @@ Score 8+ is pass.`;
 
     let evaluationText = "";
     try {
-      const chatCompletion = await groq.chat.completions.create({
+      const chatCompletion = await createGroqChatCompletion({
         messages: [{ role: "user", content: geminiPrompt }],
         model: "llama-3.3-70b-versatile",
         temperature: 0.1,
         response_format: { type: "json_object" },
       });
       evaluationText = chatCompletion.choices[0]?.message?.content || "";
-    } catch (err: any) {
-      console.warn("Groq evaluation error - triggering fallback:", err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn("Groq evaluation error - triggering fallback:", message);
       
       // FALLBACK: Random score between 4-10 if AI is busy
       const fallbackScore = Math.floor(Math.random() * 7) + 4; // 4 to 10
