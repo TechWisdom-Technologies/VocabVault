@@ -52,16 +52,10 @@ export default function NotificationsPage() {
         const res = await fetch("/api/notifications", { headers });
         if (res.ok) {
           const { notifications: data } = await res.json();
-          setNotifications(data);
-          
-          const unreadIds = data.filter((n: any) => !n.read).map((n: any) => n.id);
-          if (unreadIds.length > 0) {
-            await fetch("/api/notifications/read", {
-              method: "POST",
-              headers: { ...headers, "Content-Type": "application/json" },
-              body: JSON.stringify({ notificationIds: unreadIds })
-            });
-          }
+          const userNotifs = (data || []).filter((n: any) =>
+            !["FEEDBACK_RECEIVED", "PAYMENT_REQUESTED"].includes(n.type)
+          );
+          setNotifications(userNotifs);
         }
       } catch (err) {
         console.error("Failed to load notifications", err);

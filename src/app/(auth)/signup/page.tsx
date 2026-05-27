@@ -38,11 +38,19 @@ export default function SignupPage() {
       router.push(`/verify-email${plan === 'pro' ? '?plan=pro' : ''}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Sign up failed";
+      
+      // Professional credentials & network signup error mapping
       if (message.includes("auth/email-already-in-use")) {
         setError("This email is already registered. Try logging in instead.");
-        return;
+      } else if (message.includes("auth/weak-password")) {
+        setError("The password is too weak. Please use a stronger password (minimum 6 characters).");
+      } else if (message.includes("auth/invalid-email")) {
+        setError("Invalid email address format. Please enter a valid email.");
+      } else if (message.includes("auth/network-request-failed")) {
+        setError("Network connection failed. Please check your internet connection and try again.");
+      } else {
+        setError(message || "An unexpected error occurred during signup. Please try again.");
       }
-      setError(message);
     }
   };
 
@@ -106,7 +114,7 @@ export default function SignupPage() {
       </motion.div>
 
       {/* Right Side: Form */}
-      <div className="w-full lg:w-1/2 flex flex-col relative">
+      <div className="w-full lg:w-1/2 flex flex-col relative h-screen overflow-hidden">
         <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10 lg:hidden">
           <Link href="/">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white transition-colors hover:bg-white/5">
@@ -129,13 +137,9 @@ export default function SignupPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1 flex items-center justify-center p-8 sm:p-12 pt-0 sm:pt-0"
+          className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden"
         >
-          <div className="w-full max-w-[400px] space-y-10">
-            <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-white tracking-tight">Sign up</h2>
-              <p className="text-white/40 font-medium">Create your profile to begin your mastery journey.</p>
-            </div>
+          <div className="w-full max-w-[400px] space-y-6">
 
             <div className="space-y-6">
               {error && (
@@ -234,10 +238,6 @@ export default function SignupPage() {
               </div>
           </div>
         </motion.div>
-
-        <div className="p-8 text-center lg:text-left text-[10px] font-bold uppercase tracking-[0.2em] text-white/10">
-          © TechWisdom Technologies
-        </div>
       </div>
     </div>
   );

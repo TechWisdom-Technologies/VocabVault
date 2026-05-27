@@ -35,6 +35,23 @@ export async function POST(req: NextRequest) {
 
     console.log("Created manual payment tx:", tx.id);
 
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { id: true },
+    });
+
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map((admin) => ({
+          userId: admin.id,
+          type: "PAYMENT_REQUESTED",
+          title: "New Payment Verification Request",
+          message: `User ${user.email} submitted a manual payment of 499 BDT (${paymentMethod || "manual"}).`,
+          metadata: { transactionId: tx.id },
+        })),
+      });
+    }
+
     return NextResponse.json({ success: true, message: "Payment submitted for verification. Admin will review it shortly." });
   } catch (error: any) {
     console.error("Manual payment error:", error);

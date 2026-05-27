@@ -24,6 +24,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data: { status },
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: updatedFeedback.userId,
+        type: "FEEDBACK_STATUS_UPDATE",
+        title: "Feedback Status Updated",
+        message: `Your feedback regarding "${updatedFeedback.subject}" has been marked as ${status.replace('_', ' ')}.`,
+        metadata: {
+          feedbackId: id,
+          status,
+        },
+      },
+    });
+
     // Optional: Log this action in ActivityLog
     await prisma.activityLog.create({
       data: {

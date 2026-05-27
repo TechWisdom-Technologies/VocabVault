@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AccessibilityProvider } from "@/components/accessibility-provider";
 import PWARegister from "@/components/pwa-register";
+import AccountLockedModal from "@/components/auth/account-locked-modal";
 import "./globals.css";
 
 const inter = Inter({
@@ -53,6 +54,7 @@ export default function RootLayout({
           <AccessibilityProvider>
             <TooltipProvider>
               <PWARegister />
+              <AccountLockedModal />
               {children}
             </TooltipProvider>
           </AccessibilityProvider>

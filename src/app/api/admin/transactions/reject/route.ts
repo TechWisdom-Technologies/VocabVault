@@ -63,6 +63,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: transaction.userId,
+        type: "PAYMENT_REJECTED",
+        title: "Payment Verification Rejected",
+        message: `Your manual payment verification has been rejected. Reason: "${rejectionReason}"`,
+        metadata: {
+          transactionId: transaction.id,
+          rejectionReason,
+        },
+      },
+    });
+
     // Send rejection email to user
     try {
       if (transaction.user.email) {

@@ -25,7 +25,8 @@ import {
   Copy,
   RefreshCw,
   Shield,
-  Download
+  Download,
+  BookOpen
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -37,6 +38,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { formatDate, cn } from "@/lib/utils";
 
 interface AdminLog {
@@ -74,6 +79,33 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [banReason, setBanReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Detailed Profile Viewer State
+  const [detailedUserProfile, setDetailedUserProfile] = useState<any | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const openDetailedProfile = async (userId: string) => {
+    setIsProfileLoading(true);
+    setProfileError(null);
+    setDetailedUserProfile(null);
+
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/admin/users/${userId}`, { headers });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to load user intelligence profile");
+      }
+
+      const data = await res.json();
+      setDetailedUserProfile(data.user);
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Failed to load profile");
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -281,6 +313,13 @@ export default function AdminUsersPage() {
                       </DropdownMenu>
 
                       <Button
+                        onClick={() => openDetailedProfile(user.id)}
+                        className="h-9 px-4 rounded-xl bg-[#fb731f]/10 hover:bg-[#fb731f] border border-[#fb731f]/20 text-[#fb731f] hover:text-white font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer"
+                      >
+                        Intelligence Dossier
+                      </Button>
+
+                      <Button
                         onClick={() => {
                           if (user.isLocked) {
                             handleToggleLock(user);
@@ -333,6 +372,37 @@ export default function AdminUsersPage() {
                       <p className="text-white/80 font-medium">{user.reason || "Not provided"}</p>
                     </div>
                   </div>
+
+                  {/* Administrative Audit Trail & Ban History logs */}
+                  {user.logs && user.logs.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-white/5 space-y-4">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 flex items-center gap-1.5">
+                        <History className="w-3.5 h-3.5 text-[#fb731f]" />
+                        Administrative Audit Trail & Ban History
+                      </p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {user.logs.map((log) => {
+                          const isBan = log.action.includes("BAN");
+                          return (
+                            <div key={log.id} className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.04] flex flex-col gap-2 hover:border-white/[0.08] transition-all">
+                              <div className="flex items-center justify-between gap-2">
+                                <Badge className={cn(
+                                  "border-0 text-[8px] font-black uppercase px-2 py-0.5 rounded",
+                                  isBan ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400"
+                                )}>
+                                  {log.action}
+                                </Badge>
+                                <span className="text-[10px] text-white/30 font-black">{formatDate(log.createdAt)}</span>
+                              </div>
+                              <p className="text-xs text-white/70 italic font-medium leading-relaxed">
+                                &quot;{log.reason || "No description provided"}&quot;
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -385,6 +455,189 @@ export default function AdminUsersPage() {
           </Card>
         </div>
       )}
+
+      {/* Detailed User Profile Dossier Modal */}
+      <Dialog open={Boolean(detailedUserProfile) || isProfileLoading || Boolean(profileError)} onOpenChange={(open) => !open && setDetailedUserProfile(null)}>
+        <DialogContent showCloseButton={false} className="w-[min(96vw,64rem)] max-w-none sm:max-w-none gap-0 max-h-[85vh] border border-white/[0.08] bg-[#0c0a17] text-white rounded-[24px] p-0 overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.6)] group">
+          
+          {/* Accent glow spots */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#fb731f]/10 via-indigo-600/5 to-transparent blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-indigo-500/10 via-[#fb731f]/5 to-transparent blur-[120px] pointer-events-none" />
+
+          {/* Sticky Header */}
+          <div className="relative z-10 sticky top-0 flex items-center justify-between border-b border-white/[0.06] bg-[#0c0a17]/95 px-6 sm:px-8 py-5 backdrop-blur-xl">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-11 h-11 rounded-2xl bg-[#fb731f]/10 border border-[#fb731f]/20 flex items-center justify-center text-[#fb731f] shrink-0">
+                <ShieldCheck className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#fb731f]">User Intelligence Dossier</p>
+                <p className="text-xs text-white/50 truncate font-medium">Full account standings, metrics audit logs, and streaks</p>
+              </div>
+            </div>
+            <Button variant="ghost" className="h-10 px-5 rounded-2xl bg-white/5 border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-xs font-black uppercase tracking-widest cursor-pointer active:scale-95 transition-all" onClick={() => setDetailedUserProfile(null)}>
+              Close View
+            </Button>
+          </div>
+
+          {/* Scrollable Container */}
+          <div className="relative z-10 h-[calc(85vh-83px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="max-w-7xl mx-auto p-6 sm:p-8 space-y-6">
+
+              {isProfileLoading && (
+                <div className="py-32 flex flex-col items-center justify-center gap-4 text-white/40">
+                  <Loader2 className="w-10 h-10 animate-spin text-[#fb731f]" />
+                  <p className="text-sm font-black uppercase tracking-widest text-center">Aggregating User Intelligence...</p>
+                </div>
+              )}
+
+              {profileError && !isProfileLoading && (
+                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-6 text-sm text-rose-100 flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-rose-400 shrink-0" />
+                  {profileError}
+                </div>
+              )}
+
+              {detailedUserProfile && !isProfileLoading && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-500">
+                  
+                  {/* High-Fidelity Avatar Banner */}
+                  <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 border-b border-white/[0.08] pb-8">
+                    <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                      <div className="w-20 h-20 rounded-[28px] bg-gradient-to-tr from-[#fb731f] to-indigo-600 p-0.5 shadow-lg shadow-indigo-500/20">
+                        <div className="w-full h-full rounded-[26px] bg-[#0c0a17] flex items-center justify-center text-4xl font-black text-white italic">
+                          {detailedUserProfile.name ? detailedUserProfile.name[0].toUpperCase() : <Users className="w-9 h-9 text-white/40" />}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                          <h2 className="text-3xl font-black text-white tracking-tight uppercase italic">{detailedUserProfile.name || "Anonymous User"}</h2>
+                          <Badge className={cn("border-0 text-[9px] font-black uppercase px-2.5 h-6 rounded-md", detailedUserProfile.plan === "PRO" ? "bg-amber-500/15 text-amber-500 border border-amber-500/20" : "bg-white/10 text-white/50")}>
+                            {detailedUserProfile.plan} Plan
+                          </Badge>
+                          <Badge className={cn("border-0 text-[9px] font-black uppercase px-2.5 h-6 rounded-md", detailedUserProfile.isLocked ? "bg-rose-500/15 text-rose-300 border border-rose-500/20" : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20")}>
+                            {detailedUserProfile.isLocked ? "Locked" : "Active"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-white/50 font-semibold flex items-center gap-2 justify-center md:justify-start">
+                          <Mail className="w-4 h-4 text-[#fb731f] shrink-0" />
+                          {detailedUserProfile.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center md:items-end gap-1.5 bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-2xl p-4 max-w-xs w-full sm:w-auto">
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Account Reference ID</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs font-mono text-white/60 truncate max-w-[160px]">{detailedUserProfile.id}</code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(detailedUserProfile.id);
+                          }}
+                          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 hover:text-[#fb731f] text-white/40 transition-all cursor-pointer active:scale-95"
+                          title="Copy User ID"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tactile Metrics Circular Cards */}
+                  <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                    {[
+                      { label: "Study Streak", value: `${detailedUserProfile.currentStreak || 0} Days`, icon: Clock, color: "text-[#fb731f] bg-[#fb731f]/10 border-[#fb731f]/20 animate-pulse" },
+                      { label: "Words Learned", value: `${detailedUserProfile.wordsLearned || 0} Words`, icon: BookOpen, color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20" },
+                      { label: "Total Score", value: `${detailedUserProfile.totalScore || 0} Pts`, icon: ShieldCheck, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+                      { label: "Days Active", value: `${detailedUserProfile.dayCount || 0} Days`, icon: Calendar, color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
+                    ].map((m) => {
+                      const Icon = m.icon;
+                      return (
+                        <div key={m.label} className="rounded-[24px] border border-white/[0.06] bg-white/[0.01] p-5 flex items-center gap-4 hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-300">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${m.color}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">{m.label}</p>
+                            <p className="mt-0.5 text-xl font-black text-white italic tracking-tight">{m.value}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Two Column demographic/motivation and full historical audit logs */}
+                  <div className="grid gap-6 lg:grid-cols-2">
+
+                    {/* Left details grid */}
+                    <div className="rounded-[32px] border border-white/[0.08] bg-white/[0.02] p-6 sm:p-8 space-y-5">
+                      <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 border-b border-white/[0.06] pb-3">
+                        <Users className="w-4 h-4 text-[#fb731f]" />
+                        Personal Profile Details
+                      </div>
+                      <div className="space-y-4 text-sm font-semibold">
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="text-white/40 shrink-0">Profession:</span>
+                          <span className="text-white/85 text-right">{detailedUserProfile.profession || "Not provided"}</span>
+                        </div>
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="text-white/40 shrink-0">Nationality:</span>
+                          <span className="text-white/85 text-right">{detailedUserProfile.nationality || "Not provided"}</span>
+                        </div>
+                        <div className="flex items-start justify-between gap-4">
+                          <span className="text-white/40 shrink-0">Date of Birth:</span>
+                          <span className="text-white/85 text-right">
+                            {detailedUserProfile.dob ? new Date(detailedUserProfile.dob).toLocaleDateString(undefined, { dateStyle: 'long' }) : "Not provided"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-4 border-t border-white/[0.06]">
+                          <span className="text-white/40 font-semibold">Motivation for Studying:</span>
+                          <p className="text-white/70 italic text-xs leading-relaxed bg-black/20 rounded-2xl p-4 border border-white/5 font-medium">
+                            {detailedUserProfile.reason ? `"${detailedUserProfile.reason}"` : "No specific reason provided."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* History logs block */}
+                    <div className="rounded-[32px] border border-white/[0.08] bg-white/[0.02] p-6 sm:p-8 space-y-5">
+                      <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 border-b border-white/[0.06] pb-3">
+                        <History className="w-4 h-4 text-[#fb731f]" />
+                        Administrative Actions Timeline
+                      </div>
+
+                      {detailedUserProfile.logs && detailedUserProfile.logs.length > 0 ? (
+                        <div className="space-y-3 max-h-[220px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                          {detailedUserProfile.logs.map((log: any) => {
+                            const isBan = log.action.includes("BAN");
+                            return (
+                              <div key={log.id} className="p-4 rounded-2xl bg-black/20 border border-white/5 flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <Badge className={cn("border-0 text-[8px] font-black uppercase px-2 h-4.5 rounded", isBan ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400")}>
+                                    {log.action}
+                                  </Badge>
+                                  <span className="text-[9px] text-white/30 font-black">{formatDate(log.createdAt)}</span>
+                                </div>
+                                <p className="text-xs text-white/60 font-semibold italic">&quot;{log.reason || "No comment logged."}&quot;</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center text-white/20 text-xs font-bold uppercase tracking-wider">
+                          No audit action logs recorded.
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

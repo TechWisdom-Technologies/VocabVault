@@ -37,7 +37,7 @@ import { Button } from "@/components/ui/button";
 
 export default function TopBar() {
   const router = useRouter();
-  const { user, logout, getAuthHeaders, syncUser } = useAuthStore();
+  const { user, logout, getAuthHeaders, syncUser, isInitialized } = useAuthStore();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -113,10 +113,11 @@ export default function TopBar() {
   }, []);
 
   useEffect(() => {
-    if (user?.id) syncUser();
-  }, []);
+    if (isInitialized && user?.id) syncUser();
+  }, [isInitialized, user?.id]);
 
   useEffect(() => {
+    if (!isInitialized || !user?.id) return;
     const fetchProfile = async () => {
       try {
         const headers = await getAuthHeaders();
@@ -124,11 +125,11 @@ export default function TopBar() {
         if (res.ok) setProfileData(await res.json());
       } catch (e) { console.error(e); }
     };
-    if (user?.id) fetchProfile();
-  }, [user?.id, getAuthHeaders]);
+    fetchProfile();
+  }, [isInitialized, user?.id, getAuthHeaders]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!isInitialized || !user) return;
 
     const fetchNotifications = async () => {
       try {
@@ -137,7 +138,10 @@ export default function TopBar() {
         if (res.ok) {
           const data = await res.json();
           if (data.notifications && Array.isArray(data.notifications)) {
-            setUnreadNotifications(data.notifications);
+            const userNotifs = data.notifications.filter((n: any) =>
+              !["FEEDBACK_RECEIVED", "PAYMENT_REQUESTED"].includes(n.type)
+            );
+            setUnreadNotifications(userNotifs);
           }
         }
       } catch (err) { console.error("Notification fetch error:", err); }
@@ -151,6 +155,10 @@ export default function TopBar() {
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
           if (payload.new) {
+            // Filter out administrative notifications for standard user top-bar
+            if (["FEEDBACK_RECEIVED", "PAYMENT_REQUESTED"].includes(payload.new.type)) {
+              return;
+            }
             setUnreadNotifications((prev) => [payload.new, ...prev]);
             setActiveToast(payload.new);
             setTimeout(() => setActiveToast(null), 10000);
@@ -160,7 +168,7 @@ export default function TopBar() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user, getAuthHeaders]);
+  }, [isInitialized, user, getAuthHeaders]);
 
   const handleLogout = async () => {
     await logout();
@@ -326,15 +334,16 @@ export default function TopBar() {
                     </div>
                   )}
                 </div>
-                {unreadNotifications.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    className="w-full rounded-none h-11 text-xs font-bold text-primary hover:bg-primary/5"
-                    onClick={() => router.push("/dashboard/notifications")}
-                  >
-                    View All Notifications
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  className="w-full rounded-none h-11 text-xs font-bold text-primary hover:bg-primary/5 border-t border-border/10"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    router.push("/dashboard/notifications");
+                  }}
+                >
+                  View All Notifications
+                </Button>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

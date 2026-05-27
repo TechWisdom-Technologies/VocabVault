@@ -48,7 +48,19 @@ export default function LoginPage() {
         setError(message.replace("ACCOUNT_LOCKED:", "Account locked: "));
         return;
       }
-      setError(message || "Login failed. Please try again.");
+      
+      // Professional credentials & network error mapping
+      if (message.includes("auth/invalid-credential") || message.includes("auth/user-not-found") || message.includes("auth/wrong-password")) {
+        setError("Invalid email or password. Please verify your credentials and try again.");
+      } else if (message.includes("auth/too-many-requests")) {
+        setError("Access temporarily blocked due to repeated failed login attempts. Please try again later.");
+      } else if (message.includes("auth/invalid-email")) {
+        setError("Invalid email address format. Please enter a valid email.");
+      } else if (message.includes("auth/network-request-failed")) {
+        setError("Network connection failed. Please check your internet connection and try again.");
+      } else {
+        setError(message || "An unexpected login error occurred. Please try again.");
+      }
     }
   };
 
@@ -69,7 +81,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] flex overflow-y-auto overflow-x-hidden">
+    <div className="h-screen bg-[#0a0a0b] flex overflow-hidden">
       {/* Left Side: Branding & Quote */}
       <motion.div 
         initial={{ x: -100, opacity: 0 }}
@@ -111,7 +123,7 @@ export default function LoginPage() {
       </motion.div>
 
       {/* Right Side: Form */}
-      <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen">
+      <div className="w-full lg:w-1/2 flex flex-col relative h-screen overflow-hidden">
         <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10 lg:hidden">
           <Link href="/">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white transition-colors hover:bg-white/5">
@@ -134,15 +146,9 @@ export default function LoginPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-1 flex items-center justify-center p-8 sm:p-12 pt-0 sm:pt-0 overflow-y-auto"
+          className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden"
         >
-          <div className="w-full max-w-[400px] space-y-10">
-            <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-white tracking-tight">Sign in</h2>
-              <p className="text-white/40 font-medium">Enter your credentials to access the vault.</p>
-            </div>
-
-            <div className="space-y-6">
+          <div className="w-full max-w-[400px] space-y-6">
               {error && (
                 <div className="flex items-center gap-3 p-4 text-sm font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl animate-in fade-in zoom-in duration-300">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -222,14 +228,8 @@ export default function LoginPage() {
                   {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Sign in"}
                 </Button>
               </form>
-
-              </div>
           </div>
         </motion.div>
-
-        <div className="p-8 text-center lg:text-left text-[10px] font-bold uppercase tracking-[0.2em] text-white/10">
-          © TechWisdom Technologies
-        </div>
       </div>
     </div>
   );

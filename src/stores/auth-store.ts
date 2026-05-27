@@ -94,6 +94,8 @@ interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
+  isAccountLocked: boolean;
+  lockReason: string | null;
 
   // Actions
   login: (email: string, password: string) => Promise<SessionData>;
@@ -111,6 +113,7 @@ interface AuthState {
   acknowledgeRules: () => void;
   isSessionExpired: boolean;
   setSessionExpired: (expired: boolean) => void;
+  setAccountLocked: (locked: boolean, reason: string | null) => void;
   syncUser: () => Promise<void>;
 }
 
@@ -154,9 +157,12 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       isInitialized: false,
       isSessionExpired: false,
+      isAccountLocked: false,
+      lockReason: null,
       error: null,
 
       setSessionExpired: (expired) => set({ isSessionExpired: expired }),
+      setAccountLocked: (locked, reason) => set({ isAccountLocked: locked, lockReason: reason }),
 
       loginWithGoogle: async () => {
         set({ isLoading: true, error: null });
@@ -177,7 +183,12 @@ export const useAuthStore = create<AuthState>()(
           return sessionData;
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : "Google login failed";
-          set({ isLoading: false, error: message });
+          if (message.startsWith("ACCOUNT_LOCKED:")) {
+            const reason = message.replace("ACCOUNT_LOCKED:", "");
+            set({ isAccountLocked: true, lockReason: reason, isLoading: false });
+          } else {
+            set({ isLoading: false, error: message });
+          }
           throw error;
         }
       },
@@ -202,7 +213,12 @@ export const useAuthStore = create<AuthState>()(
           return sessionData;
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : "Login failed";
-          set({ isLoading: false, error: message });
+          if (message.startsWith("ACCOUNT_LOCKED:")) {
+            const reason = message.replace("ACCOUNT_LOCKED:", "");
+            set({ isAccountLocked: true, lockReason: reason, isLoading: false });
+          } else {
+            set({ isLoading: false, error: message });
+          }
           throw error;
         }
       },
@@ -322,6 +338,7 @@ export const useAuthStore = create<AuthState>()(
       name: "vocabvault-auth",
       partialize: (state) => ({
         user: state.user,
+        sessionToken: state.sessionToken,
       }),
     }
   )
@@ -345,6 +362,11 @@ export function initializeAuthListener() {
           store.setSessionToken(sessionData.sessionToken);
         } catch (error) {
           console.error("Failed to restore session", error);
+          const message = error instanceof Error ? error.message : "";
+          if (message.startsWith("ACCOUNT_LOCKED:")) {
+            const reason = message.replace("ACCOUNT_LOCKED:", "");
+            store.setAccountLocked(true, reason);
+          }
           store.setUser(null);
           store.setSessionToken(null);
           await signOut(auth);

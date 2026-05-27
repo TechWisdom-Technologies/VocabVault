@@ -29,9 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import BrandLogo from "@/components/brand-logo";
+import { supabase } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, color: "text-violet-500" },
+  { href: "/admin/notifications", label: "Governance Alerts", icon: Bell, color: "text-pink-500" },
   { href: "/admin/transactions", label: "Payment Requests", icon: ReceiptText, color: "text-cyan-500" },
   { href: "/admin/users", label: "Users & Accounts", icon: Users, color: "text-emerald-500" },
   { href: "/admin/words", label: "Word Management", icon: BookOpen, color: "text-amber-500" },
@@ -42,13 +44,13 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, getAuthHeaders } = useAuthStore();
+  const { user, logout, getAuthHeaders, isInitialized } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [adminNotifOpen, setAdminNotifOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!isInitialized || !user) return;
 
     const loadNotifications = async () => {
       try {
@@ -57,14 +59,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (!res.ok) return;
 
         const data = await res.json();
-        setNotifications(data.notifications || []);
+        const allNotifs = data.notifications || [];
+        const adminNotifs = allNotifs.filter((n: any) =>
+          ["FEEDBACK_RECEIVED", "PAYMENT_REQUESTED"].includes(n.type)
+        );
+        setNotifications(adminNotifs);
       } catch (error) {
         console.error("Failed to load admin notifications", error);
       }
     };
 
     loadNotifications();
-  }, [user, getAuthHeaders]);
+
+    const channel = supabase
+      .channel(`admin-notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          if (payload.new && ["FEEDBACK_RECEIVED", "PAYMENT_REQUESTED"].includes(payload.new.type)) {
+            setNotifications((prev) => [payload.new, ...prev]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isInitialized, user, getAuthHeaders]);
 
   const markNotificationsRead = async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
@@ -104,8 +127,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-100 w-72 border-r border-white/5 bg-background/50 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          fixed inset-y-0 left-0 z-[100] w-72 border-r border-white/5 bg-[#0a0a0c]/98 backdrop-blur-xl flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-transform duration-300
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <div className="p-8">
             <Link href="/admin" className="flex items-center gap-3 group">
@@ -183,9 +206,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:pl-72">
           {/* Top Header */}
-          <header className="h-20 border-b border-white/5 bg-background/30 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 pl-14 sm:pl-16 lg:pl-8 shrink-0 relative z-10">
+          <header className="h-20 border-b border-white/5 bg-[#0a0a0c]/40 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 shrink-0 relative z-10">
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
@@ -249,7 +272,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       notifications.slice(0, 5).map((notification) => (
                         <DropdownMenuItem
                           key={notification.id}
-                          onSelect={() => router.push("/dashboard/notifications")}
+                          onSelect={() => {
+                            if (notification.type === "FEEDBACK_RECEIVED") {
+                              router.push("/admin/feedback");
+                            } else if (notification.type === "PAYMENT_REQUESTED") {
+                              router.push("/admin/transactions");
+                            } else {
+                              router.push("/admin/notifications");
+                            }
+                          }}
                           className="p-4 flex flex-col items-start gap-1 border-b border-white/5 last:border-0 cursor-pointer focus:bg-white/5"
                         >
                           <span className="text-sm font-bold tracking-tight text-white">
@@ -269,15 +300,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </div>
                     )}
                   </div>
-                  {notifications.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      className="w-full rounded-none h-11 text-xs font-bold text-primary hover:bg-primary/5"
-                      onClick={() => router.push("/dashboard/notifications")}
-                    >
-                      View All Notifications
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    className="w-full rounded-none h-11 text-xs font-bold text-primary hover:bg-primary/5 border-t border-white/5"
+                    onClick={() => {
+                      setAdminNotifOpen(false);
+                      router.push("/admin/notifications");
+                    }}
+                  >
+                    View All Notifications
+                  </Button>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -294,7 +326,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <main className="flex-1 overflow-y-auto p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <div className="max-w-7xl mx-auto">
               {children}
             </div>
