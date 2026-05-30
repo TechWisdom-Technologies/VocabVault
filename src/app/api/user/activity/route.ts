@@ -69,8 +69,8 @@ export async function GET(req: NextRequest) {
         take: 10,
         include: {
           wordProgress: {
-            include: {
-              word: true,
+            select: {
+              word: { select: { id: true, word: true } },
             },
           },
         },

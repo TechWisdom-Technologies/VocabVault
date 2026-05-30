@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     // --- SELF-HEALING: Sync maxUnlockedIndex with actual progress ---
     const lastCompleted = await prisma.wordProgress.findFirst({
       where: { userId: user.id, status: "COMPLETED" },
-      include: { word: true },
+      select: { word: { select: { orderIndex: true } } },
       orderBy: { word: { orderIndex: "desc" } }
     });
 

@@ -3,6 +3,7 @@
 import AuthGuard from "@/components/auth/auth-guard";
 import SessionExpiredModal from "@/components/auth/session-expired-modal";
 import RulesModal from "@/components/dashboard/rules-modal";
+import BetaTestingModal from "@/components/dashboard/beta-testing-modal";
 import Sidebar from "@/components/dashboard/sidebar";
 import TopBar from "@/components/dashboard/top-bar";
 import { usePathname } from "next/navigation";
@@ -24,6 +25,7 @@ export default function DashboardLayout({
       <AuthGuard>
         {children}
         {showRules && <RulesModal />}
+        <BetaTestingModal />
         <SessionExpiredModal />
       </AuthGuard>
     );
@@ -41,6 +43,7 @@ export default function DashboardLayout({
         </div>
       </div>
       {showRules && <RulesModal />}
+      <BetaTestingModal />
       <SessionExpiredModal />
     </AuthGuard>
   );

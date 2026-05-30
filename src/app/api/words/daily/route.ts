@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
       const allWordIds = Array.from(new Set(historySets.flatMap(s => s.wordIds as string[])));
       const [historyWords, historyProgress] = await Promise.all([
-        prisma.word.findMany({ where: { id: { in: allWordIds } } }),
+        prisma.word.findMany({ where: { id: { in: allWordIds } }, select: { id: true, word: true, orderIndex: true } }),
         prisma.wordProgress.findMany({ where: { userId: user.id, wordId: { in: allWordIds } } })
       ]);
 
@@ -136,7 +136,8 @@ export async function GET(req: NextRequest) {
     let chosenWords = await prisma.word.findMany({
       where: { id: { notIn: completedWordIds } },
       orderBy: { orderIndex: "asc" },
-      take: wordsToAssignCount
+      take: wordsToAssignCount,
+      select: { id: true, word: true, orderIndex: true }
     });
 
     let usedFallback = false;
@@ -144,7 +145,8 @@ export async function GET(req: NextRequest) {
       usedFallback = true;
       chosenWords = await prisma.word.findMany({
         orderBy: { orderIndex: "asc" },
-        take: wordsToAssignCount
+        take: wordsToAssignCount,
+        select: { id: true, word: true, orderIndex: true }
       });
     }
 
@@ -200,7 +202,7 @@ export async function GET(req: NextRequest) {
 
     const finalWordIds = Array.from(new Set(finalSets.flatMap(s => s.wordIds as string[])));
     const [finalWords, finalProgress] = await Promise.all([
-      prisma.word.findMany({ where: { id: { in: finalWordIds } } }),
+      prisma.word.findMany({ where: { id: { in: finalWordIds } }, select: { id: true, word: true, orderIndex: true } }),
       prisma.wordProgress.findMany({ where: { userId: user.id, wordId: { in: finalWordIds } } })
     ]);
 

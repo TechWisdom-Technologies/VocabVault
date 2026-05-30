@@ -387,59 +387,67 @@ export default function HomePage() {
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-t border-white/5 bg-[#020203]/98 backdrop-blur-3xl overflow-hidden w-full"
+              initial={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -20, filter: "blur(10px)", transition: { duration: 0.2 } }}
+              className="lg:hidden absolute top-[calc(100%+16px)] left-4 right-4 bg-[#050506]/95 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_40px_100px_-20px_rgba(251,115,31,0.2)]"
             >
-              <div className="p-6 space-y-10">
-                <div className="flex flex-col gap-6 font-sans">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#fb731f]/10 via-transparent to-transparent pointer-events-none" />
+              
+              <div className="p-6 relative z-10 space-y-6">
+                <div className="grid grid-cols-2 gap-3 font-sans">
                   {[
-                    { name: "Features", href: "#features" },
-                    { name: "Stages", href: "#stages" },
-                    { name: "Pricing", href: "#pricing" },
-                    ...(user ? [{ name: "Dashboard", href: "/dashboard" }] : [])
+                    { name: "Features", href: "#features", icon: Sparkles },
+                    { name: "Stages", href: "#stages", icon: Layers },
+                    { name: "Pricing", href: "#pricing", icon: Zap },
+                    { name: "Support", href: "/support", icon: Headphones },
+                    ...(user ? [{ name: "Dashboard", href: "/dashboard", icon: Activity }] : [])
                   ].map((item, i) => (
                     <motion.div
                       key={item.name}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
+                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 + 0.1, type: "spring", stiffness: 300 }}
                     >
                       <Link 
                         href={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-2xl font-serif font-black uppercase italic text-white/40 hover:text-[#fb731f] transition-colors flex items-center justify-between group"
+                        className="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-[#fb731f]/50 transition-all group active:scale-95"
                       >
-                        {item.name}
-                        <ChevronRight className="w-5 h-5 opacity-100 text-[#fb731f]" />
+                        <item.icon className="w-5 h-5 text-white/50 group-hover:text-[#fb731f] transition-colors" strokeWidth={1.5} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white transition-colors">{item.name}</span>
                       </Link>
                     </motion.div>
                   ))}
                 </div>
 
-                <div className="space-y-4 font-sans border-t border-white/5 pt-8">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-3 pt-6 border-t border-white/5 font-sans"
+                >
                   {!user ? (
                     <>
                       <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)} className="block">
-                        <Button className="w-full h-14 bg-[#fb731f] text-white text-lg font-bold rounded-2xl shadow-xl shadow-[#fb731f]/20">
+                        <Button className="w-full h-14 bg-[#fb731f] hover:bg-[#ff853c] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-2xl shadow-xl shadow-[#fb731f]/20 transition-all active:scale-[0.98]">
                           Join the Institute
                         </Button>
                       </Link>
                       <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="block">
-                        <Button variant="ghost" className="w-full h-14 text-sm font-bold text-white/30 hover:text-white">
+                        <Button variant="ghost" className="w-full h-12 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-2xl transition-all active:scale-[0.98]">
                           Sign in to Account
                         </Button>
                       </Link>
                     </>
                   ) : (
                     <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block">
-                      <Button className="w-full h-14 bg-[#fb731f] text-white text-lg font-bold rounded-2xl">
+                      <Button className="w-full h-14 bg-[#fb731f] hover:bg-[#ff853c] text-white text-xs sm:text-sm font-bold uppercase tracking-widest rounded-2xl shadow-xl shadow-[#fb731f]/20 transition-all active:scale-[0.98]">
                         Enter Dashboard
                       </Button>
                     </Link>
                   )}
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}

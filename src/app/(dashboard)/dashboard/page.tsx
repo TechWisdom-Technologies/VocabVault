@@ -197,15 +197,6 @@ export default function DashboardPage() {
 
     if (user?.onboardingComplete) {
       fetchData();
-      (async () => {
-        try {
-          const res = await fetchWithAuth("/api/words/word-of-the-day");
-          if (res.ok) {
-            const data = await res.json();
-            setWordOfTheDay(data.word);
-          }
-        } catch (e) { console.error(e); }
-      })();
     }
   }, [user?.id]);
 

@@ -383,8 +383,8 @@ export default function TopBar() {
               <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
                 <Settings className="w-4 h-4 mr-2" /> Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => {
-                setTimeout(() => setShowReportModal(true), 100);
+              <DropdownMenuItem onClick={() => {
+                setTimeout(() => setShowReportModal(true), 150);
               }}>
                 <MessageSquare className="w-4 h-4 mr-2" /> Report
               </DropdownMenuItem>
